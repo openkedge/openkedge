@@ -32,11 +32,13 @@ Mutation → OpenKedge Interceptor
    ▼                           ▼
 ALLOW + Care for resources    BLOCK
 
+```
 ### Install
 
 ```
 go install github.com/openkedge/openkedge/cmd/kedge@latest
 ```
 # or
-
+```
 brew install openkedge   # (we'll add the formula later)
+```
