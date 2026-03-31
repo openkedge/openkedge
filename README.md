@@ -1,48 +1,112 @@
-# 🧠 OpenKedge
+# OpenKedge
 
-> **Intent-based protocol for safe, context-aware mutation in agentic systems**
+**Governing Real-World State in Agentic Systems via Intent-Based Mutation**
 
 ---
 
-## ⚡ TL;DR
+## 🧠 Overview
 
-Modern AI agents interact with real-world systems through APIs. 
+OpenKedge is a protocol for safely managing **real-world state mutation** in systems operated by autonomous AI agents.
 
-That model is breaking.
+Modern systems assume that callers are:
+- **Correct**: They know exactly what change to make.
+- **Context-aware**: They understand the current state and surroundings.
+- **Operating independently**: There are no conflicting actors.
 
-**OpenKedge replaces direct mutation with:**
+These assumptions break down in **agentic environments**, where multiple agents act under uncertainty. This leads to conflicting updates, context-insensitive actions, and unsafe mutations.
+
+OpenKedge addresses this by introducing a **governance layer** between agents and system state.
+
+---
+
+## 🔥 Key Idea
+
+> **Mutation should not be executed — it should be decided.**
+
+Instead of the traditional direct-mutation model:
 
 ```text
-Intent → Context → Policy → Event → Derived State
+Agent → API → Mutate State
 ```
 
-Agents no longer mutate systems directly. 
-They **propose intent**, and the system determines whether it becomes truth.
-
----
-
-## 🚨 The Problem
-
-Today’s systems rely on a flawed assumption:
+OpenKedge introduces a mediated flow:
 
 ```text
-Agent → API → Mutation
+Agent → Intent → Context → Policy → Event → Derived State
 ```
 
-This assumes:
-* the caller is correct
-* the caller has full context
-* no conflicting agents exist
-
-❌ In agentic environments, this breaks:
-* agents hallucinate
-* multiple agents conflict
-* mutations are unsafe and irreversible
-* no audit or governance layer exists
+Every change is proposed, evaluated, approved (or rejected), and then committed as an immutable event.
 
 ---
 
-## ✅ The OpenKedge Model
+## ⚙️ Core Concepts
+
+### 1. Intent-Based Mutation
+
+Agents do not mutate state directly—they submit **intent proposals**.
+
+```ts
+type IntentProposal = {
+  actor: Actor;      // Who is proposing
+  target: Entity;     // What is being changed
+  intent: string;     // The goal (e.g. "update_status")
+  proposedFacts: Fact[]; // The proposed truth
+  metadata: Record<string, any>;
+}
+```
+
+### 2. Fact-Based Truth Model
+
+State is not stored as a static record. It is derived from structured **facts**.
+
+```ts
+type Fact = {
+  type: string;
+  value: any;
+  attributes: Record<string, any>;
+  validity: { from: string; to: string };
+}
+```
+
+*Example:* `operating_status = open`, `inventory_status(croissant) = sold_out`.
+
+### 3. Append-Only Event Log
+
+Approved updates become immutable **TruthEvents**. The system state at any point is a projection of these events.
+
+```bash
+State = Reduce(events)
+```
+
+```ts
+type TruthEvent = {
+  entity: string;
+  facts: Fact[];
+  source: Actor;
+  timestamp: string;
+}
+```
+
+### 4. Policy-Governed Mutation
+
+All updates pass through a policy engine that evaluates the proposal against the current system context.
+
+```text
+Policy(Proposal, Context) → { approve | reject | escalate }
+```
+
+No approval → no mutation. This ensures that even "hallucinating" agents cannot corrupt the system state.
+
+### 5. Multi-Agent Coordination
+
+OpenKedge resolves conflicts using a deterministic authority model:
+* **Authority**: Owner updates always override agent proposals.
+* **Trust**: Reliability scores influence decision making.
+* **Time**: Recency helps resolve temporal conflicts.
+
+---
+
+## 🔄 Truth Flow
 
 ```mermaid
 graph TD
@@ -60,302 +124,126 @@ graph TD
 
 ---
 
-## 🧱 Core Concepts
+## 🧪 What This Solves
 
-### 1. IntentProposal
+OpenKedge eliminates entire classes of failures common in agentic systems:
 
-Agents do not mutate state directly—they submit intent.
-
-```ts
-type IntentProposal = {
-  id: string;
-
-  actor: Actor;
-  target: EntityRef;
-
-  intent: string;
-
-  payload: {
-    proposedFacts: Fact[];
-  };
-
-  metadata?: {
-    reason?: string;
-    traceId?: string;
-  };
-
-  createdAt: string;
-};
-```
+| Problem | API Systems | OpenKedge |
+| :--- | :---: | :---: |
+| **Conflicting updates** | ❌ | ✅ |
+| **Context awareness** | ❌ | ✅ |
+| **Safe mutation** | ❌ | ✅ |
+| **Determinism** | ❌ | ✅ |
+| **Auditability** | ❌ | ✅ |
 
 ---
 
-### 2. Actor
+## 🏗️ Reference Implementation: Riftront
 
-Defines who is making the proposal.
+OpenKedge is implemented in **[Riftront](https://riftront.com)**, a system that manages real-time business state:
 
-```ts
-type Actor = {
-  id: string;
+* **Owners** update via high-level messaging (e.g., “closing early”).
+* **Agents** propose updates (inventory, hours, etc.) based on observations.
+* **System** resolves conflicts and maintains a consistent source of truth for the business.
 
-  type: 
-    | "owner" 
-    | "verified_agent" 
-    | "unverified_agent" 
-    | "system";
-
-  trustLevel: number; // 0–1
-};
-```
+This demonstrates the protocol's real-world applicability in multi-agent, high-stakes environments.
 
 ---
 
-### 3. Fact (Composable Truth)
+## 🧭 Why OpenKedge Matters
 
-The atomic unit of truth.
+Agent systems are rapidly moving from **prototypes → production** and from **human control → autonomous operation**. However, our current infrastructure (REST/gRPC APIs) was designed for human-driven, context-aware clients.
 
-```ts
-type Fact = {
-  type: string;
-  value: any;
+OpenKedge introduces a new abstraction: **State mutation as a governed decision process.**
 
-  item?: string;
-
-  validFrom?: string;
-  validTo?: string;
-
-  priority?: number;
-};
-```
-
-**Examples:**
-* `operating_status = open`
-* `closing_time_override = 15:00`
-* `inventory_status(item=croissant) = sold_out`
+This is as fundamental to the agentic era as databases introducing transactions were to the mainframe era, or distributed consensus was to cloud computing.
 
 ---
 
-### 4. TruthEvent (Append-only)
+## 📄 Paper
 
-All approved mutations become immutable events.
+> **OpenKedge: Governing Real-World State in Agentic Systems via Intent-Based Mutation**
 
-```ts
-type TruthEvent = {
-  id: string;
-  
-  entity: EntityRef;
-
-  facts: Fact[];
-
-  source: Actor;
-
-  createdAt: string;
-
-  schemaVersion: "v2";
-};
-```
+*Coming soon to arXiv*
 
 ---
 
-### 5. DerivedState
-
-State is never written—only computed.
+## 🚀 Getting Started (Conceptual)
 
 ```ts
-type DerivedState = {
-  facts: Fact[];
-
-  computed: {
-    isOpen?: boolean;
-    closesAt?: string;
-    inventory?: Record<string, string>;
-  };
-
-  confidence: "explicit_owner" | "fallback" | "expired";
-
-  lastUpdated: string;
-};
-```
-
----
-
-## 🔄 Truth Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User / Agent
-    participant I as Intent Proposal
-    participant C as Context Collection
-    participant P as Policy Evaluation
-    participant T as TruthEvent (Log)
-    participant R as Reducer
-    participant S as Derived State
-
-    U->>I: Propose Intent
-    I->>C: Gather Context
-    C->>P: Evaluate
-    P->>T: Record Event (if approved)
-    T->>R: Reduce
-    R->>S: Update State
-```
-
----
-
-## ⚖️ Policy Engine
-
-All mutations are governed.
-
-```ts
-if (actor.type === "owner") {
-  approve();
+const proposal = {
+  actor: "agent",
+  target: "bakery_123",
+  intent: "update_status",
+  proposedFacts: [
+    { type: "operating_status", value: "closed" }
+  ]
 }
 
-if (actor.type === "verified_agent") {
-  if (conflictsWithRecentOwnerUpdate) reject();
-  else approve();
-}
+const decision = Policy(proposal, context)
 
-if (actor.type === "unverified_agent") {
-  escalate();
+if (decision === "approve") {
+  appendEvent(proposal)
 }
 ```
 
 ---
 
-## 🔐 Authority Model
+## 🔒 Guarantees
 
-Conflict resolution is deterministic:
+OpenKedge ensures:
+* **No unsafe mutation**: All changes are validated by policy first.
+* **Deterministic state**: The state is a reproducible reduction of events.
+* **Full auditability**: Every change has a clear actor, intent, and context.
+* **Multi-agent safety**: Built-in conflict resolution for overlapping actors.
+* **Context-aware decisions**: Policies can see the "whole picture" before committing.
+
+---
+
+## 🧠 Design Principles
+
+* Separate **intent** from **execution**.
+* Treat mutation as a **decision**.
+* Represent truth as **events + facts**.
+* Ensure **determinism and reproducibility**.
+
+---
+
+## 🛣️ Roadmap
+
+- [ ] **Core protocol specification** (v0.1)
+- [ ] **Policy DSL**: A domain-specific language for defining governance rules.
+- [ ] **Multi-entity coordination**: Transactions across multiple stateful components.
+- [ ] **Distributed OpenKedge clusters**: Scalable, high-availability event logs.
+- [ ] **Integration with agent frameworks**: Standard adapters for LangChain, AutoGPT, etc.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions in:
+* Policy engine design
+* Schema and data modeling
+* Distributed systems architecture
+* Agent framework integrations
+
+---
+
+## 📬 Contact
+
+**Joe Helium**  
+OpenKedge.io  
+[joehelium@openkedge.io](mailto:joehelium@openkedge.io)
+
+---
+
+## ⭐️ Vision
+
+OpenKedge aims to become **the standard protocol for governing how AI agents interact with real-world systems.**
+
+---
 
 ```text
-owner > verified_agent > system > unverified_agent
+State mutation is too dangerous to be left to chance. 
+OpenKedge makes it a governed decision.
 ```
-
----
-
-## 🔄 Multi-Agent Coordination
-
-```mermaid
-graph LR
-    A[Agent A] --- P
-    B[Agent B] --- P
-    P{Policy Engine} --> D[Decision]
-    O[Owner] -.->|Overrides if conflict| D
-```
-
----
-
-## 🔌 Query Interface
-
-```http
-POST /openkedge/query
-```
-
-```json
-{
-  "intent": "check_open",
-  "entity": { "id": "cafe-luna" }
-}
-```
-
-**Response:**
-
-```json
-{
-  "result": { "isOpen": true },
-  "confidence": "explicit_owner",
-  "explanation": "Owner updated status recently",
-  "source": {
-    "lastUpdated": "...",
-    "actor": "owner"
-  }
-}
-```
-
----
-
-## 🌍 Discovery Interface
-
-```http
-POST /openkedge/discover
-```
-
-```json
-{
-  "intent": "find_open",
-  "filters": {
-    "type": "cafe",
-    "location": "Seattle"
-  }
-}
-```
-
----
-
-## 🧠 Key Insight
-
-> APIs expose *how to mutate*
-> OpenKedge exposes *whether mutation should happen*
-
----
-
-## 📜 Protocol Invariants
-
-* ✅ **No direct mutation**
-* ✅ **All changes go through intent → policy → event**
-* ✅ **Truth is append-only**
-* ✅ **State is derived, never stored**
-* ✅ **Deterministic resolution**
-
----
-
-## 🛍️ Reference Implementation: [Riftront](https://riftront.com)
-
-**Real-time storefront system powered by OpenKedge**
-
-* Business owners send updates via message
-* System converts to structured facts
-* Agents query real-time truth
-
----
-
-## 🚀 Use Cases
-
-* **Local business real-time state** (Riftront)
-* **Cloud infrastructure mutation safety**
-* **DevOps automation**
-* **IoT / physical systems**
-* **Financial systems**
-
----
-
-## 🔮 Roadmap
-
-* `v0.2` → Richer policy language
-* `v0.3` → Multi-agent negotiation
-* `v0.4` → Streaming subscriptions
-* `v1.0` → Production-ready protocol
-
----
-
-## 📄 Paper (in progress)
-
-> **Intent-Based Governance for Real-Time Truth Systems in Agentic Environments**
-
----
-
-## ⭐ If this resonates
-
-* **Star the repo**
-* **Follow development**
-* **Try Riftront**
-
----
-
-# 🧠 Final Note
-
-OpenKedge is not a framework. 
-It is not a workflow engine.
-
-> It is a **new abstraction for governing real-world state in the agentic era**.
-
----
