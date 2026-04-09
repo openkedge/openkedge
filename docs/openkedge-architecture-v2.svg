@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="650" viewBox="0 0 1000 650" xmlns="http://www.w3.org/2000/svg">
+
+<style>
+    .box { fill:#0b1220; stroke-width:1.5; rx:10; }
+    .governance { stroke:#38bdf8; }
+    .execution { stroke:#f87171; }
+    .text { fill:#e5e7eb; font-family:Arial, sans-serif; font-size:12px; }
+    .title { fill:#38bdf8; font-size:18px; font-weight:bold; }
+    .arrow { stroke:#9ca3af; stroke-width:1.5; marker-end:url(#arrow); }
+</style>
+
+<defs>
+  <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#9ca3af"/>
+  </marker>
+</defs>
+
+<text x="320" y="40" class="title">OpenKedge Architecture (IEEC v2)</text>
+
+<!-- Governance Layer -->
+<rect x="350" y="80" width="300" height="50" class="box governance"/>
+<text x="420" y="110" class="text">Intent Gateway</text>
+
+<rect x="350" y="150" width="300" height="50" class="box governance"/>
+<text x="400" y="180" class="text">Context Aggregation</text>
+
+<rect x="350" y="220" width="300" height="50" class="box governance"/>
+<text x="410" y="250" class="text">Policy Evaluation</text>
+
+<!-- Execution Layer -->
+<rect x="350" y="300" width="300" height="50" class="box execution"/>
+<text x="400" y="330" class="text">Execution Contract</text>
+
+<rect x="350" y="370" width="300" height="50" class="box execution"/>
+<text x="400" y="400" class="text">Ephemeral Identity</text>
+
+<rect x="350" y="440" width="300" height="50" class="box execution"/>
+<text x="395" y="470" class="text">Cloud API Execution</text>
+
+<!-- Arrows -->
+<line x1="500" y1="130" x2="500" y2="150" class="arrow"/>
+<line x1="500" y1="200" x2="500" y2="220" class="arrow"/>
+<line x1="500" y1="270" x2="500" y2="300" class="arrow"/>
+<line x1="500" y1="350" x2="500" y2="370" class="arrow"/>
+<line x1="500" y1="420" x2="500" y2="440" class="arrow"/>
+
+<!-- Agent -->
+<rect x="350" y="20" width="300" height="50" class="box governance"/>
+<text x="430" y="50" class="text">AI Agent / Operator</text>
+<line x1="500" y1="70" x2="500" y2="80" class="arrow"/>
+
+<!-- IEEC -->
+<rect x="150" y="520" width="700" height="80" fill="none" stroke="#facc15" stroke-width="2.5" rx="12"/>
+<text x="200" y="550" class="text">Intent → Context → Policy → Contract → Execution → Outcome</text>
+<text x="200" y="575" class="text">Intent-to-Execution Evidence Chain (IEEC)</text>
+<text x="200" y="595" class="text">Cryptographically linked · Deterministic · Replayable</text>
+
+</svg>

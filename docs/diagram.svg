@@ -1,0 +1,209 @@
+<svg width="1400" height="1420" viewBox="0 0 1400 1420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    
+    <linearGradient id="govBox" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8faff"/>
+    </linearGradient>
+    
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+
+    <linearGradient id="execBox" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fffdfa"/>
+      <stop offset="100%" stop-color="#fffbeb"/>
+    </linearGradient>
+
+    <linearGradient id="ieecBg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#cbd5e1" opacity="0.3"/>
+    </pattern>
+
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.05"/>
+    </filter>
+
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10" stroke="#6366f1" stroke-width="1.5" fill="none"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10" stroke="#ef4444" stroke-width="1.5" fill="none"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10" stroke="#10b981" stroke-width="1.5" fill="none"/>
+    </marker>
+
+    <style>
+      .title   { font: 800 32px 'Inter', system-ui, sans-serif; fill: #0f172a; }
+      .subtitle{ font: 400 16px 'Inter', system-ui, sans-serif; fill: #64748b; }
+      .section { font: 700 12px 'Inter', sans-serif; fill: #94a3b8; letter-spacing: 0.15em; text-transform: uppercase; }
+      .boxTitle{ font: 600 17px 'Inter', sans-serif; fill: #1e293b; }
+      .boxText { font: 400 14px 'Inter', sans-serif; fill: #475569; }
+      .agentTitle { font: 600 18px 'Inter', sans-serif; fill: #ffffff; }
+      .agentSub   { font: 400 13px 'Inter', sans-serif; fill: #e0e7ff; }
+      .ieecTitle { font: 700 16px 'Inter', sans-serif; fill: #f8fafc; }
+      .ieecNodeText { font: 600 13px 'Inter', sans-serif; fill: #f1f5f9; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="1420" fill="url(#bg)"/>
+  <rect width="1400" height="1420" fill="url(#dots)"/>
+
+  <!-- Title -->
+  <text x="700" y="60" text-anchor="middle" class="title">OpenKedge Architecture</text>
+  <text x="700" y="88" text-anchor="middle" class="subtitle">Verifiable Governance for Autonomous Agents &amp; Infrastructure Mutation</text>
+
+  <!-- ════════════════════════════════════════ -->
+  <!--  LEFT: Governance Pipeline Container    -->
+  <!-- ════════════════════════════════════════ -->
+
+  <rect x="340" y="130" width="500" height="520" rx="32" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" filter="url(#softShadow)"/>
+  <text x="590" y="160" text-anchor="middle" class="section">Governance Pipeline</text>
+
+  <!-- Box 1: Agents (indigo) -->
+  <g transform="translate(370, 185)" filter="url(#softShadow)">
+    <rect width="440" height="90" rx="16" fill="url(#agentGrad)"/>
+    <text x="220" y="40" text-anchor="middle" class="agentTitle">DevOps / AI Agents</text>
+    <text x="220" y="65" text-anchor="middle" class="agentSub">LLM Orchestrators • CI/CD Systems • Autonomous Tools</text>
+  </g>
+
+  <!-- Box 2: Intent Gateway -->
+  <g transform="translate(370, 315)">
+    <rect width="440" height="80" rx="12" fill="url(#govBox)" stroke="#e2e8f0" stroke-width="1" filter="url(#softShadow)"/>
+    <text x="220" y="35" text-anchor="middle" class="boxTitle">Intent Gateway</text>
+    <text x="220" y="60" text-anchor="middle" class="boxText">Schema Validation &amp; Protocol Binding</text>
+  </g>
+
+  <!-- Box 3: Context Aggregation -->
+  <g transform="translate(370, 425)">
+    <rect width="440" height="80" rx="12" fill="url(#govBox)" stroke="#e2e8f0" stroke-width="1" filter="url(#softShadow)"/>
+    <text x="220" y="35" text-anchor="middle" class="boxTitle">Context Aggregation</text>
+    <text x="220" y="60" text-anchor="middle" class="boxText">Real-time Topology &amp; Resource State</text>
+  </g>
+
+  <!-- Box 4: Policy Evaluation -->
+  <g transform="translate(370, 535)">
+    <rect width="440" height="80" rx="12" fill="url(#govBox)" stroke="#e2e8f0" stroke-width="1" filter="url(#softShadow)"/>
+    <text x="220" y="35" text-anchor="middle" class="boxTitle">Policy Evaluation</text>
+    <text x="220" y="60" text-anchor="middle" class="boxText">OPA / Rego • Risk Scoring • Guardrails</text>
+  </g>
+
+  <!-- Blue arrows between governance boxes -->
+  <g stroke="#6366f1" stroke-width="2.5" fill="none">
+    <path d="M590 275 V310" marker-end="url(#arrowBlue)"/>
+    <path d="M590 395 V420" marker-end="url(#arrowBlue)"/>
+    <path d="M590 505 V530" marker-end="url(#arrowBlue)"/>
+    <path d="M590 615 V655" marker-end="url(#arrowBlue)"/>
+  </g>
+
+  <!-- ════════════════════════════════════════ -->
+  <!--  DECISION node                          -->
+  <!-- ════════════════════════════════════════ -->
+
+  <rect x="540" y="660" width="100" height="32" rx="16" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2" filter="url(#softShadow)"/>
+  <text x="590" y="681" text-anchor="middle" font-size="12" font-weight="bold" fill="#475569">DECISION</text>
+
+  <!-- Branch: APPROVE (right, green) -->
+  <path d="M640 676 H1150 V860" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrowGreen)"/>
+
+  <!-- Branch: REJECT (left, red) -->
+  <path d="M540 676 H220 V740" stroke="#ef4444" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+
+  <!-- ════════════════════════════════════════ -->
+  <!--  LEFT: Reject / Defer                   -->
+  <!-- ════════════════════════════════════════ -->
+
+  <g transform="translate(80, 745)">
+    <rect width="280" height="120" rx="20" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+    <text x="140" y="50" text-anchor="middle" class="boxTitle" fill="#991b1b">Reject / Defer Path</text>
+    <text x="140" y="80" text-anchor="middle" class="boxText" fill="#b91c1c">Mutation Blocked</text>
+    <text x="140" y="100" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="600">SAFETY VIOLATION PREVENTED</text>
+  </g>
+
+  <!-- ════════════════════════════════════════ -->
+  <!--  CENTER: Air-gap callout                -->
+  <!-- ════════════════════════════════════════ -->
+
+  <g transform="translate(485, 775)">
+    <rect width="210" height="60" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
+    <text x="105" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">AIR-GAPPED FLOW</text>
+    <text x="105" y="45" text-anchor="middle" font-size="11" fill="#94a3b8">No Direct Agent access to APIs</text>
+  </g>
+
+  <!-- ════════════════════════════════════════ -->
+  <!--  RIGHT: Bounded Execution Zone          -->
+  <!-- ════════════════════════════════════════ -->
+
+  <text x="955" y="855" text-anchor="start" class="section" fill="#b45309">Bounded Execution Zone</text>
+  <rect x="940" y="868" width="380" height="480" rx="28" fill="#fffef8" stroke="#fde68a" stroke-width="2" stroke-dasharray="10 5"/>
+
+  <!-- Execution Contract -->
+  <g transform="translate(965, 875)">
+    <rect width="330" height="80" rx="14" fill="url(#execBox)" stroke="#fcd34d" stroke-width="1" filter="url(#softShadow)"/>
+    <text x="165" y="35" text-anchor="middle" class="boxTitle">Execution Contract</text>
+    <text x="165" y="58" text-anchor="middle" class="boxText" font-size="13">Scoped Capabilities &amp; TTL</text>
+  </g>
+
+  <!-- Ephemeral Identity -->
+  <g transform="translate(965, 1005)">
+    <rect width="330" height="80" rx="14" fill="url(#execBox)" stroke="#fcd34d" stroke-width="1" filter="url(#softShadow)"/>
+    <text x="165" y="35" text-anchor="middle" class="boxTitle">Ephemeral Identity</text>
+    <text x="165" y="58" text-anchor="middle" class="boxText" font-size="13">Task-Scoped STS Service Role</text>
+  </g>
+
+  <!-- Cloud API Mutation -->
+  <g transform="translate(965, 1135)">
+    <rect width="330" height="100" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#softShadow)"/>
+    <text x="165" y="40" text-anchor="middle" font-size="17" font-weight="600" fill="#f8fafc">Cloud API Mutation</text>
+    <text x="165" y="66" text-anchor="middle" fill="#94a3b8" font-size="13">Verified Request Execution</text>
+  </g>
+
+  <!-- Green arrows between execution boxes -->
+  <g stroke="#10b981" stroke-width="2.5" fill="none">
+    <path d="M1130 955 V1000" marker-end="url(#arrowGreen)"/>
+    <path d="M1130 1085 V1130" marker-end="url(#arrowGreen)"/>
+  </g>
+
+  <!-- ════════════════════════════════════════ -->
+  <!--  BOTTOM: IEEC panel                     -->
+  <!-- ════════════════════════════════════════ -->
+
+  <g transform="translate(70, 1300)">
+    <rect width="1260" height="100" rx="20" fill="url(#ieecBg)" filter="url(#softShadow)"/>
+    <text x="30" y="45" class="ieecTitle">INTENT-TO-EXECUTION EVIDENCE CHAIN (IEEC)</text>
+    <text x="30" y="70" font-size="13" fill="#94a3b8">Cryptographically signed logs linking user intent to the final API call result</text>
+    
+    <!-- IEEC chain nodes -->
+    <g transform="translate(620, 35)" fill="#334155" stroke-width="1.5">
+       <rect x="0" y="0" width="90" height="30" rx="6" fill="#475569"/>
+       <text x="45" y="20" text-anchor="middle" class="ieecNodeText">Intent</text>
+       <path d="M90 15 H115" stroke="#64748b" marker-end="url(#arrowBlue)"/>
+       
+       <rect x="125" y="0" width="90" height="30" rx="6" fill="#475569"/>
+       <text x="170" y="20" text-anchor="middle" class="ieecNodeText">Context</text>
+       <path d="M215 15 H240" stroke="#64748b" marker-end="url(#arrowBlue)"/>
+
+       <rect x="250" y="0" width="90" height="30" rx="6" fill="#475569"/>
+       <text x="295" y="20" text-anchor="middle" class="ieecNodeText">Policy</text>
+       <path d="M340 15 H365" stroke="#64748b" marker-end="url(#arrowBlue)"/>
+
+       <rect x="375" y="0" width="90" height="30" rx="6" fill="#475569"/>
+       <text x="420" y="20" text-anchor="middle" class="ieecNodeText">Contract</text>
+       <path d="M465 15 H490" stroke="#64748b" marker-end="url(#arrowBlue)"/>
+
+       <rect x="500" y="0" width="100" height="30" rx="6" fill="#6366f1"/>
+       <text x="550" y="20" text-anchor="middle" class="ieecNodeText">Outcome</text>
+    </g>
+  </g>
+</svg>

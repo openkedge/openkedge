@@ -1,254 +1,244 @@
-# 🌊 OpenKedge
+# OpenKedge
 
-**Governing Real-World State in Agentic Systems via Intent-Based Mutation**
+> Governing Agentic Mutation with Execution-Bound Safety and Evidence Chains
 
-> 🛑 **Stop letting AI agents call your cloud APIs directly.**
-> 
-> Traditional APIs were built for deterministic software. When autonomous agents operate under uncertainty, they hallucinate parameters, blindly overwrite each other's changes, and corrupt production state. 
-> 
-> OpenKedge fixes this by introducing an **intent-based governance layer** between agents and your production state.
+OpenKedge is a protocol for safely operating AI agents over real-world systems.
 
----
-
-## 🧠 Overview
-
-OpenKedge is a protocol for safely managing **real-world state mutation** in systems operated by autonomous AI agents.
-
-Modern systems assume that callers are:
-- **🎯 Correct**: They know exactly what change to make.
-- **👁️ Context-aware**: They understand the current state and surroundings.
-- **🤝 Operating independently**: There are no conflicting actors.
-
-These assumptions break down in **agentic environments**, where multiple agents act under uncertainty. This leads to conflicting updates, context-insensitive actions, and unsafe mutations.
-
-OpenKedge addresses this by introducing a **governance layer** between agents and system state.
+It replaces direct API execution with:
+- **intent-governed mutation**
+- **execution-bounded contracts**
+- **verifiable decision lineage (IEEC)**
 
 ---
 
-## 🔥 Key Idea
+## 🚨 Why OpenKedge?
 
-> ⚖️ **Mutation should not be executed — it should be decided.**
+Modern infrastructure is built on assumptions that no longer hold:
 
-Instead of the traditional direct-mutation model, where agents blindly fire and forget:
+- callers are deterministic  
+- actions are correct  
+- context is complete  
+
+This breaks in the era of AI agents.
+
+Today’s model:
 
 ```text
-🤖 Agent → 🔌 API → 💥 Mutate State
-```
+Agent → API → Immediate Mutation
+````
 
-OpenKedge introduces a mediated, event-sourced flow:
+Leads to:
+
+* unsafe deletions (e.g., terminating live infrastructure)
+* conflicting multi-agent updates
+* context-blind automation
+* cascading failures
+
+👉 The issue is not just the model —
+it’s the **mutation model**.
+
+---
+
+## 🔐 The OpenKedge Model
+
+OpenKedge introduces a governed mutation pipeline:
 
 ```text
-🤖 Agent → 💭 Intent → 🌐 Context → 🛡️ Policy → 📜 Event → 🏗️ Derived State
+Intent → Context → Policy → Contract → Execution → Evidence Chain
 ```
-
-Every change is proposed, evaluated, approved (or rejected), and then committed as an immutable event.
 
 ---
 
-## ⚙️ Core Concepts
+### 1. Intent-Governed Mutation
 
-### 1. 💭 Intent-Based Mutation
+Agents do not execute APIs directly.
 
-Agents do not mutate state directly—they submit **intent proposals**.
+They submit:
 
-```ts
-type IntentProposal = {
-  actor: Actor;      // Who is proposing
-  target: Entity;     // What is being changed
-  intent: string;     // The goal (e.g. "update_status")
-  proposedFacts: Fact[]; // The proposed truth
-  metadata: Record<string, any>;
-}
-```
+> what they want to achieve
 
-### 2. 🗂️ Fact-Based Truth Model
+The system evaluates:
 
-State is not stored as a static record. It is derived from structured **facts**.
+* system-wide context
+* dependencies
+* policy constraints
+* multi-agent conflicts
 
-```ts
-type Fact = {
-  type: string;
-  value: any;
-  attributes: Record<string, any>;
-  validity: { from: string; to: string };
-}
-```
+---
 
-*Example:* `operating_status = open`, `inventory_status(croissant) = sold_out`.
+### 2. Execution-Bound Safety
 
-### 3. 📜 Append-Only Event Log
+Approved intents are compiled into **execution contracts**:
 
-Approved updates become immutable **TruthEvents**. The system state at any point is a projection of these events.
+* allowed actions
+* scoped resources
+* strict time bounds
 
-```bash
-State = Reduce(events)
-```
+Execution is enforced via **ephemeral identities** (e.g., AWS STS).
 
-```ts
-type TruthEvent = {
-  entity: string;
-  facts: Fact[];
-  source: Actor;
-  timestamp: string;
-}
-```
+Even if an agent hallucinates, execution is physically constrained.
 
-### 4. 🛡️ Policy-Governed Mutation
+---
 
-All updates pass through a policy engine that evaluates the proposal against the current system context.
+### 3. Intent-to-Execution Evidence Chain (IEEC)
+
+Every mutation produces a **verifiable lineage**:
 
 ```text
-Policy(Proposal, Context) → { approve | reject | escalate }
+Intent → Context → Policy → Contract → Execution → Outcome
 ```
 
-No approval → no mutation. This ensures that even "hallucinating" agents cannot corrupt the system state.
+Properties:
 
-### 5. 🤝 Multi-Agent Coordination
+* cryptographically linked
+* temporally ordered
+* fully reconstructable
 
-OpenKedge resolves conflicts using a deterministic authority model:
-* **👑 Authority**: Owner updates always override agent proposals.
-* **✅ Trust**: Reliability scores influence decision making.
-* **⏱️ Time**: Recency helps resolve temporal conflicts.
+This enables:
 
----
+* auditability
+* explainability
+* forensic debugging
 
-## 🔄 Truth Flow
-
-```mermaid
-graph TD
-    A[Agent] -->|Intent Proposal| B(Context Collection)
-    B --> C{Policy Engine}
-    C -->|Approved| D[TruthEvent]
-    C -->|Rejected| E[Rejected]
-    D -->|Append-only| F(Reducer)
-    F --> G[DerivedState]
-    
-    style D fill:#d4edda,stroke:#28a745
-    style E fill:#f8d7da,stroke:#dc3545
-    style G fill:#fff3cd,stroke:#ffc107
-```
+👉 Not just *what happened*, but *why it was allowed*
 
 ---
 
-## 🧪 What This Solves
+## 🧠 Core Insight
 
-OpenKedge eliminates entire classes of failures common in agentic systems:
-
-| Problem | Standard APIs | 🌊 OpenKedge |
-| :--- | :---: | :---: |
-| **💥 Conflicting updates** | ❌ (Last write wins) | ✅ (Resolution policies) |
-| **👁️ Context awareness** | ❌ (Stateless) | ✅ (Holistic context) |
-| **🛡️ Safe mutation** | ❌ (Blind execution)| ✅ (Policy governed) |
-| **🎲 Determinism** | ❌ (Race conditions) | ✅ (Event sourced) |
-| **🔍 Auditability** | ❌ (Scattered logs) | ✅ (Immutable events) |
-
----
-
-## 🏗️ Reference Implementation: Riftront
-
-OpenKedge is implemented in **[Riftront](https://riftront.com)**, a system that manages real-time business state:
-
-* **Owners** update via high-level messaging (e.g., “closing early”).
-* **Agents** propose updates (inventory, hours, etc.) based on observations.
-* **System** resolves conflicts and maintains a consistent source of truth for the business.
-
-This demonstrates the protocol's real-world applicability in multi-agent, high-stakes environments.
-
----
-
-## 🧭 Why OpenKedge Matters
-
-Agent systems are rapidly moving from **prototypes → production** and from **human control → autonomous operation**. However, our current infrastructure (REST/gRPC APIs) was designed for human-driven, context-aware clients.
-
-OpenKedge introduces a new abstraction: **State mutation as a governed decision process.**
-
-This is as fundamental to the agentic era as databases introducing transactions were to the mainframe era, or distributed consensus was to cloud computing.
+> Mutation should not be executed. Mutation should be governed.
 
 ---
 
 ## 📄 Paper
 
-> **OpenKedge: Governing Real-World State in Agentic Systems via Intent-Based Mutation**
+Read the full paper:
 
-*Coming soon to arXiv*
+* [openkedge.io/paper](https://www.openkedge.io/paper)
 
 ---
 
-## 🚀 Getting Started (Conceptual)
+## 🏗 Architecture
 
-```ts
-const proposal = {
-  actor: "agent",
-  target: "bakery_123",
-  intent: "update_status",
-  proposedFacts: [
-    { type: "operating_status", value: "closed" }
-  ]
-}
+![OpenKedge Architecture](./docs/diagram.svg)
 
-const decision = Policy(proposal, context)
+Key guarantees:
 
-if (decision === "approve") {
-  appendEvent(proposal)
-}
+* no direct agent → API execution path
+* all mutations pass governance
+* execution is strictly bounded
+* every step is recorded in IEEC
+
+---
+
+## 🧪 Example: Safe Instance Termination
+
+### ❌ Traditional
+
+```text
+ec2:TerminateInstances
 ```
 
----
-
-## 🔒 Guarantees
-
-OpenKedge ensures:
-* **🛡️ No unsafe mutation**: All changes are validated by policy first.
-* **🕰️ Deterministic state**: The state is a reproducible reduction of events.
-* **🔍 Full auditability**: Every change has a clear actor, intent, and context.
-* **🤝 Multi-agent safety**: Built-in conflict resolution for overlapping actors.
-* **👁️ Context-aware decisions**: Policies can see the "whole picture" before committing.
+→ Instance deleted (even if still in use)
 
 ---
 
-## 📐 Design Principles
+### ✅ OpenKedge
 
-* Separate **intent** from **execution**.
-* Treat mutation as a **decision**.
-* Represent truth as **events + facts**.
-* Ensure **determinism and reproducibility**.
+1. Agent submits:
+
+```text
+Intent: "remove unused compute resource"
+```
+
+2. System evaluates:
+
+* dependency graph
+* traffic signals
+* policy constraints
+
+3. If approved:
+
+* generates execution contract
+* issues scoped identity
+
+4. Execution:
+
+* limited to specific resource
+* within time bounds
+
+5. IEEC records full lineage
 
 ---
 
-## 🛣️ Roadmap
+## 🚀 Getting Started
 
-- [ ] **Core protocol specification** (v0.1)
-- [ ] **Policy DSL**: A domain-specific language for defining governance rules.
-- [ ] **Multi-entity coordination**: Transactions across multiple stateful components.
-- [ ] **Distributed OpenKedge clusters**: Scalable, high-availability event logs.
-- [ ] **Integration with agent frameworks**: Standard adapters for LangChain, AutoGPT, etc.
+```bash
+git clone https://github.com/openkedge/openkedge
+cd openkedge
+```
+
+> ⚠️ Early-stage reference implementation
+
+---
+
+## 🧩 Use Cases
+
+* AI-driven DevOps automation
+* multi-agent systems
+* cloud infrastructure safety
+* workflow engines with AI integration
+* autonomous system governance
+
+---
+
+## 🔬 Key Contributions
+
+* intent-governed mutation protocol
+* execution-bound safety via contracts
+* IEEC: verifiable mutation lineage
+
+---
+
+## 🛣 Roadmap
+
+* [ ] Core protocol (v0.1)
+* [ ] AWS adapter (STS + policy integration)
+* [ ] Policy engine plugins (Cedar / OPA)
+* [ ] Multi-agent simulation framework
+* [ ] IEEC visualization UI
+* [ ] Production SDK
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions in:
-* Policy engine design
-* Schema and data modeling
-* Distributed systems architecture
-* Agent framework integrations
+We welcome contributions across:
+
+* policy engines
+* cloud adapters
+* agent integrations
+* visualization tools
 
 ---
 
-## 📬 Contact
+## 📜 License
 
-**Joe Helium**  
-OpenKedge.io  
-[joehelium@openkedge.io](mailto:joehelium@openkedge.io)
+MIT (or TBD)
 
 ---
 
-## ⭐️ Vision
+## 🌍 Vision
 
-OpenKedge aims to become **the standard protocol for governing how AI agents interact with real-world systems.**
+As AI agents become primary operators of infrastructure,
+the correctness of individual agents becomes secondary to the correctness of the system governing them.
+
+OpenKedge provides that foundation.
 
 ---
 
-> ⚠️ **State mutation in the agentic era is too dangerous to be left to chance.** 
-> 
-> OpenKedge makes it a governed decision. 🌊
+## ⭐ If this resonates
+
+Star the repo and follow the project.
+
+This is just the beginning.
