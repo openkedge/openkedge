@@ -133,41 +133,53 @@ Key guarantees:
 
 ## 🧪 Example: Safe Instance Termination
 
-### ❌ Traditional
+### ❌ Traditional: API-Driven Execution
+
+A user tells an AI agent to terminate 2 EC2 instances. The agent immediately invokes the AWS API:
 
 ```text
-ec2:TerminateInstances
+Action: ec2:TerminateInstances
+Instances: [i-0123456789abcdef0, i-0abcdef1234567890]
 ```
 
-→ Instance deleted (even if still in use)
+**The problem:** If you look at AWS CloudTrail, you only see that the `ec2:TerminateInstances` API was called. The original user request, the agent's context, and any safety checks (or lack thereof) are never logged. You only see what eventually happened, even if the instances were actively serving production traffic.
 
 ---
 
-### ✅ OpenKedge
+### ✅ OpenKedge: Intent-Governed Mutation
 
-1. Agent submits:
+OpenKedge forces the AI agent to start from an "intent" and enforces safety checks through policies prior to execution. Everything is recorded in a cryptographically chained log.
 
-```text
-Intent: "remove unused compute resource"
+**1. Intent Submission**
+The agent cannot call the API directly. It submits an intent:
+
+```json
+{
+  "action": "terminate_instances",
+  "reason": "User requested cleanup of idle environments",
+  "targets": ["i-0123456789abcdef0", "i-0abcdef1234567890"]
+}
 ```
 
-2. System evaluates:
+**2. Context & Policy Evaluation**
+OpenKedge evaluates the blast radius against live infrastructure state:
+* **Context:** Are these instances receiving traffic from an active Load Balancer?
+* **Policy:** Does the agent have permissions to terminate instances lacking the `env:dev` tag?
 
-* dependency graph
-* traffic signals
-* policy constraints
+**3. Execution Contract Generation**
+If approved, OpenKedge generates an immutable execution contract and issues highly-scoped, temporary credentials (e.g., via AWS STS) that *only* permit terminating those exact two instances within a 5-minute window.
 
-3. If approved:
+**4. Bounded Execution**
+The mutation occurs. Even if the agent goes rogue, the physical execution is bounded by the credentials—it cannot terminate a third instance.
 
-* generates execution contract
-* issues scoped identity
+**5. Intent-to-Execution Evidence Chain (IEEC)**
+Instead of an isolated CloudTrail API event, OpenKedge produces a cryptographically sealed chain:
 
-4. Execution:
+```text
+[Hash1: Intent] → [Hash2: Context] → [Hash3: Policy Approval] → [Hash4: Contract] → [Hash5: Execution Event]
+```
 
-* limited to specific resource
-* within time bounds
-
-5. IEEC records full lineage
+You have complete forensic visibility into *why* the mutation was allowed, not just that it happened.
 
 ---
 
