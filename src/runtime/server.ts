@@ -5,6 +5,7 @@ import { OpenKedgeEngine } from '../core/engine/OpenKedgeEngine'
 import { InMemoryEventStore } from '../core/event/InMemoryEventStore'
 import { DefaultPolicyEvaluator } from '../core/evaluation/DefaultPolicyEvaluator'
 import { NoopExecutor } from '../core/execution/NoopExecutor'
+import { IdentityManager } from '../core/identity/IdentityManager'
 import { OpenKedgeClient } from '../sdk/client'
 
 async function main(): Promise<void> {
@@ -13,6 +14,31 @@ async function main(): Promise<void> {
     new DefaultContextProvider(),
     new DefaultPolicyEvaluator(),
     new NoopExecutor(),
+    new IdentityManager(
+      {
+        async issueIdentity(intent) {
+          const issuedAt = Date.now()
+
+          return {
+            id: `runtime-${intent.id}-${issuedAt}`,
+            intentId: intent.id,
+            issuedAt,
+            expiresAt: issuedAt + 60_000,
+            permissions: [intent.type],
+            metadata: {
+              provider: 'runtime-local'
+            }
+          }
+        },
+        async revokeIdentity(identity) {
+          identity.metadata = {
+            ...identity.metadata,
+            revokedAt: Date.now()
+          }
+        }
+      },
+      eventStore
+    ),
     eventStore
   )
   const client = new OpenKedgeClient(engine, eventStore)

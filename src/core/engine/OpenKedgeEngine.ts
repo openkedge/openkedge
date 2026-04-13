@@ -10,12 +10,14 @@ import { EventType } from '../../interfaces/contracts'
 import type { ContextProvider } from '../context/ContextProvider'
 import type { PolicyEvaluator } from '../evaluation/PolicyEvaluator'
 import type { Executor } from '../execution/Executor'
+import type { IdentityManager } from '../identity/IdentityManager'
 
 export class OpenKedgeEngine {
   constructor(
     private readonly contextProvider: ContextProvider,
     private readonly policyEvaluator: PolicyEvaluator,
     private readonly executor: Executor,
+    private readonly identityManager: IdentityManager,
     private readonly eventStore: EventStore
   ) {}
 
@@ -99,25 +101,32 @@ export class OpenKedgeEngine {
         return blockedResult
       }
 
-      const executionResult = await this.executor.execute(intent, contextSnapshot)
+      const executionResult = await this.identityManager.withIdentity(
+        intent,
+        async (identity) => {
+          const result = await this.executor.execute(intent, contextSnapshot, identity)
 
-      await this.eventStore.append({
-        id: randomUUID(),
-        type: EventType.ExecutionCompleted,
-        timestamp: Date.now(),
-        intentId: intent.id,
-        payload: {
-          intentSnapshot: intent,
-          contextSnapshot,
-          evaluationResult,
-          executionResult,
-          reasoningTrail: [
-            executionResult.success
-              ? 'Executor completed successfully'
-              : 'Executor returned a failure result'
-          ]
+          await this.eventStore.append({
+            id: randomUUID(),
+            type: EventType.ExecutionCompleted,
+            timestamp: Date.now(),
+            intentId: intent.id,
+            payload: {
+              intentSnapshot: intent,
+              contextSnapshot,
+              evaluationResult,
+              executionResult: result,
+              reasoningTrail: [
+                result.success
+                  ? 'Executor completed successfully'
+                  : 'Executor returned a failure result'
+              ]
+            }
+          })
+
+          return result
         }
-      })
+      )
 
       return executionResult
     } catch (error) {

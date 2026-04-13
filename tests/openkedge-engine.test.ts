@@ -3,8 +3,15 @@ import { OpenKedgeEngine } from '../src/core/engine/OpenKedgeEngine'
 import { InMemoryEventStore } from '../src/core/event/InMemoryEventStore'
 import { ReplayEngine } from '../src/core/event/ReplayEngine'
 import type { Executor } from '../src/core/execution/Executor'
+import { assertIdentityCanExecute } from '../src/core/identity/Identity'
+import { IdentityManager } from '../src/core/identity/IdentityManager'
 import { OpenKedgeClient } from '../src/sdk/client'
-import type { EvaluationResult, Intent, PolicyEvaluator } from '../src/interfaces/contracts'
+import type {
+  EvaluationResult,
+  ExecutionIdentity,
+  Intent,
+  PolicyEvaluator
+} from '../src/interfaces/contracts'
 import { EventType } from '../src/interfaces/contracts'
 
 const sampleIntent: Intent = {
@@ -15,6 +22,39 @@ const sampleIntent: Intent = {
     actor: 'tester',
     timestamp: 1
   }
+}
+
+function createTestIdentityManager(
+  store: InMemoryEventStore,
+  options: {
+    ttlMs?: number
+  } = {}
+): IdentityManager {
+  return new IdentityManager(
+    {
+      async issueIdentity(intent) {
+        const issuedAt = Date.now()
+
+        return {
+          id: `identity-${intent.id}-${issuedAt}`,
+          intentId: intent.id,
+          issuedAt,
+          expiresAt: issuedAt + (options.ttlMs ?? 60_000),
+          permissions: [intent.type],
+          metadata: {
+            provider: 'test'
+          }
+        }
+      },
+      async revokeIdentity(identity) {
+        identity.metadata = {
+          ...identity.metadata,
+          revokedAt: Date.now()
+        }
+      }
+    },
+    store
+  )
 }
 
 test('records a full evidence chain for an allowed intent', async () => {
@@ -34,15 +74,21 @@ test('records a full evidence chain for an allowed intent', async () => {
     }
   }
   const executor: Executor = {
-    async execute(intent, context) {
+    async execute(intent, context, identity) {
       return {
         success: true,
-        result: { intentId: intent.id, context }
+        result: { intentId: intent.id, context, identityId: identity.id }
       }
     }
   }
   const client = new OpenKedgeClient(
-    new OpenKedgeEngine(contextProvider, policyEvaluator, executor, store),
+    new OpenKedgeEngine(
+      contextProvider,
+      policyEvaluator,
+      executor,
+      createTestIdentityManager(store),
+      store
+    ),
     store
   )
 
@@ -51,18 +97,26 @@ test('records a full evidence chain for an allowed intent', async () => {
 
   expect(result).toEqual({
     success: true,
-    result: { intentId: sampleIntent.id, context: { region: 'local' } }
+    result: {
+      intentId: sampleIntent.id,
+      context: { region: 'local' },
+      identityId: expect.stringContaining(`identity-${sampleIntent.id}-`)
+    }
   })
   expect(events.map((event) => event.type)).toEqual([
     EventType.IntentReceived,
     EventType.ContextResolved,
     EventType.EvaluationCompleted,
-    EventType.ExecutionCompleted
+    EventType.IdentityIssued,
+    EventType.IdentityUsed,
+    EventType.ExecutionCompleted,
+    EventType.IdentityRevoked
   ])
-  expect(events.map((event) => event.sequence)).toEqual([1, 2, 3, 4])
+  expect(events.map((event) => event.sequence)).toEqual([1, 2, 3, 4, 5, 6, 7])
   expect(events[0].previousEventHash).toBeNull()
   expect(events[1].previousEventHash).toBe(events[0].currentHash)
-  expect(events[3].payload.executionResult).toEqual(result)
+  expect(events[3].payload.identitySnapshot?.intentId).toBe(sampleIntent.id)
+  expect(events[5].payload.executionResult).toEqual(result)
 })
 
 test('replay reconstructs a blocked intent and preserves reasoning', async () => {
@@ -87,6 +141,7 @@ test('replay reconstructs a blocked intent and preserves reasoning', async () =>
           throw new Error('executor should not run')
         }
       },
+      createTestIdentityManager(store),
       store
     ),
     store
@@ -127,6 +182,7 @@ test('processing failures are captured as terminal evidence events', async () =>
           }
         }
       },
+      createTestIdentityManager(store),
       store
     ),
     store
@@ -170,6 +226,7 @@ test('replay detects tampering in the event hash chain', async () => {
           }
         }
       },
+      createTestIdentityManager(store),
       store
     ),
     store
@@ -190,4 +247,58 @@ test('replay detects tampering in the event hash chain', async () => {
 
   expect(replay.integrity.valid).toBe(false)
   expect(replay.integrity.brokenAtEventId).toBe(originalEvents[2].id)
+})
+
+test('fails execution when the issued identity expires before use', async () => {
+  const store = new InMemoryEventStore()
+  const delayedExecutor: Executor = {
+    async execute(
+      intent: Intent,
+      _context: unknown,
+      identity: ExecutionIdentity
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      assertIdentityCanExecute(intent, identity)
+
+      return {
+        success: true
+      }
+    }
+  }
+  const client = new OpenKedgeClient(
+    new OpenKedgeEngine(
+      {
+        async resolve() {
+          return { owner: 'platform' }
+        }
+      },
+      {
+        async evaluate() {
+          return {
+            allowed: true,
+            reasons: ['approved']
+          }
+        }
+      },
+      delayedExecutor,
+      createTestIdentityManager(store, { ttlMs: 5 }),
+      store
+    ),
+    store
+  )
+
+  const result = await client.submitIntent(sampleIntent)
+  const events = await client.getEventsByIntent(sampleIntent.id)
+
+  expect(result.success).toBe(false)
+  expect(result.error).toContain('expired')
+  expect(events.map((event) => event.type)).toEqual([
+    EventType.IntentReceived,
+    EventType.ContextResolved,
+    EventType.EvaluationCompleted,
+    EventType.IdentityIssued,
+    EventType.IdentityUsed,
+    EventType.IdentityRevoked,
+    EventType.ProcessingFailed
+  ])
 })

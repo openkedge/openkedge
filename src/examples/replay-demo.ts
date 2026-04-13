@@ -5,8 +5,13 @@ import { OpenKedgeEngine } from '../core/engine/OpenKedgeEngine'
 import type { PolicyEvaluator } from '../core/evaluation/PolicyEvaluator'
 import { InMemoryEventStore } from '../core/event/InMemoryEventStore'
 import type { Executor } from '../core/execution/Executor'
+import { IdentityManager } from '../core/identity/IdentityManager'
 import { OpenKedgeClient } from '../sdk/client'
-import type { EvaluationResult, Intent } from '../interfaces/contracts'
+import type {
+  EvaluationResult,
+  ExecutionIdentity,
+  Intent
+} from '../interfaces/contracts'
 
 class DemoContextProvider implements ContextProvider {
   async resolve(intent: Intent): Promise<unknown> {
@@ -47,13 +52,18 @@ class DemoPolicyEvaluator implements PolicyEvaluator {
 }
 
 class DemoExecutor implements Executor {
-  async execute(intent: Intent, context: unknown) {
+  async execute(
+    intent: Intent,
+    context: unknown,
+    identity: ExecutionIdentity
+  ) {
     return {
       success: true,
       result: {
         message: 'Demo mutation executed',
         intentType: intent.type,
-        context
+        context,
+        identityId: identity.id
       }
     }
   }
@@ -65,6 +75,31 @@ async function runScenario(label: string, critical: boolean): Promise<void> {
     new DemoContextProvider(),
     new DemoPolicyEvaluator(),
     new DemoExecutor(),
+    new IdentityManager(
+      {
+        async issueIdentity(intent) {
+          const issuedAt = Date.now()
+
+          return {
+            id: `demo-${intent.id}-${issuedAt}`,
+            intentId: intent.id,
+            issuedAt,
+            expiresAt: issuedAt + 60_000,
+            permissions: [intent.type],
+            metadata: {
+              provider: 'demo-local'
+            }
+          }
+        },
+        async revokeIdentity(identity) {
+          identity.metadata = {
+            ...identity.metadata,
+            revokedAt: Date.now()
+          }
+        }
+      },
+      store
+    ),
     store
   )
   const client = new OpenKedgeClient(engine, store)

@@ -3,15 +3,20 @@ import { randomUUID } from 'node:crypto'
 import { createAwsAdapter } from '../adapters/aws'
 import { OpenKedgeEngine } from '../core/engine/OpenKedgeEngine'
 import { InMemoryEventStore } from '../core/event/InMemoryEventStore'
+import { IdentityManager } from '../core/identity/IdentityManager'
 import { OpenKedgeClient } from '../sdk/client'
 
 async function run(): Promise<void> {
-  const adapter = createAwsAdapter()
   const store = new InMemoryEventStore()
+  const adapter = createAwsAdapter({
+    roleArn: process.env.OPENKEDGE_AWS_EXECUTION_ROLE_ARN,
+    region: process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION
+  })
   const engine = new OpenKedgeEngine(
     adapter.contextProvider,
     adapter.policyEvaluator,
     adapter.executor,
+    new IdentityManager(adapter.identityProvider, store),
     store
   )
   const client = new OpenKedgeClient(engine, store)

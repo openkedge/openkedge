@@ -7,12 +7,24 @@ import {
 } from '@aws-sdk/client-ec2'
 
 import type { Executor } from '../../core/execution/Executor'
-import type { ExecutionResult, Intent } from '../../interfaces/contracts'
+import { assertIdentityCanExecute } from '../../core/identity/Identity'
+import type {
+  ExecutionIdentity,
+  ExecutionResult,
+  Intent
+} from '../../interfaces/contracts'
+
+type Ec2Command = DescribeInstancesCommand | TerminateInstancesCommand
 
 interface Ec2ClientLike {
   send(
-    command: DescribeInstancesCommand | TerminateInstancesCommand
+    command: Ec2Command
   ): Promise<DescribeInstancesCommandOutput | TerminateInstancesCommandOutput>
+}
+
+export interface AwsExecutorOptions {
+  region?: string
+  clientFactory?: (identity: ExecutionIdentity) => Ec2ClientLike
 }
 
 function extractInstanceIds(intent: Intent): string[] {
@@ -29,18 +41,76 @@ function normalizeError(error: unknown): string {
   return typeof error === 'string' ? error : 'Unknown error'
 }
 
-export class AwsExecutor implements Executor {
-  private readonly ec2: Ec2ClientLike
+function extractAllowedInstanceIds(identity: ExecutionIdentity): string[] {
+  const allowed = identity.metadata?.allowedInstanceIds
 
-  constructor(ec2: Ec2ClientLike = new EC2Client({})) {
-    this.ec2 = ec2
+  return Array.isArray(allowed)
+    ? allowed.filter((value): value is string => typeof value === 'string')
+    : []
+}
+
+function assertAwsCredentialMaterial(
+  identity: ExecutionIdentity
+): asserts identity is ExecutionIdentity & {
+  accessKeyId: string
+  secretAccessKey: string
+  sessionToken: string
+} {
+  if (
+    !identity.accessKeyId ||
+    !identity.secretAccessKey ||
+    !identity.sessionToken
+  ) {
+    throw new Error(
+      `Execution identity ${identity.id} is missing AWS session credentials`
+    )
+  }
+}
+
+function assertIntentResourceScope(
+  intent: Intent,
+  identity: ExecutionIdentity
+): void {
+  if (intent.type !== 'ec2:TerminateInstances') {
+    return
   }
 
-  async execute(intent: Intent, _context: unknown): Promise<ExecutionResult> {
+  const requestedInstanceIds = extractInstanceIds(intent)
+  const allowedInstanceIds = extractAllowedInstanceIds(identity)
+
+  if (allowedInstanceIds.length === 0) {
+    throw new Error(
+      `Execution identity ${identity.id} is missing an EC2 resource scope`
+    )
+  }
+
+  const unauthorized = requestedInstanceIds.filter(
+    (instanceId) => !allowedInstanceIds.includes(instanceId)
+  )
+
+  if (unauthorized.length > 0) {
+    throw new Error(
+      `Execution identity ${identity.id} does not cover instance IDs: ${unauthorized.join(', ')}`
+    )
+  }
+}
+
+export class AwsExecutor implements Executor {
+  constructor(private readonly options: AwsExecutorOptions = {}) {}
+
+  async execute(
+    intent: Intent,
+    _context: unknown,
+    identity: ExecutionIdentity
+  ): Promise<ExecutionResult> {
+    assertIdentityCanExecute(intent, identity)
+    assertIntentResourceScope(intent, identity)
+
     try {
       switch (intent.type) {
         case 'ec2:DescribeInstances': {
-          const result = await this.ec2.send(new DescribeInstancesCommand({}))
+          const ec2 = this.createEc2Client(identity)
+          const result = await ec2.send(new DescribeInstancesCommand({}))
           return {
             success: true,
             result
@@ -57,7 +127,8 @@ export class AwsExecutor implements Executor {
             }
           }
 
-          const result = await this.ec2.send(
+          const ec2 = this.createEc2Client(identity)
+          const result = await ec2.send(
             new TerminateInstancesCommand({
               InstanceIds: instanceIds
             })
@@ -81,5 +152,22 @@ export class AwsExecutor implements Executor {
         error: normalizeError(error)
       }
     }
+  }
+
+  private createEc2Client(identity: ExecutionIdentity): Ec2ClientLike {
+    if (this.options.clientFactory) {
+      return this.options.clientFactory(identity)
+    }
+
+    assertAwsCredentialMaterial(identity)
+
+    return new EC2Client({
+      region: this.options.region ?? identity.metadata?.region,
+      credentials: {
+        accessKeyId: identity.accessKeyId,
+        secretAccessKey: identity.secretAccessKey,
+        sessionToken: identity.sessionToken
+      }
+    })
   }
 }

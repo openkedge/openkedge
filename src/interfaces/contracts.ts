@@ -1,3 +1,8 @@
+import type {
+  ExecutionIdentity,
+  IdentityAuditRecord
+} from '../core/identity/Identity'
+
 export interface Intent {
   id: string
   type: string
@@ -29,13 +34,20 @@ export interface PolicyEvaluator {
 }
 
 export interface Executor {
-  execute(intent: Intent, context: unknown): Promise<ExecutionResult>
+  execute(
+    intent: Intent,
+    context: unknown,
+    identity: ExecutionIdentity
+  ): Promise<ExecutionResult>
 }
 
 export enum EventType {
   IntentReceived = 'IntentReceived',
   ContextResolved = 'ContextResolved',
   EvaluationCompleted = 'EvaluationCompleted',
+  IdentityIssued = 'IdentityIssued',
+  IdentityUsed = 'IdentityUsed',
+  IdentityRevoked = 'IdentityRevoked',
   ExecutionCompleted = 'ExecutionCompleted',
   ExecutionSkipped = 'ExecutionSkipped',
   ProcessingFailed = 'ProcessingFailed'
@@ -46,6 +58,7 @@ export interface EvidenceEventPayload {
   contextSnapshot?: unknown
   evaluationResult?: EvaluationResult
   executionResult?: ExecutionResult
+  identitySnapshot?: IdentityAuditRecord
   error?: string
   reasoningTrail?: string[]
   metadata?: Record<string, unknown>
@@ -97,3 +110,5 @@ export interface ReplayResult {
     brokenAtEventId?: string
   }
 }
+
+export type { ExecutionIdentity, IdentityAuditRecord }

@@ -149,6 +149,12 @@ export class ReplayEngine {
         return event.payload.evaluationResult?.allowed
           ? `Policy allowed intent ${event.intentId}`
           : `Policy blocked intent ${event.intentId}`
+      case EventType.IdentityIssued:
+        return `Identity ${event.payload.identitySnapshot?.identityId ?? 'unknown'} issued for ${event.intentId}`
+      case EventType.IdentityUsed:
+        return `Identity ${event.payload.identitySnapshot?.identityId ?? 'unknown'} used for ${event.intentId}`
+      case EventType.IdentityRevoked:
+        return `Identity ${event.payload.identitySnapshot?.identityId ?? 'unknown'} revoked for ${event.intentId}`
       case EventType.ExecutionCompleted:
         return event.payload.executionResult?.success
           ? `Execution succeeded for ${event.intentId}`

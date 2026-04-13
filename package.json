@@ -16,6 +16,7 @@
     "dev": "ts-node src/runtime/server.ts",
     "demo:replay": "ts-node src/examples/replay-demo.ts",
     "demo:aws": "ts-node src/examples/aws-demo.ts",
+    "demo:aws-identity": "ts-node src/examples/aws-identity-demo.ts",
     "test": "jest --runInBand"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@aws-sdk/client-ec2": "^3.1029.0"
+    "@aws-sdk/client-ec2": "^3.1029.0",
+    "@aws-sdk/client-sts": "^3.1029.0"
   }
 }

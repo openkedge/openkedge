@@ -4,6 +4,7 @@ import { ReplayEngine } from '../core/event/ReplayEngine'
 import { DefaultPolicyEvaluator } from '../core/evaluation/DefaultPolicyEvaluator'
 import { InMemoryEventStore } from '../core/event/InMemoryEventStore'
 import { NoopExecutor } from '../core/execution/NoopExecutor'
+import { IdentityManager } from '../core/identity/IdentityManager'
 import type {
   EventStore,
   ExecutionResult,
@@ -58,6 +59,31 @@ export function createOpenKedgeClient(
       new DefaultContextProvider(),
       new DefaultPolicyEvaluator(),
       new NoopExecutor(),
+      new IdentityManager(
+        {
+          async issueIdentity(intent) {
+            const issuedAt = Date.now()
+
+            return {
+              id: `local-${intent.id}-${issuedAt}`,
+              intentId: intent.id,
+              issuedAt,
+              expiresAt: issuedAt + 60_000,
+              permissions: [intent.type],
+              metadata: {
+                provider: 'local-ephemeral'
+              }
+            }
+          },
+          async revokeIdentity(identity) {
+            identity.metadata = {
+              ...identity.metadata,
+              revokedAt: Date.now()
+            }
+          }
+        },
+        eventStore
+      ),
       eventStore
     )
 
