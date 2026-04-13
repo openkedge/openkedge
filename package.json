@@ -14,6 +14,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/runtime/server.js",
     "dev": "ts-node src/runtime/server.ts",
+    "demo:replay": "ts-node src/examples/replay-demo.ts",
+    "demo:aws": "ts-node src/examples/aws-demo.ts",
     "test": "jest --runInBand"
   },
   "devDependencies": {

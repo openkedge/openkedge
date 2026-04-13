@@ -1,23 +1,15 @@
+import { randomUUID } from 'node:crypto'
+
 import type {
-  EvaluationResult,
   EventStore,
+  EvaluationResult,
   ExecutionResult,
   Intent
 } from '../../interfaces/contracts'
+import { EventType } from '../../interfaces/contracts'
 import type { ContextProvider } from '../context/ContextProvider'
 import type { PolicyEvaluator } from '../evaluation/PolicyEvaluator'
-import { createEvent, EventType } from '../event/Event'
 import type { Executor } from '../execution/Executor'
-
-type LogLevel = 'info' | 'warn' | 'error'
-
-function normalizeError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return typeof error === 'string' ? error : 'Unknown error'
-}
 
 export class OpenKedgeEngine {
   constructor(
@@ -28,139 +20,129 @@ export class OpenKedgeEngine {
   ) {}
 
   async process(intent: Intent): Promise<ExecutionResult> {
-    let context: unknown = {}
-    let evaluation: EvaluationResult = {
-      allowed: false,
-      reasons: ['Evaluation did not complete']
-    }
-    let execution: ExecutionResult = {
-      success: false,
-      error: 'Execution was not attempted'
-    }
-
-    await this.appendEvent(EventType.IntentReceived, intent.id, { intent })
-    this.log('info', 'Intent received', {
-      actor: intent.metadata.actor,
+    await this.eventStore.append({
+      id: randomUUID(),
+      type: EventType.IntentReceived,
+      timestamp: Date.now(),
       intentId: intent.id,
-      intentType: intent.type
+      payload: {
+        intentSnapshot: intent,
+        reasoningTrail: [
+          `Intent submitted by actor=${intent.metadata.actor}`,
+          `Intent type=${intent.type}`
+        ]
+      }
     })
+
+    let contextSnapshot: unknown | undefined
+    let evaluationResult: EvaluationResult | undefined
 
     try {
-      context = await this.contextProvider.resolve(intent)
-      this.log('info', 'Context resolved', {
-        intentId: intent.id
-      })
+      contextSnapshot = await this.contextProvider.resolve(intent)
 
-      evaluation = await this.policyEvaluator.evaluate(intent, context)
-    } catch (error) {
-      evaluation = {
-        allowed: false,
-        reasons: [`Pipeline failed: ${normalizeError(error)}`],
-        enrichedContext: context
-      }
-      this.log('error', 'Evaluation pipeline failed', {
-        error: normalizeError(error),
-        intentId: intent.id
-      })
-    }
-
-    if (evaluation.enrichedContext === undefined) {
-      evaluation = {
-        ...evaluation,
-        enrichedContext: context
-      }
-    }
-
-    await this.appendEvent(EventType.EvaluationCompleted, intent.id, {
-      intent,
-      context,
-      evaluation
-    })
-    this.log('info', 'Evaluation completed', {
-      allowed: evaluation.allowed,
-      intentId: intent.id,
-      reasons: evaluation.reasons
-    })
-
-    if (evaluation.allowed) {
-      try {
-        execution = await this.executor.execute(
-          intent,
-          evaluation.enrichedContext ?? context
-        )
-        this.log('info', 'Execution completed', {
-          intentId: intent.id,
-          success: execution.success
-        })
-      } catch (error) {
-        execution = {
-          success: false,
-          error: `Execution failed: ${normalizeError(error)}`
-        }
-        this.log('error', 'Execution failed', {
-          error: normalizeError(error),
-          intentId: intent.id
-        })
-      }
-    } else {
-      execution = {
-        success: false,
-        error: `Intent blocked by policy: ${evaluation.reasons.join('; ')}`
-      }
-      this.log('warn', 'Intent blocked', {
+      await this.eventStore.append({
+        id: randomUUID(),
+        type: EventType.ContextResolved,
+        timestamp: Date.now(),
         intentId: intent.id,
-        reasons: evaluation.reasons
+        payload: {
+          intentSnapshot: intent,
+          contextSnapshot,
+          reasoningTrail: [
+            'Context provider resolved current execution context'
+          ]
+        }
       })
-    }
 
-    await this.appendEvent(EventType.ExecutionCompleted, intent.id, {
-      intent,
-      context,
-      evaluation,
-      execution
-    })
+      evaluationResult = await this.policyEvaluator.evaluate(intent, contextSnapshot)
 
-    return execution
-  }
+      await this.eventStore.append({
+        id: randomUUID(),
+        type: EventType.EvaluationCompleted,
+        timestamp: Date.now(),
+        intentId: intent.id,
+        payload: {
+          intentSnapshot: intent,
+          contextSnapshot,
+          evaluationResult,
+          reasoningTrail: [
+            ...evaluationResult.reasons,
+            evaluationResult.allowed
+              ? 'Intent approved for execution'
+              : 'Intent denied before execution'
+          ]
+        }
+      })
 
-  private async appendEvent(
-    type: EventType,
-    intentId: string,
-    payload: unknown
-  ): Promise<void> {
-    try {
-      await this.eventStore.append(createEvent(type, intentId, payload))
+      if (!evaluationResult.allowed) {
+        const blockedResult: ExecutionResult = {
+          success: false,
+          error: `Blocked by policy: ${evaluationResult.reasons.join('; ')}`
+        }
+
+        await this.eventStore.append({
+          id: randomUUID(),
+          type: EventType.ExecutionSkipped,
+          timestamp: Date.now(),
+          intentId: intent.id,
+          payload: {
+            intentSnapshot: intent,
+            contextSnapshot,
+            evaluationResult,
+            executionResult: blockedResult,
+            reasoningTrail: [
+              'Execution was intentionally skipped because evaluation denied the intent'
+            ]
+          }
+        })
+
+        return blockedResult
+      }
+
+      const executionResult = await this.executor.execute(intent, contextSnapshot)
+
+      await this.eventStore.append({
+        id: randomUUID(),
+        type: EventType.ExecutionCompleted,
+        timestamp: Date.now(),
+        intentId: intent.id,
+        payload: {
+          intentSnapshot: intent,
+          contextSnapshot,
+          evaluationResult,
+          executionResult,
+          reasoningTrail: [
+            executionResult.success
+              ? 'Executor completed successfully'
+              : 'Executor returned a failure result'
+          ]
+        }
+      })
+
+      return executionResult
     } catch (error) {
-      this.log('error', 'Event append failed', {
-        error: normalizeError(error),
-        eventType: type,
-        intentId
+      const message = error instanceof Error ? error.message : String(error)
+      const failedResult: ExecutionResult = {
+        success: false,
+        error: message
+      }
+
+      await this.eventStore.append({
+        id: randomUUID(),
+        type: EventType.ProcessingFailed,
+        timestamp: Date.now(),
+        intentId: intent.id,
+        payload: {
+          intentSnapshot: intent,
+          contextSnapshot,
+          evaluationResult,
+          executionResult: failedResult,
+          error: message,
+          reasoningTrail: ['Processing encountered an exception', message]
+        }
       })
+
+      return failedResult
     }
-  }
-
-  private log(
-    level: LogLevel,
-    message: string,
-    fields: Record<string, unknown>
-  ): void {
-    const entry = JSON.stringify({
-      level,
-      message,
-      timestamp: new Date().toISOString(),
-      ...fields
-    })
-
-    if (level === 'error') {
-      console.error(entry)
-      return
-    }
-
-    if (level === 'warn') {
-      console.warn(entry)
-      return
-    }
-
-    console.log(entry)
   }
 }

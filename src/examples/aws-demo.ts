@@ -7,17 +7,18 @@ import { OpenKedgeClient } from '../sdk/client'
 
 async function run(): Promise<void> {
   const adapter = createAwsAdapter()
+  const store = new InMemoryEventStore()
   const engine = new OpenKedgeEngine(
     adapter.contextProvider,
     adapter.policyEvaluator,
     adapter.executor,
-    new InMemoryEventStore()
+    store
   )
-  const client = new OpenKedgeClient(engine)
+  const client = new OpenKedgeClient(engine, store)
   const instanceId =
     process.env.OPENKEDGE_AWS_INSTANCE_ID ?? 'i-xxxxxxxxxxxx'
 
-  const result = await client.submitIntent({
+  const intent = {
     id: randomUUID(),
     type: 'ec2:TerminateInstances',
     payload: [instanceId],
@@ -25,9 +26,18 @@ async function run(): Promise<void> {
       actor: 'agent-1',
       timestamp: Date.now()
     }
-  })
+  }
+
+  const result = await client.submitIntent(intent)
 
   console.log('FINAL RESULT:', result)
+  const replay = await client.replayIntent(intent.id)
+  console.log('REPLAY OUTCOME:', replay.reconstructed.finalOutcome)
+  console.log('REASONING TRAIL:')
+  for (const line of replay.reasoningTrail) {
+    console.log(`- ${line}`)
+  }
+  console.log('INTEGRITY:', replay.integrity.valid)
 }
 
 run().catch((error: unknown) => {

@@ -7,8 +7,8 @@ export class NoopExecutor implements Executor {
     return {
       success: true,
       result: {
-        message: 'Noop execution',
-        intent,
+        message: 'Noop execution completed',
+        intentType: intent.type,
         context
       }
     }

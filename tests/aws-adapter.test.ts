@@ -6,7 +6,11 @@ import {
 import { AwsContextProvider } from '../src/adapters/aws/AwsContextProvider'
 import { AwsExecutor } from '../src/adapters/aws/AwsExecutor'
 import { AwsSafetyPolicyEvaluator } from '../src/adapters/aws/AwsSafetyPolicyEvaluator'
+import { OpenKedgeEngine } from '../src/core/engine/OpenKedgeEngine'
+import { InMemoryEventStore } from '../src/core/event/InMemoryEventStore'
+import { OpenKedgeClient } from '../src/sdk/client'
 import type { Intent } from '../src/interfaces/contracts'
+import { EventType } from '../src/interfaces/contracts'
 
 const terminateIntent: Intent = {
   id: 'intent-aws-1',
@@ -132,4 +136,48 @@ test('AwsExecutor rejects unsupported intent types', async () => {
     success: false,
     error: 'Unsupported intent type: s3:DeleteBucket'
   })
+})
+
+test('AWS adapter decisions are replayable through the evidence chain', async () => {
+  const store = new InMemoryEventStore()
+  const client = new OpenKedgeClient(
+    new OpenKedgeEngine(
+      new AwsContextProvider({
+        async send() {
+          return {
+            Reservations: [
+              {
+                Instances: [
+                  {
+                    InstanceId: 'i-123',
+                    State: { Name: 'running' },
+                    Tags: [{ Key: 'critical', Value: 'true' }]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }),
+      new AwsSafetyPolicyEvaluator(),
+      new AwsExecutor({
+        async send() {
+          throw new Error('execution should have been skipped')
+        }
+      }),
+      store
+    ),
+    store
+  )
+
+  const result = await client.submitIntent(terminateIntent)
+  const replay = await client.replayIntent(terminateIntent.id)
+
+  expect(result.success).toBe(false)
+  expect(replay.reconstructed.finalOutcome).toBe('blocked')
+  expect(replay.events.at(-1)?.type).toBe(EventType.ExecutionSkipped)
+  expect(replay.reasoningTrail).toContain(
+    'Blocked termination of critical instances: i-123'
+  )
+  expect(replay.integrity.valid).toBe(true)
 })

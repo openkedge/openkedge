@@ -1,25 +1,11 @@
 import type { ContextProvider } from '../src/core/context/ContextProvider'
 import { OpenKedgeEngine } from '../src/core/engine/OpenKedgeEngine'
-import type { PolicyEvaluator } from '../src/core/evaluation/PolicyEvaluator'
 import { InMemoryEventStore } from '../src/core/event/InMemoryEventStore'
+import { ReplayEngine } from '../src/core/event/ReplayEngine'
 import type { Executor } from '../src/core/execution/Executor'
-import type { Intent } from '../src/interfaces/contracts'
-
-let infoSpy: jest.SpyInstance
-let warnSpy: jest.SpyInstance
-let errorSpy: jest.SpyInstance
-
-beforeEach(() => {
-  infoSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-  warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
-  errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-})
-
-afterEach(() => {
-  infoSpy.mockRestore()
-  warnSpy.mockRestore()
-  errorSpy.mockRestore()
-})
+import { OpenKedgeClient } from '../src/sdk/client'
+import type { EvaluationResult, Intent, PolicyEvaluator } from '../src/interfaces/contracts'
+import { EventType } from '../src/interfaces/contracts'
 
 const sampleIntent: Intent = {
   id: 'intent-1',
@@ -31,7 +17,7 @@ const sampleIntent: Intent = {
   }
 }
 
-test('processes an allowed intent through the full pipeline', async () => {
+test('records a full evidence chain for an allowed intent', async () => {
   const store = new InMemoryEventStore()
   const contextProvider: ContextProvider = {
     async resolve() {
@@ -39,7 +25,7 @@ test('processes an allowed intent through the full pipeline', async () => {
     }
   }
   const policyEvaluator: PolicyEvaluator = {
-    async evaluate(_intent, context) {
+    async evaluate(_intent, context): Promise<EvaluationResult> {
       return {
         allowed: true,
         reasons: ['approved'],
@@ -55,130 +41,153 @@ test('processes an allowed intent through the full pipeline', async () => {
       }
     }
   }
-  const engine = new OpenKedgeEngine(
-    contextProvider,
-    policyEvaluator,
-    executor,
+  const client = new OpenKedgeClient(
+    new OpenKedgeEngine(contextProvider, policyEvaluator, executor, store),
     store
   )
 
-  const result = await engine.process(sampleIntent)
-  const events = await store.query(sampleIntent.id)
+  const result = await client.submitIntent(sampleIntent)
+  const events = await client.getEventsByIntent(sampleIntent.id)
 
   expect(result).toEqual({
     success: true,
     result: { intentId: sampleIntent.id, context: { region: 'local' } }
   })
   expect(events.map((event) => event.type)).toEqual([
-    'IntentReceived',
-    'EvaluationCompleted',
-    'ExecutionCompleted'
+    EventType.IntentReceived,
+    EventType.ContextResolved,
+    EventType.EvaluationCompleted,
+    EventType.ExecutionCompleted
   ])
+  expect(events.map((event) => event.sequence)).toEqual([1, 2, 3, 4])
+  expect(events[0].previousEventHash).toBeNull()
+  expect(events[1].previousEventHash).toBe(events[0].currentHash)
+  expect(events[3].payload.executionResult).toEqual(result)
 })
 
-test('returns a blocked execution result when policy denies an intent', async () => {
+test('replay reconstructs a blocked intent and preserves reasoning', async () => {
   const store = new InMemoryEventStore()
-  const engine = new OpenKedgeEngine(
-    {
-      async resolve() {
-        return { owner: 'platform' }
-      }
-    },
-    {
-      async evaluate() {
-        return {
-          allowed: false,
-          reasons: ['maintenance window is closed']
+  const client = new OpenKedgeClient(
+    new OpenKedgeEngine(
+      {
+        async resolve() {
+          return { owner: 'platform' }
         }
-      }
-    },
-    {
-      async execute() {
-        throw new Error('executor should not run')
-      }
-    },
+      },
+      {
+        async evaluate() {
+          return {
+            allowed: false,
+            reasons: ['maintenance window is closed']
+          }
+        }
+      },
+      {
+        async execute() {
+          throw new Error('executor should not run')
+        }
+      },
+      store
+    ),
     store
   )
 
-  const result = await engine.process(sampleIntent)
-  const executionEvents = (await store.query(sampleIntent.id)).filter(
-    (event) => event.type === 'ExecutionCompleted'
-  )
+  const result = await client.submitIntent(sampleIntent)
+  const replay = await client.replayIntent(sampleIntent.id)
 
   expect(result.success).toBe(false)
-  expect(result.error).toContain('Intent blocked by policy')
-  expect(executionEvents).toHaveLength(1)
+  expect(result.error).toContain('Blocked by policy')
+  expect(replay.reconstructed.finalOutcome).toBe('blocked')
+  expect(replay.events.at(-1)?.type).toBe(EventType.ExecutionSkipped)
+  expect(replay.reasoningTrail).toContain('maintenance window is closed')
+  expect(replay.integrity.valid).toBe(true)
 })
 
-test('captures executor failures without crashing the engine', async () => {
+test('processing failures are captured as terminal evidence events', async () => {
   const store = new InMemoryEventStore()
-  const engine = new OpenKedgeEngine(
-    {
-      async resolve() {
-        return { state: 'ready' }
-      }
-    },
-    {
-      async evaluate(_intent, context) {
-        return {
-          allowed: true,
-          reasons: ['approved'],
-          enrichedContext: context
+  const client = new OpenKedgeClient(
+    new OpenKedgeEngine(
+      {
+        async resolve() {
+          throw new Error('context backend offline')
         }
-      }
-    },
-    {
-      async execute() {
-        throw new Error('simulated execution failure')
-      }
-    },
+      },
+      {
+        async evaluate() {
+          return {
+            allowed: true,
+            reasons: ['approved']
+          }
+        }
+      },
+      {
+        async execute() {
+          return {
+            success: true
+          }
+        }
+      },
+      store
+    ),
     store
   )
 
-  const result = await engine.process(sampleIntent)
-  const events = await store.query(sampleIntent.id)
+  const result = await client.submitIntent(sampleIntent)
+  const replay = await client.replayIntent(sampleIntent.id)
 
   expect(result).toEqual({
     success: false,
-    error: 'Execution failed: simulated execution failure'
+    error: 'context backend offline'
   })
-  expect(events).toHaveLength(3)
+  expect(replay.events.at(-1)?.type).toBe(EventType.ProcessingFailed)
+  expect(replay.reconstructed.finalOutcome).toBe('failed')
+  expect(replay.reasoningTrail).toContain('Processing encountered an exception')
 })
 
-test('still writes a terminal event when context resolution fails', async () => {
+test('replay detects tampering in the event hash chain', async () => {
   const store = new InMemoryEventStore()
-  const engine = new OpenKedgeEngine(
-    {
-      async resolve() {
-        throw new Error('context backend offline')
-      }
-    },
-    {
-      async evaluate() {
-        return {
-          allowed: true,
-          reasons: ['approved']
+  const client = new OpenKedgeClient(
+    new OpenKedgeEngine(
+      {
+        async resolve() {
+          return { region: 'local' }
         }
-      }
-    },
-    {
-      async execute() {
-        return {
-          success: true
+      },
+      {
+        async evaluate(_intent, context) {
+          return {
+            allowed: true,
+            reasons: ['approved'],
+            enrichedContext: context
+          }
         }
-      }
-    },
+      },
+      {
+        async execute() {
+          return {
+            success: true,
+            result: { ok: true }
+          }
+        }
+      },
+      store
+    ),
     store
   )
 
-  const result = await engine.process(sampleIntent)
-  const events = await store.query(sampleIntent.id)
-
-  expect(result.success).toBe(false)
-  expect(events.at(-1)?.type).toBe('ExecutionCompleted')
-  expect(events.at(-1)?.payload).toMatchObject({
-    execution: {
-      success: false
+  await client.submitIntent(sampleIntent)
+  const originalEvents = await client.getEventsByIntent(sampleIntent.id)
+  const tamperedEvents = originalEvents.map((event) => ({
+    ...event,
+    payload: {
+      ...event.payload,
+      reasoningTrail:
+        event.sequence === 3 ? ['tampered reason'] : event.payload.reasoningTrail
     }
-  })
+  }))
+
+  const replay = await new ReplayEngine().replayIntent(tamperedEvents)
+
+  expect(replay.integrity.valid).toBe(false)
+  expect(replay.integrity.brokenAtEventId).toBe(originalEvents[2].id)
 })
