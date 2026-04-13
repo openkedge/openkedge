@@ -188,7 +188,30 @@ You have complete forensic visibility into *why* the mutation was allowed, not j
 ```bash
 git clone https://github.com/openkedge/openkedge
 cd openkedge
+npm install
 ```
+
+### Running the Interactive Demo
+
+Experience the OpenKedge safety guarantees in real-time by running the full-stack interactive demo locally. The demo overlays an automated agent attempting a destructive mutation against a mocked context.
+
+You will need two terminals.
+
+**Terminal 1: Start the API Engine (Backend)**
+```bash
+cd apps/demo-server
+npm run dev
+```
+
+**Terminal 2: Start the Replay Visualizer (Frontend)**
+```bash
+cd apps/replay-ui
+npm run dev
+```
+
+1. Navigate to `http://localhost:5173/` in your browser.
+2. Click **Run Outage Simulation**  
+3. Watch the visual timeline demonstrate how the mutation is intercepted, contextualized, and blocked dynamically.
 
 > ⚠️ Early-stage reference implementation
 

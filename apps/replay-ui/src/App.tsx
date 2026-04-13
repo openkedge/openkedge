@@ -127,6 +127,32 @@ export default function App() {
               >
                 {playbackActive ? 'Stop Playback' : 'Replay Animation'}
               </button>
+              
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const id = crypto.randomUUID()
+                    await fetch('http://localhost:3001/intent', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        id,
+                        type: 'ec2:TerminateInstances',
+                        payload: Array.from({ length: 25 }).map((_, i) => `i-${String(i + 6).padStart(7, '0')}`),
+                        metadata: { actor: 'demo-ui', timestamp: Date.now() }
+                      })
+                    })
+                    setIntentId(id)
+                    setPlaybackActive(true)
+                  } catch (e) {
+                    console.error('Simulation run failed', e)
+                  }
+                }}
+                className="rounded-full border border-rose-500/30 bg-rose-500/80 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-500"
+              >
+                Run Outage Simulation
+              </button>
             </div>
           </div>
           {loading ? (
