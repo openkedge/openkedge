@@ -1,1 +1,5 @@
-export * from './client'
+export * from './types'
+export * from './ReplayClient'
+export * from './ExecutionHandle'
+export * from './IntentBuilder'
+export * from './OpenKedgeClient'
