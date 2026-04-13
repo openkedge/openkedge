@@ -9,6 +9,7 @@ This directory contains Request for Comments (RFCs) for the OpenKedge project. R
 | Number | Title | Status |
 |--------|------|--------|
 | 0001 | [Intent Governance Protocol (IGP)](./0001-intent-governance-protocol.md) | Draft |
+| 0002 | [Event Evidence Chain (EEC)](./0002-event-evidence-chain.md) | Draft |
 
 ---
 
