@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IGP Intent Schema",
+  "type": "object",
+  "required": ["actor", "action", "target"],
+  "properties": {
+    "actor": {
+      "type": "string",
+      "description": "Unique identifier of the agent requesting the mutation."
+    },
+    "action": {
+      "type": "string",
+      "description": "The specific state mutation operation requested."
+    },
+    "target": {
+      "type": "array",
+      "description": "List of resource identifiers to be mutated.",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Operational boundaries (e.g., region limits, timeouts) the execution must adhere to.",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Auxiliary data such as chain-of-thought reasoning, request IDs, or correlation IDs.",
+      "additionalProperties": true
+    }
+  }
+}

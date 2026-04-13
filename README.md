@@ -235,6 +235,16 @@ npm run dev
 
 ---
 
+## 📜 RFCs & Governance
+
+OpenKedge is governed by a formal RFC process to ensure protocol stability and multi-agent interoperability.
+
+* **[RFC Index](./rfcs/README.md)**: Browse all RFCs, architectural standards, and protocol specifications.
+* **[Intent Governance Protocol (IGP)](./rfcs/0001-intent-governance-protocol.md)**: Our primary specification for intent-based safety.
+* **[Protocol Schemas](./schemas/)**: Machine-readable definitions for Intents and Evidence Chains.
+
+---
+
 ## 🛣 Roadmap
 
 * [ ] Core protocol (v0.1)
