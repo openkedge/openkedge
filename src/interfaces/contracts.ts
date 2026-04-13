@@ -22,22 +22,12 @@ export interface ExecutionResult {
   error?: string
 }
 
-export type EventType =
-  | 'IntentReceived'
-  | 'EvaluationCompleted'
-  | 'ExecutionCompleted'
-
 export interface Event<TPayload = unknown> {
   id: string
-  type: EventType
+  type: string
   timestamp: number
   intentId: string
   payload: TPayload
-}
-
-export interface EventFilter {
-  intentId?: string
-  type?: EventType
 }
 
 export interface ContextProvider<TContext = unknown> {
@@ -54,5 +44,5 @@ export interface Executor<TContext = unknown> {
 
 export interface EventStore {
   append(event: Event): Promise<void>
-  query(filter?: EventFilter): Promise<Event[]>
+  query(intentId: string): Promise<Event[]>
 }

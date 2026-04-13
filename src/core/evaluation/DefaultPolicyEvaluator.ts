@@ -1,19 +1,12 @@
-import type {
-  EvaluationResult,
-  Intent,
-  PolicyEvaluator
-} from '../../interfaces/contracts'
+import type { EvaluationResult, Intent } from '../../interfaces/contracts'
 
-export class DefaultPolicyEvaluator
-  implements PolicyEvaluator<Record<string, unknown>>
-{
-  async evaluate(
-    intent: Intent,
-    context: Record<string, unknown>
-  ): Promise<EvaluationResult> {
+import type { PolicyEvaluator } from './PolicyEvaluator'
+
+export class DefaultPolicyEvaluator implements PolicyEvaluator {
+  async evaluate(intent: Intent, context: unknown): Promise<EvaluationResult> {
     return {
       allowed: true,
-      reasons: [`Allowed by default policy for intent type "${intent.type}"`],
+      reasons: [`Default allow policy for "${intent.type}"`],
       enrichedContext: context
     }
   }

@@ -1,6 +1,12 @@
+import { randomUUID } from 'node:crypto'
+
+import { DefaultContextProvider } from '../core/context/DefaultContextProvider'
+import { OpenKedgeEngine } from '../core/engine/OpenKedgeEngine'
+import { DefaultPolicyEvaluator } from '../core/evaluation/DefaultPolicyEvaluator'
+import { InMemoryEventStore } from '../core/event/InMemoryEventStore'
+import { NoopExecutor } from '../core/execution/NoopExecutor'
 import type { Intent } from '../interfaces/contracts'
-import { InMemoryEventStore } from '../core/event'
-import { createOpenKedgeClient } from '../sdk/client'
+import { OpenKedgeClient } from '../sdk/client'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -36,9 +42,15 @@ async function readIntent(argv: string[]): Promise<Intent> {
     intentFlagIndex >= 0 ? argv[intentFlagIndex + 1] : await readFromStdin()
 
   if (!rawIntent) {
-    throw new Error(
-      'Provide an intent with --intent \'{...}\' or pipe JSON into stdin.'
-    )
+    return {
+      id: randomUUID(),
+      type: 'test:intent',
+      payload: { action: 'demo' },
+      metadata: {
+        actor: 'user',
+        timestamp: Date.now()
+      }
+    }
   }
 
   const parsed = JSON.parse(rawIntent) as unknown
@@ -51,17 +63,20 @@ async function readIntent(argv: string[]): Promise<Intent> {
 }
 
 async function main(): Promise<void> {
-  const eventStore = new InMemoryEventStore()
-  const client = createOpenKedgeClient({ eventStore })
+  const engine = new OpenKedgeEngine(
+    new DefaultContextProvider(),
+    new DefaultPolicyEvaluator(),
+    new NoopExecutor(),
+    new InMemoryEventStore()
+  )
+  const client = new OpenKedgeClient(engine)
   const intent = await readIntent(process.argv.slice(2))
   const result = await client.submitIntent(intent)
-  const events = await eventStore.query({ intentId: intent.id })
 
   process.stdout.write(
     JSON.stringify(
       {
-        result,
-        events
+        result
       },
       null,
       2

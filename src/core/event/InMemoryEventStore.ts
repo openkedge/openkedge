@@ -1,4 +1,4 @@
-import type { Event, EventFilter, EventStore } from '../../interfaces/contracts'
+import type { Event, EventStore } from '../../interfaces/contracts'
 
 export class InMemoryEventStore implements EventStore {
   private readonly events: Event[] = []
@@ -7,17 +7,7 @@ export class InMemoryEventStore implements EventStore {
     this.events.push(event)
   }
 
-  async query(filter: EventFilter = {}): Promise<Event[]> {
-    return this.events.filter((event) => {
-      if (filter.intentId && event.intentId !== filter.intentId) {
-        return false
-      }
-
-      if (filter.type && event.type !== filter.type) {
-        return false
-      }
-
-      return true
-    })
+  async query(intentId: string): Promise<Event[]> {
+    return this.events.filter((event) => event.intentId === intentId)
   }
 }

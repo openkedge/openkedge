@@ -1,37 +1,33 @@
-import { DefaultPolicyEvaluator, EmptyContextProvider } from '../core/evaluation'
-import { OpenKedgeEngine, type OpenKedgeEngineDependencies } from '../core/engine'
-import { InMemoryEventStore } from '../core/event'
-import { NoopExecutor } from '../core/execution'
+import { DefaultContextProvider } from '../core/context/DefaultContextProvider'
+import { OpenKedgeEngine } from '../core/engine/OpenKedgeEngine'
+import { DefaultPolicyEvaluator } from '../core/evaluation/DefaultPolicyEvaluator'
+import { InMemoryEventStore } from '../core/event/InMemoryEventStore'
+import { NoopExecutor } from '../core/execution/NoopExecutor'
 import type { ExecutionResult, Intent } from '../interfaces/contracts'
 
-export type OpenKedgeClientOptions<TContext = Record<string, unknown>> = Partial<
-  OpenKedgeEngineDependencies<TContext>
->
+export interface OpenKedgeClientOptions {
+  engine?: OpenKedgeEngine
+}
 
-export class OpenKedgeClient<TContext = Record<string, unknown>> {
-  constructor(private readonly engine: OpenKedgeEngine<TContext>) {}
+export class OpenKedgeClient {
+  constructor(private readonly engine: OpenKedgeEngine) {}
 
   async submitIntent(intent: Intent): Promise<ExecutionResult> {
     return this.engine.process(intent)
   }
 }
 
-export function createOpenKedgeClient<TContext = Record<string, unknown>>(
-  options: OpenKedgeClientOptions<TContext> = {}
-): OpenKedgeClient<TContext> {
-  const engine = new OpenKedgeEngine<TContext>({
-    contextProvider:
-      options.contextProvider ??
-      (new EmptyContextProvider() as unknown as OpenKedgeEngineDependencies<TContext>['contextProvider']),
-    policyEvaluator:
-      options.policyEvaluator ??
-      (new DefaultPolicyEvaluator() as unknown as OpenKedgeEngineDependencies<TContext>['policyEvaluator']),
-    executor:
-      options.executor ??
-      (new NoopExecutor() as unknown as OpenKedgeEngineDependencies<TContext>['executor']),
-    eventStore: options.eventStore ?? new InMemoryEventStore(),
-    logger: options.logger
-  })
+export function createOpenKedgeClient(
+  options: OpenKedgeClientOptions = {}
+): OpenKedgeClient {
+  const engine =
+    options.engine ??
+    new OpenKedgeEngine(
+      new DefaultContextProvider(),
+      new DefaultPolicyEvaluator(),
+      new NoopExecutor(),
+      new InMemoryEventStore()
+    )
 
   return new OpenKedgeClient(engine)
 }

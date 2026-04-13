@@ -1,17 +1,14 @@
-import type {
-  ExecutionResult,
-  Executor,
-  Intent
-} from '../../interfaces/contracts'
+import type { ExecutionResult, Intent } from '../../interfaces/contracts'
 
-export class NoopExecutor implements Executor<unknown> {
+import type { Executor } from './Executor'
+
+export class NoopExecutor implements Executor {
   async execute(intent: Intent, context: unknown): Promise<ExecutionResult> {
     return {
       success: true,
       result: {
-        simulated: true,
-        intentId: intent.id,
-        intentType: intent.type,
+        message: 'Noop execution',
+        intent,
         context
       }
     }

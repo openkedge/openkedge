@@ -1,23 +1,15 @@
 import type {
-  ContextProvider,
   EvaluationResult,
-  Event,
   EventStore,
   ExecutionResult,
-  Executor,
-  Intent,
-  PolicyEvaluator
+  Intent
 } from '../../interfaces/contracts'
-import { createEvent } from '../event'
-import { consoleLogger, type Logger } from './logger'
+import type { ContextProvider } from '../context/ContextProvider'
+import type { PolicyEvaluator } from '../evaluation/PolicyEvaluator'
+import { createEvent, EventType } from '../event/Event'
+import type { Executor } from '../execution/Executor'
 
-export interface OpenKedgeEngineDependencies<TContext = unknown> {
-  contextProvider: ContextProvider<TContext>
-  policyEvaluator: PolicyEvaluator<TContext>
-  executor: Executor<TContext>
-  eventStore: EventStore
-  logger?: Logger
-}
+type LogLevel = 'info' | 'warn' | 'error'
 
 function normalizeError(error: unknown): string {
   if (error instanceof Error) {
@@ -27,15 +19,16 @@ function normalizeError(error: unknown): string {
   return typeof error === 'string' ? error : 'Unknown error'
 }
 
-export class OpenKedgeEngine<TContext = unknown> {
-  private readonly logger: Logger
-
-  constructor(private readonly dependencies: OpenKedgeEngineDependencies<TContext>) {
-    this.logger = dependencies.logger ?? consoleLogger
-  }
+export class OpenKedgeEngine {
+  constructor(
+    private readonly contextProvider: ContextProvider,
+    private readonly policyEvaluator: PolicyEvaluator,
+    private readonly executor: Executor,
+    private readonly eventStore: EventStore
+  ) {}
 
   async process(intent: Intent): Promise<ExecutionResult> {
-    let context: TContext | unknown = {}
+    let context: unknown = {}
     let evaluation: EvaluationResult = {
       allowed: false,
       reasons: ['Evaluation did not complete']
@@ -45,34 +38,27 @@ export class OpenKedgeEngine<TContext = unknown> {
       error: 'Execution was not attempted'
     }
 
-    await this.safeAppend(
-      createEvent('IntentReceived', intent.id, {
-        intent
-      })
-    )
-    this.logger.info('Intent received', {
+    await this.appendEvent(EventType.IntentReceived, intent.id, { intent })
+    this.log('info', 'Intent received', {
       actor: intent.metadata.actor,
       intentId: intent.id,
       intentType: intent.type
     })
 
     try {
-      context = await this.dependencies.contextProvider.resolve(intent)
-      this.logger.info('Context resolved', {
+      context = await this.contextProvider.resolve(intent)
+      this.log('info', 'Context resolved', {
         intentId: intent.id
       })
 
-      evaluation = await this.dependencies.policyEvaluator.evaluate(
-        intent,
-        context as TContext
-      )
+      evaluation = await this.policyEvaluator.evaluate(intent, context)
     } catch (error) {
       evaluation = {
         allowed: false,
         reasons: [`Pipeline failed: ${normalizeError(error)}`],
         enrichedContext: context
       }
-      this.logger.error('Evaluation pipeline failed', {
+      this.log('error', 'Evaluation pipeline failed', {
         error: normalizeError(error),
         intentId: intent.id
       })
@@ -85,14 +71,12 @@ export class OpenKedgeEngine<TContext = unknown> {
       }
     }
 
-    await this.safeAppend(
-      createEvent('EvaluationCompleted', intent.id, {
-        context,
-        evaluation,
-        intent
-      })
-    )
-    this.logger.info('Evaluation completed', {
+    await this.appendEvent(EventType.EvaluationCompleted, intent.id, {
+      intent,
+      context,
+      evaluation
+    })
+    this.log('info', 'Evaluation completed', {
       allowed: evaluation.allowed,
       intentId: intent.id,
       reasons: evaluation.reasons
@@ -100,11 +84,11 @@ export class OpenKedgeEngine<TContext = unknown> {
 
     if (evaluation.allowed) {
       try {
-        execution = await this.dependencies.executor.execute(
+        execution = await this.executor.execute(
           intent,
-          (evaluation.enrichedContext ?? context) as TContext
+          evaluation.enrichedContext ?? context
         )
-        this.logger.info('Execution completed', {
+        this.log('info', 'Execution completed', {
           intentId: intent.id,
           success: execution.success
         })
@@ -113,7 +97,7 @@ export class OpenKedgeEngine<TContext = unknown> {
           success: false,
           error: `Execution failed: ${normalizeError(error)}`
         }
-        this.logger.error('Execution failed', {
+        this.log('error', 'Execution failed', {
           error: normalizeError(error),
           intentId: intent.id
         })
@@ -123,33 +107,60 @@ export class OpenKedgeEngine<TContext = unknown> {
         success: false,
         error: `Intent blocked by policy: ${evaluation.reasons.join('; ')}`
       }
-      this.logger.warn('Intent blocked', {
+      this.log('warn', 'Intent blocked', {
         intentId: intent.id,
         reasons: evaluation.reasons
       })
     }
 
-    await this.safeAppend(
-      createEvent('ExecutionCompleted', intent.id, {
-        context,
-        evaluation,
-        execution,
-        intent
-      })
-    )
+    await this.appendEvent(EventType.ExecutionCompleted, intent.id, {
+      intent,
+      context,
+      evaluation,
+      execution
+    })
 
     return execution
   }
 
-  private async safeAppend(event: Event): Promise<void> {
+  private async appendEvent(
+    type: EventType,
+    intentId: string,
+    payload: unknown
+  ): Promise<void> {
     try {
-      await this.dependencies.eventStore.append(event)
+      await this.eventStore.append(createEvent(type, intentId, payload))
     } catch (error) {
-      this.logger.error('Event append failed', {
+      this.log('error', 'Event append failed', {
         error: normalizeError(error),
-        eventType: event.type,
-        intentId: event.intentId
+        eventType: type,
+        intentId
       })
     }
+  }
+
+  private log(
+    level: LogLevel,
+    message: string,
+    fields: Record<string, unknown>
+  ): void {
+    const entry = JSON.stringify({
+      level,
+      message,
+      timestamp: new Date().toISOString(),
+      ...fields
+    })
+
+    if (level === 'error') {
+      console.error(entry)
+      return
+    }
+
+    if (level === 'warn') {
+      console.warn(entry)
+      return
+    }
+
+    console.log(entry)
   }
 }

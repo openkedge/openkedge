@@ -8,12 +8,12 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist",
-    "types": ["node", "jest"],
+    "types": ["node"],
     "forceConsistentCasingInFileNames": true,
     "composite": true
   },
-  "include": ["src/**/*.ts", "packages/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["node_modules", "dist", "apps", "examples"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

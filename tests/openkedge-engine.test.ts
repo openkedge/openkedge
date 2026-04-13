@@ -1,12 +1,25 @@
+import type { ContextProvider } from '../src/core/context/ContextProvider'
+import { OpenKedgeEngine } from '../src/core/engine/OpenKedgeEngine'
+import type { PolicyEvaluator } from '../src/core/evaluation/PolicyEvaluator'
+import { InMemoryEventStore } from '../src/core/event/InMemoryEventStore'
+import type { Executor } from '../src/core/execution/Executor'
 import type { Intent } from '../src/interfaces/contracts'
-import { OpenKedgeEngine } from '../src/core/engine'
-import { InMemoryEventStore } from '../src/core/event'
 
-const silentLogger = {
-  info() {},
-  warn() {},
-  error() {}
-}
+let infoSpy: jest.SpyInstance
+let warnSpy: jest.SpyInstance
+let errorSpy: jest.SpyInstance
+
+beforeEach(() => {
+  infoSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+  warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+  errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterEach(() => {
+  infoSpy.mockRestore()
+  warnSpy.mockRestore()
+  errorSpy.mockRestore()
+})
 
 const sampleIntent: Intent = {
   id: 'intent-1',
@@ -20,35 +33,37 @@ const sampleIntent: Intent = {
 
 test('processes an allowed intent through the full pipeline', async () => {
   const store = new InMemoryEventStore()
-  const engine = new OpenKedgeEngine({
-    contextProvider: {
-      async resolve() {
-        return { region: 'local' }
+  const contextProvider: ContextProvider = {
+    async resolve() {
+      return { region: 'local' }
+    }
+  }
+  const policyEvaluator: PolicyEvaluator = {
+    async evaluate(_intent, context) {
+      return {
+        allowed: true,
+        reasons: ['approved'],
+        enrichedContext: context
       }
-    },
-    policyEvaluator: {
-      async evaluate(_intent, context) {
-        return {
-          allowed: true,
-          reasons: ['approved'],
-          enrichedContext: context
-        }
+    }
+  }
+  const executor: Executor = {
+    async execute(intent, context) {
+      return {
+        success: true,
+        result: { intentId: intent.id, context }
       }
-    },
-    executor: {
-      async execute(intent, context) {
-        return {
-          success: true,
-          result: { intentId: intent.id, context }
-        }
-      }
-    },
-    eventStore: store,
-    logger: silentLogger
-  })
+    }
+  }
+  const engine = new OpenKedgeEngine(
+    contextProvider,
+    policyEvaluator,
+    executor,
+    store
+  )
 
   const result = await engine.process(sampleIntent)
-  const events = await store.query({ intentId: sampleIntent.id })
+  const events = await store.query(sampleIntent.id)
 
   expect(result).toEqual({
     success: true,
@@ -63,13 +78,13 @@ test('processes an allowed intent through the full pipeline', async () => {
 
 test('returns a blocked execution result when policy denies an intent', async () => {
   const store = new InMemoryEventStore()
-  const engine = new OpenKedgeEngine({
-    contextProvider: {
+  const engine = new OpenKedgeEngine(
+    {
       async resolve() {
         return { owner: 'platform' }
       }
     },
-    policyEvaluator: {
+    {
       async evaluate() {
         return {
           allowed: false,
@@ -77,20 +92,18 @@ test('returns a blocked execution result when policy denies an intent', async ()
         }
       }
     },
-    executor: {
+    {
       async execute() {
         throw new Error('executor should not run')
       }
     },
-    eventStore: store,
-    logger: silentLogger
-  })
+    store
+  )
 
   const result = await engine.process(sampleIntent)
-  const executionEvents = await store.query({
-    intentId: sampleIntent.id,
-    type: 'ExecutionCompleted'
-  })
+  const executionEvents = (await store.query(sampleIntent.id)).filter(
+    (event) => event.type === 'ExecutionCompleted'
+  )
 
   expect(result.success).toBe(false)
   expect(result.error).toContain('Intent blocked by policy')
@@ -99,13 +112,13 @@ test('returns a blocked execution result when policy denies an intent', async ()
 
 test('captures executor failures without crashing the engine', async () => {
   const store = new InMemoryEventStore()
-  const engine = new OpenKedgeEngine({
-    contextProvider: {
+  const engine = new OpenKedgeEngine(
+    {
       async resolve() {
         return { state: 'ready' }
       }
     },
-    policyEvaluator: {
+    {
       async evaluate(_intent, context) {
         return {
           allowed: true,
@@ -114,17 +127,16 @@ test('captures executor failures without crashing the engine', async () => {
         }
       }
     },
-    executor: {
+    {
       async execute() {
         throw new Error('simulated execution failure')
       }
     },
-    eventStore: store,
-    logger: silentLogger
-  })
+    store
+  )
 
   const result = await engine.process(sampleIntent)
-  const events = await store.query({ intentId: sampleIntent.id })
+  const events = await store.query(sampleIntent.id)
 
   expect(result).toEqual({
     success: false,
@@ -135,13 +147,13 @@ test('captures executor failures without crashing the engine', async () => {
 
 test('still writes a terminal event when context resolution fails', async () => {
   const store = new InMemoryEventStore()
-  const engine = new OpenKedgeEngine({
-    contextProvider: {
+  const engine = new OpenKedgeEngine(
+    {
       async resolve() {
         throw new Error('context backend offline')
       }
     },
-    policyEvaluator: {
+    {
       async evaluate() {
         return {
           allowed: true,
@@ -149,19 +161,18 @@ test('still writes a terminal event when context resolution fails', async () => 
         }
       }
     },
-    executor: {
+    {
       async execute() {
         return {
           success: true
         }
       }
     },
-    eventStore: store,
-    logger: silentLogger
-  })
+    store
+  )
 
   const result = await engine.process(sampleIntent)
-  const events = await store.query({ intentId: sampleIntent.id })
+  const events = await store.query(sampleIntent.id)
 
   expect(result.success).toBe(false)
   expect(events.at(-1)?.type).toBe('ExecutionCompleted')

@@ -1,19 +1,19 @@
 export type {
-  ContextProvider,
   EvaluationResult,
   Event,
-  EventFilter,
   EventStore,
-  EventType,
   ExecutionResult,
-  Executor,
   Intent,
-  IntentMetadata,
-  PolicyEvaluator
+  IntentMetadata
 } from './interfaces/contracts'
-export * from './core/intent'
-export * from './core/evaluation'
-export * from './core/execution'
-export * from './core/event'
-export * from './core/engine'
+export * from './core/intent/Intent'
+export * from './core/context/ContextProvider'
+export * from './core/context/DefaultContextProvider'
+export * from './core/evaluation/PolicyEvaluator'
+export * from './core/evaluation/DefaultPolicyEvaluator'
+export * from './core/execution/Executor'
+export * from './core/execution/NoopExecutor'
+export * from './core/event/Event'
+export * from './core/event/InMemoryEventStore'
+export * from './core/engine/OpenKedgeEngine'
 export * from './sdk/client'
