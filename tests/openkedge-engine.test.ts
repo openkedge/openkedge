@@ -106,17 +106,19 @@ test('records a full evidence chain for an allowed intent', async () => {
   expect(events.map((event) => event.type)).toEqual([
     EventType.IntentReceived,
     EventType.ContextResolved,
+    EventType.BlastRadiusEvaluated,
     EventType.EvaluationCompleted,
     EventType.IdentityIssued,
     EventType.IdentityUsed,
     EventType.ExecutionCompleted,
     EventType.IdentityRevoked
   ])
-  expect(events.map((event) => event.sequence)).toEqual([1, 2, 3, 4, 5, 6, 7])
+  expect(events.map((event) => event.sequence)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   expect(events[0].previousEventHash).toBeNull()
   expect(events[1].previousEventHash).toBe(events[0].currentHash)
-  expect(events[3].payload.identitySnapshot?.intentId).toBe(sampleIntent.id)
-  expect(events[5].payload.executionResult).toEqual(result)
+  expect(events[2].payload.blastRadius?.riskLevel).toBe('LOW')
+  expect(events[4].payload.identitySnapshot?.intentId).toBe(sampleIntent.id)
+  expect(events[6].payload.executionResult).toEqual(result)
 })
 
 test('replay reconstructs a blocked intent and preserves reasoning', async () => {
@@ -295,6 +297,7 @@ test('fails execution when the issued identity expires before use', async () => 
   expect(events.map((event) => event.type)).toEqual([
     EventType.IntentReceived,
     EventType.ContextResolved,
+    EventType.BlastRadiusEvaluated,
     EventType.EvaluationCompleted,
     EventType.IdentityIssued,
     EventType.IdentityUsed,

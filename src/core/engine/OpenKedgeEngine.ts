@@ -7,6 +7,9 @@ import type {
   Intent
 } from '../../interfaces/contracts'
 import { EventType } from '../../interfaces/contracts'
+import { BlastRadiusEstimator } from '../blast/BlastRadiusEstimator'
+import { BlastRadiusPolicy } from '../blast/BlastRadiusPolicy'
+import type { BlastRadius } from '../blast/BlastRadiusTypes'
 import type { ContextProvider } from '../context/ContextProvider'
 import type { PolicyEvaluator } from '../evaluation/PolicyEvaluator'
 import type { Executor } from '../execution/Executor'
@@ -18,7 +21,9 @@ export class OpenKedgeEngine {
     private readonly policyEvaluator: PolicyEvaluator,
     private readonly executor: Executor,
     private readonly identityManager: IdentityManager,
-    private readonly eventStore: EventStore
+    private readonly eventStore: EventStore,
+    private readonly blastRadiusEstimator: BlastRadiusEstimator = new BlastRadiusEstimator(),
+    private readonly blastRadiusPolicy: BlastRadiusPolicy = new BlastRadiusPolicy()
   ) {}
 
   async process(intent: Intent): Promise<ExecutionResult> {
@@ -37,6 +42,7 @@ export class OpenKedgeEngine {
     })
 
     let contextSnapshot: unknown | undefined
+    let blastRadius: BlastRadius | undefined
     let evaluationResult: EvaluationResult | undefined
 
     try {
@@ -56,7 +62,29 @@ export class OpenKedgeEngine {
         }
       })
 
-      evaluationResult = await this.policyEvaluator.evaluate(intent, contextSnapshot)
+      blastRadius = this.blastRadiusEstimator.estimate(intent, contextSnapshot)
+
+      await this.eventStore.append({
+        id: randomUUID(),
+        type: EventType.BlastRadiusEvaluated,
+        timestamp: Date.now(),
+        intentId: intent.id,
+        payload: {
+          intentSnapshot: intent,
+          contextSnapshot,
+          blastRadius,
+          reasoningTrail: blastRadius.reasons
+        }
+      })
+
+      const blastDecision = this.blastRadiusPolicy.evaluate(blastRadius)
+      const safetyEvaluation = await this.policyEvaluator.evaluate(intent, contextSnapshot)
+
+      evaluationResult = {
+        allowed: safetyEvaluation.allowed && blastDecision.allowed,
+        reasons: [...safetyEvaluation.reasons, ...blastDecision.reasons],
+        enrichedContext: safetyEvaluation.enrichedContext ?? contextSnapshot
+      }
 
       await this.eventStore.append({
         id: randomUUID(),
@@ -66,6 +94,7 @@ export class OpenKedgeEngine {
         payload: {
           intentSnapshot: intent,
           contextSnapshot,
+          blastRadius,
           evaluationResult,
           reasoningTrail: [
             ...evaluationResult.reasons,
@@ -90,6 +119,7 @@ export class OpenKedgeEngine {
           payload: {
             intentSnapshot: intent,
             contextSnapshot,
+            blastRadius,
             evaluationResult,
             executionResult: blockedResult,
             reasoningTrail: [
@@ -114,6 +144,7 @@ export class OpenKedgeEngine {
             payload: {
               intentSnapshot: intent,
               contextSnapshot,
+              blastRadius,
               evaluationResult,
               executionResult: result,
               reasoningTrail: [
@@ -144,6 +175,7 @@ export class OpenKedgeEngine {
         payload: {
           intentSnapshot: intent,
           contextSnapshot,
+          blastRadius,
           evaluationResult,
           executionResult: failedResult,
           error: message,

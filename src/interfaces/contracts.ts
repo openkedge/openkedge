@@ -2,6 +2,7 @@ import type {
   ExecutionIdentity,
   IdentityAuditRecord
 } from '../core/identity/Identity'
+import type { BlastRadius } from '../core/blast/BlastRadiusTypes'
 
 export interface Intent {
   id: string
@@ -44,6 +45,7 @@ export interface Executor {
 export enum EventType {
   IntentReceived = 'IntentReceived',
   ContextResolved = 'ContextResolved',
+  BlastRadiusEvaluated = 'BlastRadiusEvaluated',
   EvaluationCompleted = 'EvaluationCompleted',
   IdentityIssued = 'IdentityIssued',
   IdentityUsed = 'IdentityUsed',
@@ -56,6 +58,7 @@ export enum EventType {
 export interface EvidenceEventPayload {
   intentSnapshot: Intent
   contextSnapshot?: unknown
+  blastRadius?: BlastRadius
   evaluationResult?: EvaluationResult
   executionResult?: ExecutionResult
   identitySnapshot?: IdentityAuditRecord
@@ -100,6 +103,7 @@ export interface ReplayResult {
   replayable: boolean
   reconstructed: {
     contextSnapshot?: unknown
+    blastRadius?: BlastRadius
     evaluationResult?: EvaluationResult
     executionResult?: ExecutionResult
     finalOutcome: 'allowed' | 'blocked' | 'failed' | 'unknown'
@@ -112,3 +116,4 @@ export interface ReplayResult {
 }
 
 export type { ExecutionIdentity, IdentityAuditRecord }
+export type { BlastRadius }

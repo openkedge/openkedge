@@ -328,6 +328,10 @@ test('AWS adapter decisions are replayable through the evidence chain', async ()
 
   expect(result.success).toBe(false)
   expect(replay.reconstructed.finalOutcome).toBe('blocked')
+  expect(replay.reconstructed.blastRadius?.riskLevel).toBe('CRITICAL')
+  expect(replay.events.map((event) => event.type)).toContain(
+    EventType.BlastRadiusEvaluated
+  )
   expect(replay.events.at(-1)?.type).toBe(EventType.ExecutionSkipped)
   expect(replay.reasoningTrail).toContain(
     'Blocked termination of critical instances: i-123'

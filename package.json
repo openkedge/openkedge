@@ -17,6 +17,7 @@
     "demo:replay": "ts-node src/examples/replay-demo.ts",
     "demo:aws": "ts-node src/examples/aws-demo.ts",
     "demo:aws-identity": "ts-node src/examples/aws-identity-demo.ts",
+    "demo:blast": "ts-node src/examples/blast-radius-demo.ts",
     "test": "jest --runInBand"
   },
   "devDependencies": {

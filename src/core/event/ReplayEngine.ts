@@ -1,4 +1,5 @@
 import type {
+  BlastRadius,
   EvidenceEvent,
   EvaluationResult,
   ExecutionResult,
@@ -25,6 +26,7 @@ export class ReplayEngine {
 
     const integrity = this.validateIntegrity(ordered)
     let contextSnapshot: unknown | undefined
+    let blastRadius: BlastRadius | undefined
     let evaluationResult: EvaluationResult | undefined
     let executionResult: ExecutionResult | undefined
     const reasoningTrail: string[] = []
@@ -33,6 +35,10 @@ export class ReplayEngine {
     for (const event of ordered) {
       if (event.payload.contextSnapshot !== undefined) {
         contextSnapshot = event.payload.contextSnapshot
+      }
+
+      if (event.payload.blastRadius !== undefined) {
+        blastRadius = event.payload.blastRadius
       }
 
       if (event.payload.evaluationResult !== undefined) {
@@ -63,6 +69,7 @@ export class ReplayEngine {
       replayable: integrity.valid,
       reconstructed: {
         contextSnapshot,
+        blastRadius,
         evaluationResult,
         executionResult,
         finalOutcome: this.computeFinalOutcome(
@@ -145,6 +152,8 @@ export class ReplayEngine {
         return `Intent ${event.intentId} received`
       case EventType.ContextResolved:
         return `Context resolved for ${event.intentId}`
+      case EventType.BlastRadiusEvaluated:
+        return `Blast radius ${event.payload.blastRadius?.riskLevel ?? 'UNKNOWN'} for ${event.intentId}`
       case EventType.EvaluationCompleted:
         return event.payload.evaluationResult?.allowed
           ? `Policy allowed intent ${event.intentId}`
