@@ -2,22 +2,21 @@
   "name": "openkedge-monorepo",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "apps/*",
-    "examples/*"
-  ],
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "workspaces": ["packages/*", "apps/*", "examples/*"],
   "scripts": {
-    "dev": "npm run dev --workspaces",
-    "build": "npm run build --workspaces",
-    "test": "jest"
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/src/runtime/server.js",
+    "start:dev": "ts-node src/runtime/server.ts",
+    "test": "jest --runInBand"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.1",
+    "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
     "jest": "^29.5.0",
-    "@types/jest": "^29.5.0",
-    "ts-jest": "^29.1.0"
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
   }
 }

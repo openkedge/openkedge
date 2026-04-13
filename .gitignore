@@ -8,6 +8,8 @@
 *.so
 *.dylib
 node_modules/*
+dist/
+*.tsbuildinfo
 # Test binary, built with `go test -c`
 *.test
 

@@ -5,10 +5,15 @@
     "lib": ["ES2022"],
     "declaration": true,
     "strict": true,
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "types": ["node", "jest"],
     "forceConsistentCasingInFileNames": true,
     "composite": true
   },
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts", "packages/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "apps", "examples"]
 }
