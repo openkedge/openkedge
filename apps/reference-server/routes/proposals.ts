@@ -5,8 +5,8 @@ import { EventStore } from '../../packages/store'
 export function proposalsRouter(store: EventStore) {
   const router = Router()
   
-  router.post('/', (req, res) => {
-    const decision = submitProposal(req.body, store)
+  router.post('/', async (req, res) => {
+    const decision = await submitProposal(req.body, store)
     res.json(decision)
   })
 

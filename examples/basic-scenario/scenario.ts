@@ -21,8 +21,12 @@ const agentProposal: IntentProposal = {
   timestamp: Date.now() + 1000
 }
 
-console.log('Owner Proposal:', submitProposal(ownerProposal, store))
-console.log('Agent Proposal:', submitProposal(agentProposal, store))
+const run = async () => {
+  console.log('Owner Proposal:', await submitProposal(ownerProposal, store))
+  console.log('Agent Proposal:', await submitProposal(agentProposal, store))
 
-const state = reduceEvents('bakery', store.getEvents('bakery'))
-console.log('Final State:', JSON.stringify(state, null, 2))
+  const state = reduceEvents('bakery', store.getEvents('bakery'))
+  console.log('Final State:', JSON.stringify(state, null, 2))
+}
+
+run().catch(console.error)

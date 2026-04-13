@@ -21,9 +21,9 @@ export class ExecutionHandle<TResult> {
     this.decision = decision
     this.replayClient = new ReplayClient(engine)
 
-    this.success = decision.outcome === 'approve'
+    this.success = decision.allowed
     if (!this.success) {
-      this.error = decision.reason
+      this.error = decision.reasons.join(', ')
     } else {
       this.result = result
     }
@@ -40,8 +40,8 @@ export class ExecutionHandle<TResult> {
 
   async summary(): Promise<SummaryResult> {
     return {
-      outcome: this.decision.outcome === 'approve' ? 'EXECUTED' : 'BLOCKED',
-      reason: this.decision.reason
+      outcome: this.decision.allowed ? 'EXECUTED' : 'BLOCKED',
+      reason: this.decision.reasons.join(', ')
     }
   }
 }

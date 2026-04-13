@@ -1,9 +1,9 @@
 import { submitProposal } from '../packages/engine'
 import { MemoryEventStore } from '../packages/store'
 
-test('full pipeline', () => {
+test('full pipeline', async () => {
   const store = new MemoryEventStore()
-  const result = submitProposal({
+  const result = await submitProposal({
     actor: { id: 'owner', type: 'owner', trust: 1 },
     target: { id: 'x', type: 'type' },
     intent: 'test',
@@ -11,6 +11,6 @@ test('full pipeline', () => {
     timestamp: Date.now()
   }, store)
   
-  expect(result.outcome).toBe('approve')
+  expect(result.allowed).toBe(true)
   expect(store.getEvents('x').length).toBe(1)
 })

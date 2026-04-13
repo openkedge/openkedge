@@ -60,7 +60,7 @@ export class OpenKedgeClient {
     const decision = await this.config.engine.submitProposal(proposal)
 
     if (this.config.debug) {
-      console.log(`[OpenKedge] Debug: Intent ${type} outcome: ${decision.outcome}`)
+      console.log(`[OpenKedge] Debug: Intent ${type} allowed: ${decision.allowed}`)
     }
 
     return new ExecutionHandle<TResult>(intentId, decision, this.config.engine)

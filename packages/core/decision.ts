@@ -1,4 +1,5 @@
-export type PolicyDecision = {
-  outcome: 'approve' | 'reject' | 'escalate'
-  reason: string
+export interface PolicyDecision {
+  allowed: boolean
+  reasons: string[]
+  raw?: any
 }
