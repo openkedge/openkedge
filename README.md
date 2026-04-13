@@ -272,7 +272,7 @@ We welcome contributions across:
 
 ## 📜 License
 
-MIT (or TBD)
+MIT
 
 ---
 

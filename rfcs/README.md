@@ -32,12 +32,3 @@ RFCs progress through the following standardized stages:
 - **IETF-Style Language:** RFCs utilize RFC 2119 normative language (MUST, SHOULD, MAY).
 - **Determinism:** Protocols and processes described must be deterministic, testable, and auditable.
 
----
-
-## 📝 How to Propose an RFC
-
-1. Copy `0000-template.md` to `XXXX-your-feature-name.md`.
-2. Assign the next available RFC number.
-3. Submit a Pull Request.
-4. Engage in discussion and address community feedback.
-5. Iterate until consensus is reached and the RFC is Accepted.
