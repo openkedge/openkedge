@@ -243,6 +243,7 @@ OpenKedge is governed by a formal RFC process to ensure protocol stability and m
 * **[Intent Governance Protocol (IGP)](./rfcs/0001-intent-governance-protocol.md)**: Our primary specification for intent-based safety.
 * **[Event Evidence Chain (EEC)](./rfcs/0002-event-evidence-chain.md)**: The mathematical model for verifiable mutation lineage.
 * **[Execution Identity (EI)](./rfcs/0003-execution-identity.md)**: The ephemeral, intent-scoped security primitive.
+* **[Replay & Simulation API (RSA)](./rfcs/0004-replay-simulation-api.md)**: Standardized interface for time-travel debugging and "what-if" simulations.
 * **[Protocol Schemas](./schemas/)**: Machine-readable definitions for Intents and Evidence Chains.
 
 ---

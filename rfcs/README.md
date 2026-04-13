@@ -11,6 +11,7 @@ This directory contains Request for Comments (RFCs) for the OpenKedge project. R
 | 0001 | [Intent Governance Protocol (IGP)](./0001-intent-governance-protocol.md) | Draft |
 | 0002 | [Event Evidence Chain (EEC)](./0002-event-evidence-chain.md) | Draft |
 | 0003 | [Execution Identity (EI)](./0003-execution-identity.md) | Draft |
+| 0004 | [Replay & Simulation API (RSA)](./0004-replay-simulation-api.md) | Draft |
 
 ---
 
