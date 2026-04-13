@@ -9,6 +9,41 @@ It replaces direct API execution with:
 - **execution-bounded contracts**
 - **verifiable decision lineage (IEEC)**
 
+## Try It In 30 Seconds
+
+```bash
+npm install
+npm run build
+
+./dist/cli/index.js preview examples/intents/terminate-25-instances.json
+```
+
+See exactly why a mutation would be blocked before it ever reaches production.
+
+---
+
+## 📄 Paper
+
+OpenKedge is backed by a research paper:
+
+👉 [arXiv:2604.08601](http://arxiv.org/abs/2604.08601)
+
+This work introduces **intent-based mutation governance** — a shift from direct API execution to structured, policy-controlled decision flows.
+
+---
+
+## 🎯 From Paper → Code
+
+The core ideas from the paper are implemented here:
+
+| Paper Concept | OpenKedge Implementation |
+|--------------|-------------------------|
+| Intent | `OpenKedgeClient.submitIntent()` / SDK |
+| Context Resolution | `ContextProvider` |
+| Policy Evaluation | `AwsSafetyPolicyEvaluator`, OPA policy packs, and Cedar adapters |
+| Execution Control | `Executor` + `IdentityManager` / execution identity |
+| Evidence Chain | Event store + `ReplayEngine` |
+
 ---
 
 ## 🚨 Why OpenKedge?
@@ -107,14 +142,6 @@ This enables:
 ## 🧠 Core Insight
 
 > Mutation should not be executed. Mutation should be governed.
-
----
-
-## 📄 Paper
-
-Read the full paper:
-
-* [openkedge.io/paper](https://www.openkedge.io/paper)
 
 ---
 
@@ -217,6 +244,38 @@ npm run dev
 
 ---
 
+## 🎬 From Theory to Practice
+
+The paper shows how unsafe mutations happen.
+
+This repo shows how to stop them.
+
+### Example: Preventing a Cloud Outage
+
+```bash
+npm run demo:blast
+```
+
+Excerpt from the real demo output:
+
+```text
+=== Terminate 50 instances -> CRITICAL -> blocked ===
+{
+  "finalOutcome": "blocked",
+  "blastRadius": {
+    "riskLevel": "CRITICAL"
+  },
+  "result": {
+    "success": false,
+    "error": "Blocked by policy: ... Blocked due to CRITICAL blast radius"
+  }
+}
+```
+
+This is the exact failure mode described in the paper — prevented in real time.
+
+---
+
 ## 🧩 Use Cases
 
 * AI-driven DevOps automation
@@ -267,6 +326,19 @@ We welcome contributions across:
 * cloud adapters
 * agent integrations
 * visualization tools
+
+---
+
+## 📚 Citation
+
+```bibtex
+@article{openkedge2026,
+  title={OpenKedge: Intent-Based Mutation Governance for Agentic Systems},
+  author={He, Jun and Yu, Deying},
+  year={2026},
+  journal={arXiv preprint arXiv:2604.08601}
+}
+```
 
 ---
 

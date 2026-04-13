@@ -9,6 +9,7 @@ import {
 import type { ExecutionIdentity } from '../../core/identity/Identity'
 import type { IdentityProvider } from '../../core/identity/IdentityProvider'
 import type { Intent } from '../../interfaces/contracts'
+import { extractInstanceIds } from './extractInstanceIds'
 
 interface StsClientLike {
   send(command: AssumeRoleCommand): Promise<AssumeRoleCommandOutput>
@@ -31,12 +32,6 @@ export interface AwsIdentityProviderOptions {
   sessionDurationSeconds?: number
   ttlSeconds?: number
   stsClient?: StsClientLike
-}
-
-function extractInstanceIds(intent: Intent): string[] {
-  return Array.isArray(intent.payload)
-    ? intent.payload.filter((value): value is string => typeof value === 'string')
-    : []
 }
 
 function maskAccessKeyId(accessKeyId: string): string {
@@ -82,7 +77,7 @@ export function generatePolicy(
 
       if (instanceIds.length === 0) {
         throw new Error(
-          'ec2:TerminateInstances requires a string[] payload of instance IDs'
+          'ec2:TerminateInstances requires payload.instanceIds or a string[] payload of instance IDs'
         )
       }
 

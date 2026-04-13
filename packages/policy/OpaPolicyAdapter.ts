@@ -11,8 +11,16 @@ export class OpaPolicyAdapter implements PolicyAdapter {
       body: JSON.stringify({ input })
     })
 
-    const data = await response.json()
-    const result = data.result || { allow: false, reasons: ['OPA Decision Failed'] }
+    const data = (await response.json()) as {
+      result?: {
+        allow?: boolean
+        reasons?: string[]
+      }
+    }
+    const result = data.result ?? {
+      allow: false,
+      reasons: ['OPA Decision Failed']
+    }
 
     return {
       allowed: result.allow === true,

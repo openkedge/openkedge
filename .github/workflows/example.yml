@@ -1,0 +1,15 @@
+name: Safe Deployment
+
+on:
+  push:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run OpenKedge
+        uses: openkedge/run@v1
+        with:
+          intent: examples/intents/terminate-25-instances.json

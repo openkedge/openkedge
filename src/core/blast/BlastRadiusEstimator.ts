@@ -1,5 +1,6 @@
 import type { Intent } from '../../interfaces/contracts'
 import type { AwsContext, AwsInstanceContext } from '../../adapters/aws/AwsContextProvider'
+import { extractInstanceIds } from '../../adapters/aws/extractInstanceIds'
 
 import type { BlastRadius, BlastRiskLevel } from './BlastRadiusTypes'
 
@@ -17,6 +18,10 @@ function extractResourceIds(intent: Intent, context: unknown): string[] {
     return instances
       .map((instance) => instance.instanceId)
       .filter((instanceId): instanceId is string => typeof instanceId === 'string')
+  }
+
+  if (intent.type === 'ec2:TerminateInstances') {
+    return extractInstanceIds(intent)
   }
 
   if (Array.isArray(intent.payload)) {

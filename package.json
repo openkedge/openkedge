@@ -2,9 +2,12 @@
   "name": "openkedge",
   "version": "0.1.0",
   "description": "Intent-based mutation governance framework",
-  "private": true,
-  "main": "dist/runtime/server.js",
+  "private": false,
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "okg": "dist/cli/index.js"
+  },
   "workspaces": [
     "packages/*",
     "apps/*",
@@ -12,8 +15,9 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/runtime/server.js",
-    "dev": "ts-node src/runtime/server.ts",
+    "start": "node dist/cli/index.js serve",
+    "dev": "ts-node src/cli/index.ts serve",
+    "cli": "ts-node src/cli/index.ts",
     "dev:replay-ui": "npm --workspace apps/replay-ui run dev",
     "demo:replay": "ts-node src/examples/replay-demo.ts",
     "demo:aws": "ts-node src/examples/aws-demo.ts",

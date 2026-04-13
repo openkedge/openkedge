@@ -17,6 +17,7 @@ export interface Intent {
 export interface EvaluationResult {
   allowed: boolean
   reasons: string[]
+  matchedRules?: string[]
   enrichedContext?: unknown
 }
 
@@ -31,7 +32,11 @@ export interface ContextProvider {
 }
 
 export interface PolicyEvaluator {
-  evaluate(intent: Intent, context: unknown): Promise<EvaluationResult>
+  evaluate(
+    intent: Intent,
+    context: unknown,
+    blastRadius?: BlastRadius
+  ): Promise<EvaluationResult>
 }
 
 export interface Executor {

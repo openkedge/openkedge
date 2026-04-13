@@ -1,0 +1,26 @@
+name: OpenKedge Preview
+description: Run OpenKedge policy evaluation against an intent file
+inputs:
+  intent:
+    description: Path to the intent JSON file
+    required: true
+  policy-path:
+    description: Optional path to the policy pack directory
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+    - name: Build CLI
+      shell: bash
+      run: npm run build
+    - name: Preview intent
+      shell: bash
+      run: |
+        CMD=(node dist/cli/index.js preview "${{ inputs.intent }}")
+        if [ -n "${{ inputs['policy-path'] }}" ]; then
+          CMD+=(--policy-path "${{ inputs['policy-path'] }}")
+        fi
+        "${CMD[@]}"

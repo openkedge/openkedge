@@ -6,6 +6,7 @@ import {
 
 import type { ContextProvider } from '../../core/context/ContextProvider'
 import type { Intent } from '../../interfaces/contracts'
+import { extractInstanceIds } from './extractInstanceIds'
 
 export interface AwsInstanceContext {
   instanceId?: string
@@ -15,18 +16,13 @@ export interface AwsInstanceContext {
 
 export interface AwsContext {
   instances: AwsInstanceContext[]
+  lookupError?: string
 }
 
 interface Ec2ClientLike {
   send(command: DescribeInstancesCommand): Promise<{
     Reservations?: Array<{ Instances?: Instance[] }>
   }>
-}
-
-function extractInstanceIds(intent: Intent): string[] {
-  return Array.isArray(intent.payload)
-    ? intent.payload.filter((value): value is string => typeof value === 'string')
-    : []
 }
 
 function mapTags(tags: Instance['Tags']): Record<string, string | undefined> {
@@ -57,23 +53,34 @@ export class AwsContextProvider implements ContextProvider {
       return { instances: [] }
     }
 
-    const result = await this.ec2.send(
-      new DescribeInstancesCommand({
-        InstanceIds: instanceIds
-      })
-    )
+    try {
+      const result = await this.ec2.send(
+        new DescribeInstancesCommand({
+          InstanceIds: instanceIds
+        })
+      )
 
-    const instances =
-      result.Reservations?.flatMap(
-        (reservation) => reservation.Instances ?? []
-      ) ?? []
+      const instances =
+        result.Reservations?.flatMap(
+          (reservation) => reservation.Instances ?? []
+        ) ?? []
 
-    return {
-      instances: instances.map((instance) => ({
-        instanceId: instance.InstanceId,
-        state: instance.State?.Name,
-        tags: mapTags(instance.Tags)
-      }))
+      return {
+        instances: instances.map((instance) => ({
+          instanceId: instance.InstanceId,
+          state: instance.State?.Name,
+          tags: mapTags(instance.Tags)
+        }))
+      }
+    } catch (error) {
+      return {
+        instances: instanceIds.map((instanceId) => ({
+          instanceId,
+          state: 'unknown',
+          tags: {}
+        })),
+        lookupError: error instanceof Error ? error.message : String(error)
+      }
     }
   }
 }

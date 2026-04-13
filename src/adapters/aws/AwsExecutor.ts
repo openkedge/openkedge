@@ -13,6 +13,7 @@ import type {
   ExecutionResult,
   Intent
 } from '../../interfaces/contracts'
+import { extractInstanceIds } from './extractInstanceIds'
 
 type Ec2Command = DescribeInstancesCommand | TerminateInstancesCommand
 
@@ -25,12 +26,6 @@ interface Ec2ClientLike {
 export interface AwsExecutorOptions {
   region?: string
   clientFactory?: (identity: ExecutionIdentity) => Ec2ClientLike
-}
-
-function extractInstanceIds(intent: Intent): string[] {
-  return Array.isArray(intent.payload)
-    ? intent.payload.filter((value): value is string => typeof value === 'string')
-    : []
 }
 
 function normalizeError(error: unknown): string {
@@ -123,7 +118,8 @@ export class AwsExecutor implements Executor {
           if (instanceIds.length === 0) {
             return {
               success: false,
-              error: 'TerminateInstances requires a string[] payload of instance IDs'
+              error:
+                'TerminateInstances requires payload.instanceIds or a string[] payload of instance IDs'
             }
           }
 

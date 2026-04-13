@@ -1,0 +1,16 @@
+policy:
+  provider: opa
+  endpoint: http://localhost:8181
+
+context:
+  provider: aws
+
+defaults:
+  actor: cli-user
+
+storage:
+  path: .openkedge/replays
+
+server:
+  host: 127.0.0.1
+  port: 4010

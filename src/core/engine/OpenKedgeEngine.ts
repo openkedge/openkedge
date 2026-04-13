@@ -78,7 +78,11 @@ export class OpenKedgeEngine {
       })
 
       const blastDecision = this.blastRadiusPolicy.evaluate(blastRadius)
-      const safetyEvaluation = await this.policyEvaluator.evaluate(intent, contextSnapshot)
+      const safetyEvaluation = await this.policyEvaluator.evaluate(
+        intent,
+        contextSnapshot,
+        blastRadius
+      )
 
       evaluationResult = {
         allowed: safetyEvaluation.allowed && blastDecision.allowed,

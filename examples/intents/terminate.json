@@ -1,0 +1,6 @@
+{
+  "type": "ec2:TerminateInstances",
+  "payload": {
+    "instanceIds": ["i-1", "i-2"]
+  }
+}
