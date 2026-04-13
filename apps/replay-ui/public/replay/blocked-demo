@@ -1,0 +1,229 @@
+{
+  "intentId": "blocked-demo",
+  "originalIntent": {
+    "id": "blocked-demo",
+    "type": "ec2:TerminateInstances",
+    "payload": ["i-prod-001"],
+    "metadata": {
+      "actor": "agent-2",
+      "timestamp": 1776018610000
+    }
+  },
+  "events": [
+    {
+      "id": "blocked-1",
+      "type": "IntentReceived",
+      "timestamp": 1776018610000,
+      "intentId": "blocked-demo",
+      "sequence": 1,
+      "previousEventHash": null,
+      "currentHash": "hash-11",
+      "payload": {
+        "intentSnapshot": {
+          "id": "blocked-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": ["i-prod-001"],
+          "metadata": {
+            "actor": "agent-2",
+            "timestamp": 1776018610000
+          }
+        },
+        "reasoningTrail": ["Intent submitted by actor=agent-2"]
+      }
+    },
+    {
+      "id": "blocked-2",
+      "type": "ContextResolved",
+      "timestamp": 1776018611000,
+      "intentId": "blocked-demo",
+      "sequence": 2,
+      "previousEventHash": "hash-11",
+      "currentHash": "hash-12",
+      "payload": {
+        "intentSnapshot": {
+          "id": "blocked-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": ["i-prod-001"],
+          "metadata": {
+            "actor": "agent-2",
+            "timestamp": 1776018610000
+          }
+        },
+        "contextSnapshot": {
+          "instances": [
+            {
+              "instanceId": "i-prod-001",
+              "state": "running",
+              "tags": {
+                "env": "prod",
+                "critical": "true"
+              }
+            }
+          ]
+        },
+        "reasoningTrail": ["Context provider resolved current execution context"]
+      }
+    },
+    {
+      "id": "blocked-3",
+      "type": "BlastRadiusEvaluated",
+      "timestamp": 1776018612000,
+      "intentId": "blocked-demo",
+      "sequence": 3,
+      "previousEventHash": "hash-12",
+      "currentHash": "hash-13",
+      "payload": {
+        "intentSnapshot": {
+          "id": "blocked-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": ["i-prod-001"],
+          "metadata": {
+            "actor": "agent-2",
+            "timestamp": 1776018610000
+          }
+        },
+        "blastRadius": {
+          "resourceCount": 1,
+          "resourceIds": ["i-prod-001"],
+          "riskLevel": "CRITICAL",
+          "reasons": [
+            "Intent targets 1 resource",
+            "Critical instances detected: i-prod-001",
+            "Blast radius evaluated as CRITICAL (1 resource)"
+          ]
+        },
+        "reasoningTrail": [
+          "Intent targets 1 resource",
+          "Critical instances detected: i-prod-001",
+          "Blast radius evaluated as CRITICAL (1 resource)"
+        ]
+      }
+    },
+    {
+      "id": "blocked-4",
+      "type": "EvaluationCompleted",
+      "timestamp": 1776018613000,
+      "intentId": "blocked-demo",
+      "sequence": 4,
+      "previousEventHash": "hash-13",
+      "currentHash": "hash-14",
+      "payload": {
+        "intentSnapshot": {
+          "id": "blocked-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": ["i-prod-001"],
+          "metadata": {
+            "actor": "agent-2",
+            "timestamp": 1776018610000
+          }
+        },
+        "blastRadius": {
+          "resourceCount": 1,
+          "resourceIds": ["i-prod-001"],
+          "riskLevel": "CRITICAL",
+          "reasons": [
+            "Intent targets 1 resource",
+            "Critical instances detected: i-prod-001",
+            "Blast radius evaluated as CRITICAL (1 resource)"
+          ]
+        },
+        "evaluationResult": {
+          "allowed": false,
+          "reasons": [
+            "Blocked termination of critical instances: i-prod-001",
+            "Intent targets 1 resource",
+            "Critical instances detected: i-prod-001",
+            "Blast radius evaluated as CRITICAL (1 resource)",
+            "Blocked due to CRITICAL blast radius"
+          ]
+        },
+        "reasoningTrail": [
+          "Blocked termination of critical instances: i-prod-001",
+          "Blocked due to CRITICAL blast radius",
+          "Intent denied before execution"
+        ]
+      }
+    },
+    {
+      "id": "blocked-5",
+      "type": "ExecutionSkipped",
+      "timestamp": 1776018613300,
+      "intentId": "blocked-demo",
+      "sequence": 5,
+      "previousEventHash": "hash-14",
+      "currentHash": "hash-15",
+      "payload": {
+        "intentSnapshot": {
+          "id": "blocked-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": ["i-prod-001"],
+          "metadata": {
+            "actor": "agent-2",
+            "timestamp": 1776018610000
+          }
+        },
+        "executionResult": {
+          "success": false,
+          "error": "Blocked by policy"
+        },
+        "reasoningTrail": [
+          "Execution was intentionally skipped because evaluation denied the intent"
+        ]
+      }
+    }
+  ],
+  "reasoningTrail": [
+    "Intent submitted by actor=agent-2",
+    "Context provider resolved current execution context",
+    "Intent targets 1 resource",
+    "Critical instances detected: i-prod-001",
+    "Blast radius evaluated as CRITICAL (1 resource)",
+    "Blocked termination of critical instances: i-prod-001",
+    "Blocked due to CRITICAL blast radius",
+    "Intent denied before execution"
+  ],
+  "replayable": true,
+  "reconstructed": {
+    "contextSnapshot": {
+      "instances": [
+        {
+          "instanceId": "i-prod-001",
+          "state": "running",
+          "tags": {
+            "env": "prod",
+            "critical": "true"
+          }
+        }
+      ]
+    },
+    "blastRadius": {
+      "resourceCount": 1,
+      "resourceIds": ["i-prod-001"],
+      "riskLevel": "CRITICAL",
+      "reasons": [
+        "Intent targets 1 resource",
+        "Critical instances detected: i-prod-001",
+        "Blast radius evaluated as CRITICAL (1 resource)"
+      ]
+    },
+    "evaluationResult": {
+      "allowed": false,
+      "reasons": [
+        "Blocked termination of critical instances: i-prod-001",
+        "Intent targets 1 resource",
+        "Critical instances detected: i-prod-001",
+        "Blast radius evaluated as CRITICAL (1 resource)",
+        "Blocked due to CRITICAL blast radius"
+      ]
+    },
+    "executionResult": {
+      "success": false,
+      "error": "Blocked by policy"
+    },
+    "finalOutcome": "blocked"
+  },
+  "steps": [],
+  "integrity": {
+    "valid": true
+  }
+}

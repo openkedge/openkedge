@@ -14,10 +14,12 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/runtime/server.js",
     "dev": "ts-node src/runtime/server.ts",
+    "dev:replay-ui": "npm --workspace apps/replay-ui run dev",
     "demo:replay": "ts-node src/examples/replay-demo.ts",
     "demo:aws": "ts-node src/examples/aws-demo.ts",
     "demo:aws-identity": "ts-node src/examples/aws-identity-demo.ts",
     "demo:blast": "ts-node src/examples/blast-radius-demo.ts",
+    "build:replay-ui": "npm --workspace apps/replay-ui run build",
     "test": "jest --runInBand"
   },
   "devDependencies": {

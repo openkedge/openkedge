@@ -1,0 +1,303 @@
+{
+  "intentId": "critical-blast-demo",
+  "originalIntent": {
+    "id": "critical-blast-demo",
+    "type": "ec2:TerminateInstances",
+    "payload": [
+      "i-wide-1",
+      "i-wide-2",
+      "i-wide-3",
+      "i-wide-4",
+      "i-wide-5",
+      "i-wide-6",
+      "i-wide-7",
+      "i-wide-8",
+      "i-wide-9",
+      "i-wide-10",
+      "i-wide-11",
+      "i-wide-12"
+    ],
+    "metadata": {
+      "actor": "agent-3",
+      "timestamp": 1776018620000
+    }
+  },
+  "events": [
+    {
+      "id": "critical-1",
+      "type": "IntentReceived",
+      "timestamp": 1776018620000,
+      "intentId": "critical-blast-demo",
+      "sequence": 1,
+      "previousEventHash": null,
+      "currentHash": "hash-21",
+      "payload": {
+        "intentSnapshot": {
+          "id": "critical-blast-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": [
+            "i-wide-1",
+            "i-wide-2",
+            "i-wide-3",
+            "i-wide-4",
+            "i-wide-5",
+            "i-wide-6",
+            "i-wide-7",
+            "i-wide-8",
+            "i-wide-9",
+            "i-wide-10",
+            "i-wide-11",
+            "i-wide-12"
+          ],
+          "metadata": {
+            "actor": "agent-3",
+            "timestamp": 1776018620000
+          }
+        },
+        "reasoningTrail": ["Intent submitted by actor=agent-3"]
+      }
+    },
+    {
+      "id": "critical-2",
+      "type": "BlastRadiusEvaluated",
+      "timestamp": 1776018621200,
+      "intentId": "critical-blast-demo",
+      "sequence": 2,
+      "previousEventHash": "hash-21",
+      "currentHash": "hash-22",
+      "payload": {
+        "intentSnapshot": {
+          "id": "critical-blast-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": [
+            "i-wide-1",
+            "i-wide-2",
+            "i-wide-3",
+            "i-wide-4",
+            "i-wide-5",
+            "i-wide-6",
+            "i-wide-7",
+            "i-wide-8",
+            "i-wide-9",
+            "i-wide-10",
+            "i-wide-11",
+            "i-wide-12"
+          ],
+          "metadata": {
+            "actor": "agent-3",
+            "timestamp": 1776018620000
+          }
+        },
+        "blastRadius": {
+          "resourceCount": 12,
+          "resourceIds": [
+            "i-wide-1",
+            "i-wide-2",
+            "i-wide-3",
+            "i-wide-4",
+            "i-wide-5",
+            "i-wide-6",
+            "i-wide-7",
+            "i-wide-8",
+            "i-wide-9",
+            "i-wide-10",
+            "i-wide-11",
+            "i-wide-12"
+          ],
+          "riskLevel": "HIGH",
+          "reasons": [
+            "Intent targets 12 resources",
+            "Blast radius evaluated as HIGH (12 resources)"
+          ]
+        },
+        "reasoningTrail": [
+          "Intent targets 12 resources",
+          "Blast radius evaluated as HIGH (12 resources)"
+        ]
+      }
+    },
+    {
+      "id": "critical-3",
+      "type": "EvaluationCompleted",
+      "timestamp": 1776018622200,
+      "intentId": "critical-blast-demo",
+      "sequence": 3,
+      "previousEventHash": "hash-22",
+      "currentHash": "hash-23",
+      "payload": {
+        "intentSnapshot": {
+          "id": "critical-blast-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": [
+            "i-wide-1",
+            "i-wide-2",
+            "i-wide-3",
+            "i-wide-4",
+            "i-wide-5",
+            "i-wide-6",
+            "i-wide-7",
+            "i-wide-8",
+            "i-wide-9",
+            "i-wide-10",
+            "i-wide-11",
+            "i-wide-12"
+          ],
+          "metadata": {
+            "actor": "agent-3",
+            "timestamp": 1776018620000
+          }
+        },
+        "evaluationResult": {
+          "allowed": true,
+          "reasons": [
+            "No critical instances detected",
+            "Intent targets 12 resources",
+            "Blast radius evaluated as HIGH (12 resources)",
+            "High-risk mutation allowed with warning"
+          ]
+        },
+        "reasoningTrail": [
+          "High-risk mutation allowed with warning",
+          "Intent approved for execution"
+        ]
+      }
+    },
+    {
+      "id": "critical-4",
+      "type": "ExecutionCompleted",
+      "timestamp": 1776018623200,
+      "intentId": "critical-blast-demo",
+      "sequence": 4,
+      "previousEventHash": "tampered-hash",
+      "currentHash": "hash-24",
+      "payload": {
+        "intentSnapshot": {
+          "id": "critical-blast-demo",
+          "type": "ec2:TerminateInstances",
+          "payload": [
+            "i-wide-1",
+            "i-wide-2",
+            "i-wide-3",
+            "i-wide-4",
+            "i-wide-5",
+            "i-wide-6",
+            "i-wide-7",
+            "i-wide-8",
+            "i-wide-9",
+            "i-wide-10",
+            "i-wide-11",
+            "i-wide-12"
+          ],
+          "metadata": {
+            "actor": "agent-3",
+            "timestamp": 1776018620000
+          }
+        },
+        "executionResult": {
+          "success": true,
+          "result": {
+            "terminated": [
+              "i-wide-1",
+              "i-wide-2",
+              "i-wide-3",
+              "i-wide-4",
+              "i-wide-5",
+              "i-wide-6",
+              "i-wide-7",
+              "i-wide-8",
+              "i-wide-9",
+              "i-wide-10",
+              "i-wide-11",
+              "i-wide-12"
+            ]
+          }
+        },
+        "reasoningTrail": ["Executor completed successfully"]
+      }
+    }
+  ],
+  "reasoningTrail": [
+    "Intent submitted by actor=agent-3",
+    "Context provider resolved current execution context",
+    "Intent targets 12 resources",
+    "Blast radius evaluated as HIGH (12 resources)",
+    "High-risk mutation allowed with warning",
+    "Intent approved for execution",
+    "Executor completed successfully"
+  ],
+  "replayable": false,
+  "reconstructed": {
+    "contextSnapshot": {
+      "instances": [
+        { "instanceId": "i-wide-1", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-2", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-3", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-4", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-5", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-6", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-7", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-8", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-9", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-10", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-11", "state": "running", "tags": { "env": "dev", "critical": "false" } },
+        { "instanceId": "i-wide-12", "state": "running", "tags": { "env": "dev", "critical": "false" } }
+      ]
+    },
+    "blastRadius": {
+      "resourceCount": 12,
+      "resourceIds": [
+        "i-wide-1",
+        "i-wide-2",
+        "i-wide-3",
+        "i-wide-4",
+        "i-wide-5",
+        "i-wide-6",
+        "i-wide-7",
+        "i-wide-8",
+        "i-wide-9",
+        "i-wide-10",
+        "i-wide-11",
+        "i-wide-12"
+      ],
+      "riskLevel": "HIGH",
+      "reasons": [
+        "Intent targets 12 resources",
+        "Blast radius evaluated as HIGH (12 resources)"
+      ]
+    },
+    "evaluationResult": {
+      "allowed": true,
+      "reasons": [
+        "No critical instances detected",
+        "Intent targets 12 resources",
+        "Blast radius evaluated as HIGH (12 resources)",
+        "High-risk mutation allowed with warning"
+      ]
+    },
+    "executionResult": {
+      "success": true,
+      "result": {
+        "terminated": [
+          "i-wide-1",
+          "i-wide-2",
+          "i-wide-3",
+          "i-wide-4",
+          "i-wide-5",
+          "i-wide-6",
+          "i-wide-7",
+          "i-wide-8",
+          "i-wide-9",
+          "i-wide-10",
+          "i-wide-11",
+          "i-wide-12"
+        ]
+      }
+    },
+    "finalOutcome": "allowed"
+  },
+  "steps": [],
+  "integrity": {
+    "valid": false,
+    "brokenAtEventId": "critical-4"
+  }
+}
