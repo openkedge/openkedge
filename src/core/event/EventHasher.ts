@@ -28,6 +28,10 @@ function stableStringify(value: unknown): string {
 }
 
 export class EventHasher {
+  static hashValue(value: unknown): string {
+    return createHash('sha256').update(stableStringify(value)).digest('hex')
+  }
+
   static hashEvent(input: {
     id: string
     type: EventType
