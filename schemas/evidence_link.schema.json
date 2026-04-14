@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Verifiable Action Record (VAR) Schema",
+  "description": "Schema for the Sovereign Proxy Evidence Link (VAR) binding foreign reasoning to local execution.",
+  "type": "object",
+  "required": [
+    "agentId",
+    "traceId",
+    "intent",
+    "evaluation",
+    "execution",
+    "prevLinkHash",
+    "signature"
+  ],
+  "properties": {
+    "agentId": {
+      "type": "string",
+      "description": "Unique identifier for the agent instance."
+    },
+    "traceId": {
+      "type": "string",
+      "description": "Correlation ID for the entire mutation lifecycle (IGP trace)."
+    },
+    "intent": {
+      "type": "object",
+      "required": ["foreignModel", "rawJustification", "abstractedPayload"],
+      "properties": {
+        "foreignModel": {
+          "type": "string",
+          "description": "The high-parameter foreign model used for reasoning (e.g., gpt-5-preview)."
+        },
+        "rawJustification": {
+          "type": "string",
+          "description": "The unredacted natural language justification from the reasoner."
+        },
+        "abstractedPayload": {
+          "type": "string",
+          "description": "The masked/anonymized intent sent to the foreign reasoner."
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "required": ["evaluatorId", "policyVersion", "telemetrySnapshotHash", "decision"],
+      "properties": {
+        "evaluatorId": {
+          "type": "string",
+          "description": "The local Sovereign Evaluator ID."
+        },
+        "policyVersion": {
+          "type": "string",
+          "description": "The version of the National Security Policy (NSP) applied."
+        },
+        "telemetrySnapshotHash": {
+          "type": "string",
+          "description": "SHA-256 hash of the local system state at evaluation time."
+        },
+        "decision": {
+          "type": "string",
+          "enum": ["APPROVED", "REJECTED"],
+          "description": "The final decision from the Sovereign Evaluator."
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": ["realResource", "actualCommand", "timestamp"],
+      "properties": {
+        "realResource": {
+          "type": "string",
+          "description": "The unmasked local resource identifier (e.g., dc-riyadh-cooling-04)."
+        },
+        "actualCommand": {
+          "type": "string",
+          "description": "The physical command executed on the local asset."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp of execution."
+        }
+      }
+    },
+    "prevLinkHash": {
+      "type": "string",
+      "description": "Cipher-linked hash to the previous record."
+    },
+    "signature": {
+      "type": "string",
+      "description": "Cryptographic signature signed by the Sovereign Proxy Kedge."
+    }
+  }
+}

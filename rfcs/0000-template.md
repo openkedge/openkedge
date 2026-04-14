@@ -1,8 +1,10 @@
-# RFC-XXXX: <Title>
+# RFC-XXXX: [TITLE]
 
-**Network Working Group** **Internet-Draft / OpenKedge Standard** **Intended status:** <Standards Track / Informational / Experimental>  
-**Created:** <YYYY-MM-DD>  
-**Authors:** <Your Name>  
+**Status:** Draft / Accepted / Implemented  
+**Author:** [NAME]  
+**Project:** OpenKedge  
+**Date:** [MONTH YYYY]  
+**Scope:** [SCOPE]
 
 ---
 

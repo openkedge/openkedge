@@ -1,9 +1,10 @@
 # RFC-0004: Replay & Simulation API (RSA)
 
-**OpenKedge Standard** **Intended status:** Standards Track  
-**Created:** 2026-04-12  
-**Authors:** OpenKedge Contributors  
-**Updates:** [RFC-0002](./0002-event-evidence-chain.md)
+**Status:** Draft  
+**Author:** Jun He  
+**Project:** OpenKedge  
+**Date:** April 2026  
+**Scope:** Validation Framework for Intent Replay and Simulation
 
 ---
 
@@ -11,7 +12,7 @@
 
 This document defines the Replay & Simulation API (RSA), a standardized interface for querying, deterministic replaying, and simulating intent-driven mutations recorded in the Event Evidence Chain (EEC, [RFC-0002]).
 
-While the EEC provides a passive cryptographic ledger of autonomous actions, the RSA transforms this ledger into an active observability and reasoning interface. It enables time-travel state reconstruction, inspection of AI decision-making (explainability), and side-effect-free evaluation of hypothetical scenarios (simulation). Through RSA, OpenKedge serves as a deterministic "debugger" for AI-driven infrastructure decisions.
+As autonomous agents transition from advisory to operational roles in mission-critical infrastructure, the ability to interrogate historical decisions is no longer an optional observability feature—it is a requirement for **National Security** and **Algorithmic Accountability**. While the EEC provides a passive cryptographic ledger, the RSA transforms this ledger into an active reasoning interface. It enables time-travel state reconstruction, inspection of AI logic (explainability), and the evaluation of hypothetical "what-if" scenarios (simulation) without side effects.
 
 ---
 
@@ -23,32 +24,32 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## 3. Problem Statement
 
-Autonomous systems generate high-velocity decisions based on complex, transient context. Without a standardized interface to interrogate this history, systems suffer from:
-* **Opaque Reasoning:** Inability to answer *why* an agent executed a specific mutation.
-* **Testing Deficiencies:** Policy changes cannot be safely validated against historical edge cases.
-* **State Ambiguity:** Difficulties in reconstructing the exact state of the world at the time a bad decision was made.
-* **Lack of Introspection:** Developers lack the tooling to debug distributed, multi-agent workflows deterministically.
+Autonomous systems generate high-velocity decisions based on transient, high-dimensional context. In a sovereign cloud or smart city environment (e.g., NEOM/Tonomus), the inability to interrogate this history leads to:
+*   **Opaque Reasoners:** Black-box AI decisions that lack a verifiable "Why" trail, creating unacceptable liability and security risk.
+*   **Governance Drift:** Inability to validate policy updates against historical edge cases before wide-scale deployment.
+*   **Forensic Vacuum:** Difficulties in reconstructing the exact system state during a security incident or autonomous failure.
+*   **Contextual Ambiguity:** testing agent behavior in non-deterministic environments that do not mirror the ground-truth state of the production environment.
 
 ---
 
 ## 4. Terminology
 
-* **Trace:** A structured, hierarchical representation linking an Intent to its Context, Decision, and Execution.
-* **Replay:** The deterministic reconstruction of historical system state using the immutable events in the EEC.
-* **Simulation:** The evaluation of a hypothetical mutation lifecycle (or re-evaluation of a historical one) using modified inputs (Policies, Contexts, or Intents) without executing state changes.
-* **Time Cursor ($\tau$):** A strict temporal boundary used to isolate system state queries to a specific point in the past.
-* **Diffing:** The programmatic comparison between an actual historical Trace and a Simulated Trace.
+*   **Trace:** A structured, hierarchical representation linking an Intent to its Context, Decision, and Execution.
+*   **Replay:** The deterministic reconstruction of historical system state using the immutable events in the EEC.
+*   **Simulation:** The evaluation of a hypothetical mutation lifecycle using modified inputs (Policies, Contexts, or Intents) without executing state changes.
+*   **Verifiable Action Record (VAR):** The formal data structure (Evidence Link) representing a single node in the chain.
+*   **Time Cursor ($\tau$):** A strict temporal boundary used to isolate system state queries to a specific point in the past.
 
 ---
 
 ## 5. API Overview and Formalization
 
 The RSA provides three core operational planes:
-1. **Query:** Retrieving traces and topological event graphs.
-2. **Replay:** Reconstructing absolute state.
-3. **Simulation:** Sandboxed policy and context evaluation.
+1.  **Query:** Retrieving traces and topological event graphs.
+2.  **Replay:** Reconstructing absolute state.
+3.  **Simulation:** Sandboxed policy and context evaluation.
 
-**5.1 State Reconstruction (Time-Travel)**
+### 5.1 State Reconstruction (Time-Travel)
 The absolute state $S$ at any timestamp $\tau$ MUST be strictly derived by folding the Event Evidence Chain up to that point:
 
 $$S_{\tau} = \text{fold}(\{E_i \in \text{EEC} \mid E_i.\text{timestamp} \leq \tau\})$$
@@ -65,18 +66,7 @@ Clients MAY query the complete lifecycle of a mutation via its `intent_id`.
 **Request:** `GET /v1/trace/{intent_id}`
 
 **Response Contract:**
-The response MUST return a hierarchical JSON object resolving the `IntentSubmitted`, `ContextEvaluated`, `PolicyEvaluated`, and `ExecutionCompleted`/`ExecutionFailed` events.
-
-```json
-{
-  "trace_id": "uuid",
-  "intent": { ... },
-  "context_snapshot": { ... },
-  "decision_record": { "status": "ALLOW", "reasoning": "..." },
-  "execution_result": { ... },
-  "causal_graph": { "parent_intents": [], "child_intents": [] }
-}
-```
+The response MUST return a hierarchical JSON object resolving the `IntentSubmitted`, `ContextEvaluated`, `PolicyEvaluated`, and `ExecutionCompleted` events.
 
 ---
 
@@ -89,80 +79,89 @@ Replay MUST process events in strict causal order.
 Replay MUST utilize the historically recorded Context Snapshots.
 Replay MUST NOT interact with live external systems, APIs, or mutable state.
 
-**Request:** `POST /v1/replay`
-```json
-{
-  "intent_id": "uuid",
-  "until_event": "event_id" // OPTIONAL: For partial replay
-}
-```
-
 ---
 
 ## 8. Specification: Simulation API
 
-Simulation allows operators to inject overrides ($C_{override}, P_{override}$) into a historical or hypothetical Intent to observe the resulting decision boundary, without side effects.
+Simulation allows operators to inject overrides into a historical or hypothetical Intent to observe the resulting decision boundary, without side effects.
 
 ### 8.1 Simulation Constraints
 Simulation MUST NOT alter the production Evidence Chain.
 Simulation MUST NOT provision an Execution Identity (RFC-0003) or interact with the execution plane.
-
-**Request:** `POST /v1/simulate`
-```json
-{
-  "intent_id": "uuid",
-  "overrides": {
-    "policy_version": "v2.1.0",
-    "context_patches": [
-      { "op": "replace", "path": "/resource/status", "value": "critical" }
-    ]
-  }
-}
-```
-
-### 8.2 Diffing Response
-The Simulation engine SHOULD return a delta comparing the actual historical execution against the simulated outcome.
-$$ \Delta = \mathcal{S}(\text{Intent}, C_{override}, P_{override}) \oplus \text{Trace}_{actual} $$
-
-```json
-{
-  "simulated_decision": "DENY",
-  "differences": {
-    "decision_changed": true,
-    "actual": "ALLOW",
-    "simulated": "DENY",
-    "failing_constraint": "region_restriction_v2"
-  }
-}
-```
 
 ---
 
 ## 9. Security Considerations
 
 ### 9.1 Simulation Isolation
-The execution of the `simulate` endpoint MUST be strictly sandboxed. Under no circumstances may a simulated context or policy bypass the airgap to trigger a physical infrastructure mutation.
+Simulation environments MUST be strictly air-gapped from the execution plane. Under no circumstances may a simulated decision or context bypass the sandbox to trigger a physical infrastructure mutation.
 
-### 9.2 Data Exposure & Redaction
-Because ContextEvaluated snapshots may contain sensitive environment variables or PII, the Query and Replay APIs MUST implement Role-Based Access Control (RBAC). Furthermore, the API SHOULD support selective redaction of fields marked as sensitive in the schema before returning Traces to the client.
-
-### 9.3 Replay Integrity
-The Replay API MUST mathematically validate the cryptographic hash chain of the retrieved events (as defined in RFC-0002, Section 8) prior to reconstructing state. If the chain is invalid, the API MUST return a 500 Internal Server Error indicating cryptographic tampering.
+### 9.2 Data Residency & Redaction
+In compliance with **SDAIA/NDMO** standards, Replay APIs SHOULD support selective redaction of fields marked as sensitive in the schema (PII, Topology secrets) before returning traces to the client.
 
 ---
 
-## 10. Rationale and Alternatives
+## 10. The Verifiable Action Record (VAR) Specification
+
+To move beyond simple JSON logs, OpenKedge standardizes on the **Verifiable Action Record (VAR)**. Each "link" in the chain must bind the intent to the outcome, ensuring cryptographic lineage and auditability.
+
+$$ChainLink = \{Identity, Intent, Evaluation, Execution, Proof\}$$
+
+### 10.1 Data Schema (TypeScript Definition)
+```typescript
+/**
+ * Verifiable Action Record (VAR)
+ * Standardized data structure for a single link in the Evidence Chain.
+ */
+interface EvidenceLink {
+  // 1. EXECUTION IDENTITY (WHO)
+  // Refers to the RFC-0003 identity model.
+  agentId: string;
+  traceId: string;
+
+  // 2. SOVEREIGN MASKED INTENT (WHAT the model thought)
+  // Included directly for explainability and reasoning audits.
+  intent: {
+    foreignModel: string;
+    rawJustification: string; // The natural language "Reasoning" from the AI
+    abstractedPayload: string; // The masked command sent to the reasoner
+  };
+
+  // 3. EVALUATION METADATA (WHY we allowed it)
+  // Captures the deterministic decision boundary.
+  evaluation: {
+    evaluatorId: string;
+    policyVersion: string;
+    telemetrySnapshotHash: string; // Hash of the context at decision time
+    decision: "APPROVED" | "REJECTED";
+  };
+
+  // 4. BINDING & EXECUTION (HOW it happened)
+  execution: {
+    realResource: string;      // The unmasked resource identifier
+    actualCommand: string;     // The final physical command executed
+    timestamp: "ISO-8601";
+  };
+
+  // 5. CRYPTOGRAPHIC PROOF
+  prevLinkHash: string;        // Hash linkage to maintenance chain integrity
+  signature: string;           // Signed by the local Sovereign Kedge
+}
+```
+
+---
+
+## 11. Rationale and Alternatives
 
 Traditional infrastructure relies on disjointed logs and manual correlation to debug failures. When AI agents operate at machine speed, manual correlation becomes impossible.
 
 **Alternatives Considered:**
-* **Standard APM / Tracing (e.g., Jaeger, OpenTelemetry):** Rejected as the primary layer. APM tools trace network latency and spans, but they do not capture declarative intent, policy reasoning, or deterministic state snapshots necessary for "what-if" simulations.
-* **Offline Local Simulation Tools:** Rejected. Decoupling simulation from the live governance plane leads to policy drift where local tests pass but live executions fail.
+*   **Standard Tracing (OpenTelemetry):** Valuable for performance latency, but insufficient for full state-reconstruction and deterministic reasoning capture required for sovereign governance.
+*   **Snapshot-only Backups:** Capture the "What" (state) but completely lose the "Why" (intent and policy reasoning).
 
 ---
 
-## 11. Future Work
+## 12. Future Work
 
-1. **Visual Replay Interfaces:** Development of graphical dashboards to visualize state evolution over time.
-2. **Adversarial Auto-Simulation:** Utilizing LLMs to automatically generate hypothetical "attack intents" and simulating them against the active policy engine to continuously discover governance vulnerabilities.
-3. **Standardized Replay Query Language (RQL):** Implementing a GraphQL or SQL-like syntax for complex cross-intent dependency queries.
+1.  **Adversarial Auto-Simulation:** Utilizing LLMs to automatically generate "attack intents" and simulating them against current policy engines to discover governance vulnerabilities.
+2.  **Standardized Replay Query Language (RQL):** Implementing a GraphQL or SQL-like syntax for complex dependency queries across the Evidence Chain.

@@ -1,8 +1,10 @@
 # RFC-0001: Intent Governance Protocol (IGP)
 
-**OpenKedge Standard** **Intended status:** Standards Track  
-**Created:** 2026-04-12  
-**Authors:** OpenKedge Contributors  
+**Status:** Draft  
+**Author:** Jun He  
+**Project:** OpenKedge  
+**Date:** April 2026  
+**Scope:** Core Protocol for Governed State Mutations
 
 ---
 

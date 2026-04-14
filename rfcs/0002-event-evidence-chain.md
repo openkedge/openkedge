@@ -1,9 +1,10 @@
 # RFC-0002: Event Evidence Chain (EEC)
 
-**OpenKedge Standard** **Intended status:** Standards Track  
-**Created:** 2026-04-12  
-**Authors:** OpenKedge Contributors  
-**Updates:** [RFC-0001](./0001-intent-governance-protocol.md)
+**Status:** Draft  
+**Author:** Jun He  
+**Project:** OpenKedge  
+**Date:** April 2026  
+**Scope:** Verifiable Event Logging and State Reconstruction
 
 ---
 

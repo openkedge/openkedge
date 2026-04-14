@@ -12,6 +12,7 @@ This directory contains Request for Comments (RFCs) for the OpenKedge project. R
 | 0002 | [Event Evidence Chain (EEC)](./0002-event-evidence-chain.md) | Draft |
 | 0003 | [Execution Identity (EI)](./0003-execution-identity.md) | Draft |
 | 0004 | [Replay & Simulation API (RSA)](./0004-replay-simulation-api.md) | Draft |
+| 0005 | [Sovereign Proxy Pattern (SPP)](./0005-sovereign-proxy-architecture.md) | Draft |
 
 ---
 
