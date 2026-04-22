@@ -7,6 +7,13 @@ inputs:
   policy-path:
     description: Optional path to the policy pack directory
     required: false
+  policy-endpoint:
+    description: Optional OPA endpoint. Defaults to a local OPA sidecar.
+    required: false
+  opa-image:
+    description: OPA Docker image used when starting the local sidecar.
+    required: false
+    default: openpolicyagent/opa:0.63.0
 runs:
   using: composite
   steps:
@@ -16,6 +23,49 @@ runs:
     - name: Build CLI
       shell: bash
       run: npm run build
+    - name: Start OPA
+      shell: bash
+      env:
+        OPA_IMAGE: ${{ inputs['opa-image'] }}
+        POLICY_ENDPOINT: ${{ inputs['policy-endpoint'] }}
+      run: |
+        ENDPOINT="${POLICY_ENDPOINT:-http://localhost:8181}"
+
+        if curl --fail --silent "$ENDPOINT/health" >/dev/null 2>&1; then
+          echo "OPA is already available at $ENDPOINT"
+          exit 0
+        fi
+
+        case "$ENDPOINT" in
+          http://localhost:8181|http://127.0.0.1:8181)
+            ;;
+          *)
+            echo "::error::OPA is not reachable at $ENDPOINT"
+            exit 1
+            ;;
+        esac
+
+        CONTAINER_NAME="openkedge-opa-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}"
+        docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+        docker run --rm -d \
+          --name "$CONTAINER_NAME" \
+          -p 8181:8181 \
+          "$OPA_IMAGE" \
+          run --server --addr 0.0.0.0:8181
+        echo "OPENKEDGE_OPA_CONTAINER=$CONTAINER_NAME" >> "$GITHUB_ENV"
+
+        for attempt in {1..30}; do
+          if curl --fail --silent "$ENDPOINT/health" >/dev/null 2>&1; then
+            echo "OPA started at $ENDPOINT"
+            exit 0
+          fi
+
+          sleep 1
+        done
+
+        echo "::error::Timed out waiting for OPA at $ENDPOINT"
+        docker logs "$CONTAINER_NAME" || true
+        exit 1
     - name: Preview intent
       shell: bash
       run: |
@@ -23,4 +73,14 @@ runs:
         if [ -n "${{ inputs['policy-path'] }}" ]; then
           CMD+=(--policy-path "${{ inputs['policy-path'] }}")
         fi
+        if [ -n "${{ inputs['policy-endpoint'] }}" ]; then
+          CMD+=(--policy-endpoint "${{ inputs['policy-endpoint'] }}")
+        fi
         "${CMD[@]}"
+    - name: Stop OPA
+      if: always()
+      shell: bash
+      run: |
+        if [ -n "${OPENKEDGE_OPA_CONTAINER:-}" ]; then
+          docker rm -f "$OPENKEDGE_OPA_CONTAINER" >/dev/null 2>&1 || true
+        fi

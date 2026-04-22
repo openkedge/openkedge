@@ -12,4 +12,4 @@ jobs:
       - name: Run OpenKedge
         uses: ./
         with:
-          intent: examples/intents/terminate-25-instances.json
+          intent: examples/intents/describe-instances.json
