@@ -333,10 +333,10 @@ We welcome contributions across:
 
 ```bibtex
 @article{openkedge2026,
-  title={OpenKedge: Intent-Based Mutation Governance for Agentic Systems},
-  author={He, Jun and Yu, Deying},
-  year={2026},
-  journal={arXiv preprint arXiv:2604.08601}
+	title = {OpenKedge: Governing Agentic Mutation with Execution-Bound Safety and Evidence Chains},
+	author = {He, Jun and Yu, Deying},
+	journal = {arXiv preprint arXiv:2604.08601},
+	year = {2026},
 }
 ```
 
