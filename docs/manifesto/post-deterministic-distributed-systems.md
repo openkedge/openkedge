@@ -219,8 +219,3 @@ The deterministic era gave us reliable distributed computation.
 The post-deterministic era must give us trustworthy autonomous infrastructure.
 
 That work starts now.
-
----
-
-**Positioning Statement (For Social & Web Integration):**
-*Classical distributed systems theory parameterized networks, timing, and failures—but kept the participant model rigid. Post-Deterministic Distributed Systems is the architectural foundation for what happens next.*
