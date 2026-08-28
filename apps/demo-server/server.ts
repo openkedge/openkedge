@@ -1,190 +1,139 @@
 import express from 'express'
 import cors from 'cors'
-import { randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 
 import { OpenKedgeEngine } from '../../src/core/engine/OpenKedgeEngine'
 import { InMemoryEventStore } from '../../src/core/event/InMemoryEventStore'
 import { IdentityManager } from '../../src/core/identity/IdentityManager'
 import { OpenKedgeClient } from '../../src/sdk/client'
-import type { ContextProvider } from '../../src/core/context/ContextProvider'
-import type { PolicyEvaluator } from '../../src/core/evaluation/PolicyEvaluator'
 import type { Executor } from '../../src/core/execution/Executor'
 import type { IdentityProvider } from '../../src/core/identity/IdentityProvider'
-import { BlastRadiusEstimator } from '../../src/core/blast/BlastRadiusEstimator'
-import { BlastRadiusPolicy } from '../../src/core/blast/BlastRadiusPolicy'
-import type { Intent, ExecutionIdentity } from '../../src/interfaces/contracts'
+import type { IEECStore, TemporalGovernanceOptions } from '../../src/core/governance/types'
+import { isRecord } from '../../src/core/crypto/canonical'
+import type { Intent } from '../../src/interfaces/contracts'
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+const MOCK_EC2_INSTANCES = Array.from({ length: 35 }, (_, index) => ({
+  id: `i-${String(index + 1).padStart(7, '0')}`,
+  tags: { env: index < 15 ? 'prod' : 'dev', critical: index < 5 ? 'true' : 'false' }
+}))
 
-// Mock EC2 Instances
-const MOCK_EC2_INSTANCES = Array.from({ length: 35 }).map((_, i) => {
-  const isCritical = i < 5
-  return {
-    id: `i-${String(i + 1).padStart(7, '0')}`,
-    tags: {
-      env: i < 15 ? 'prod' : 'dev',
-      ...(isCritical ? { critical: 'true' } : {})
-    }
+export interface DemoOptions {
+  store?: IEECStore
+  secretKey?: string
+  executor?: Executor
+  identityProvider?: IdentityProvider
+  governance?: Partial<Omit<TemporalGovernanceOptions, 'secretKey'>>
+}
+
+export function createDemoServer(options: DemoOptions = {}) {
+  const app = express()
+  app.use(cors())
+  app.use(express.json({ limit: '128kb' }))
+  const store = options.store ?? new InMemoryEventStore()
+  const governance: TemporalGovernanceOptions = {
+    secretKey: options.secretKey ?? process.env.OPENKEDGE_CAPABILITY_SECRET ?? randomBytes(32).toString('hex'),
+    actions: {
+      lookup_instance_cost: { kind: 'READ', capabilityBindings: { resourceId: 'resourceId', targetAccountId: 'targetAccountId' } },
+      terminate_instance: { kind: 'MUTATION', requiredCapabilities: ['lookup_instance_cost'] },
+      transfer: { kind: 'MUTATION' }
+    },
+    rules: [
+      { id: 'recent-instance-inspection', type: 'PRECEDING_EVENT_REQUIRED', targetAction: 'terminate_instance', windowMs: 15 * 60_000,
+        requiredPrecedingAction: 'lookup_instance_cost', matches: [
+          { currentPath: 'payload.resourceId', historicalPath: 'result.resourceId' },
+          { currentPath: 'payload.targetAccountId', historicalPath: 'result.targetAccountId' }
+        ] },
+      { id: 'shared-transfer-budget', type: 'SLIDING_WINDOW_QUOTA', targetAction: 'transfer', scope: 'RESOURCE',
+        resourcePath: 'accountId', windowMs: 24 * 60 * 60_000, metricPath: 'intent.payload.amount', maxCumulativeValue: 500, unit: 'USD' }
+    ],
+    ...options.governance
   }
-})
-
-// Custom Policy to block terminating critical instances
-class DemoPolicyEvaluator implements PolicyEvaluator {
-  async evaluate(intent: Intent, context: any) {
-    if (intent.type === 'ec2:TerminateInstances') {
-      const targetIds = intent.payload as string[]
-      const criticalTargets = targetIds.filter(id => {
-        const inst = MOCK_EC2_INSTANCES.find(i => i.id === id)
-        return inst?.tags.critical === 'true'
-      })
-
-      if (criticalTargets.length > 0) {
-        return {
-          allowed: false,
-          reasons: [
-            `Policy violation: Cannot terminate critical instances (${criticalTargets.join(', ')})`,
-            'Safety Policy: BLOCKED'
-          ],
-          enrichedContext: context
-        }
+  const identityProvider: IdentityProvider = options.identityProvider ?? {
+    async issueIdentity(intent) {
+      const issuedAt = governance.clock?.() ?? Date.now()
+      return { id: `demo-${randomUUID()}`, intentId: intent.id, issuedAt, expiresAt: issuedAt + 30_000,
+        permissions: [intent.type], metadata: { provider: 'demo' } }
+    },
+    async revokeIdentity(identity) { identity.metadata = { ...identity.metadata, revokedAt: Date.now() } }
+  }
+  const executor: Executor = options.executor ?? {
+    async execute(intent) {
+      if (intent.type === 'lookup_instance_cost') {
+        // Output comes from trusted mock inventory, never text returned by an agent.
+        const resourceId = isRecord(intent.payload) ? intent.payload.resourceId : undefined
+        const instance = MOCK_EC2_INSTANCES.find(item => item.id === resourceId)
+        if (!instance) return { success: false, error: 'Instance not found' }
+        return { success: true, result: { resourceId: instance.id, targetAccountId: 'acc-demo', hourlyCost: 0.12 } }
       }
-
-      return {
-        allowed: true,
-        reasons: ['No policy violations detected. Instances are safe to terminate.'],
-        enrichedContext: context
+      return { success: true, result: { simulated: true } }
+    }
+  }
+  const engine = new OpenKedgeEngine(
+    { async resolve(intent) {
+      const ids = Array.isArray(intent.payload) ? intent.payload : isRecord(intent.payload) ? [intent.payload.resourceId] : []
+      return { instances: MOCK_EC2_INSTANCES.filter(instance => ids.includes(instance.id)).map(instance => ({
+        instanceId: instance.id, tags: instance.tags, state: 'running'
+      })), environment: 'demo-cloud' }
+    } },
+    { async evaluate(intent, context) {
+      if (!['ec2:TerminateInstances', 'lookup_instance_cost', 'terminate_instance', 'transfer'].includes(intent.type)) {
+        return { allowed: false, reasons: ['Unknown demo action'] }
       }
-    }
-    return { allowed: true, reasons: [] }
-  }
+      const ids = Array.isArray(intent.payload) ? intent.payload : isRecord(intent.payload) ? [intent.payload.resourceId] : []
+      const critical = MOCK_EC2_INSTANCES.filter(item => ids.includes(item.id) && item.tags.critical === 'true')
+      const allowed = !['ec2:TerminateInstances', 'terminate_instance'].includes(intent.type) || critical.length === 0
+      return { allowed, reasons: [allowed ? 'Demo safety policy passed' : 'Cannot terminate critical instances'], enrichedContext: context }
+    } },
+    executor, new IdentityManager(identityProvider, store), store, undefined, undefined, governance
+  )
+  const client = new OpenKedgeClient(engine, store)
+
+  app.get('/mock/ec2', (_req, res) => { res.json(MOCK_EC2_INSTANCES) })
+  app.post('/intent', async (req, res) => {
+    try { res.json(await client.submitIntent(req.body as Intent)) }
+    catch (error) { res.status(500).json({ error: error instanceof Error ? error.message : String(error) }) }
+  })
+  app.get('/replay/:intentId', async (req, res) => {
+    try { res.json(await client.replayIntent(req.params.intentId)) }
+    catch { res.status(404).json({ error: 'Replay not found' }) }
+  })
+  app.post('/scenarios/capability-injection', async (_req, res) => {
+    try {
+      const result = await runCapabilityInjectionScenario(client)
+      res.json(result)
+    } catch (error) { res.status(500).json({ error: error instanceof Error ? error.message : String(error) }) }
+  })
+  app.post('/scenarios/temporal-budget', async (_req, res) => {
+    const accountId = `demo-budget-${randomUUID()}`
+    const submit = (amount: number) => client.submitIntent({ id: randomUUID(), type: 'transfer', payload: { accountId, amount },
+      metadata: { actor: 'demo-agent', timestamp: Date.now() } })
+    try {
+      await submit(150)
+      const intentId = randomUUID()
+      const result = await client.submitIntent({ id: intentId, type: 'transfer', payload: { accountId, amount: 400 },
+        metadata: { actor: 'second-agent', timestamp: Date.now() } })
+      res.json({ intentId, result })
+    } catch (error) { res.status(500).json({ error: error instanceof Error ? error.message : String(error) }) }
+  })
+  return { app, client, store, engine }
 }
 
-// Custom Context Provider
-class DemoContextProvider implements ContextProvider {
-  async resolve(intent: Intent) {
-    if (intent.type === 'ec2:TerminateInstances') {
-      const targetIds = intent.payload as string[]
-      const instances = targetIds.map(id => MOCK_EC2_INSTANCES.find(i => i.id === id)).filter(Boolean)
-      return {
-        targets: instances,
-        environment: 'demo-cloud'
-      }
-    }
-    return {}
-  }
+export async function runCapabilityInjectionScenario(client: OpenKedgeClient) {
+  const sourceId = randomUUID()
+  const actor = 'demo-agent'
+  const lookup = await client.submitIntent({ id: sourceId, type: 'lookup_instance_cost', payload: { resourceId: 'i-0000016' },
+    metadata: { actor, timestamp: Date.now() } })
+  if (!lookup.success || !lookup.capabilities?.length) throw new Error('Demo lookup did not issue a capability')
+  const intentId = randomUUID()
+  const result = await client.submitIntent({ id: intentId, type: 'terminate_instance',
+    payload: { resourceId: 'i-0000001', targetAccountId: 'acc-demo' }, capabilities: lookup.capabilities,
+    requiredCapabilities: lookup.capabilities.map(token => token.tokenId), metadata: { actor, timestamp: Date.now() } })
+  return { sourceId, intentId, lookup, result }
 }
 
-class DemoBlastRadiusEstimator extends BlastRadiusEstimator {
-  estimate(intent: Intent, context: any) {
-    let score = 0
-    let reasons: string[] = []
-    let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW'
-    
-    const count = context?.targets?.length || 0;
-    
-    if (intent.type === 'ec2:TerminateInstances' && context?.targets) {
-      if (count > 20) {
-        score = 90
-        riskLevel = 'CRITICAL'
-        reasons.push(`${count} instances targeted (Threshold: 20). Blast radius is CRITICAL.`)
-      } else if (count > 5) {
-        score = 60
-        riskLevel = 'HIGH'
-        reasons.push(`${count} instances targeted. Blast radius is HIGH.`)
-      } else {
-        score = 20
-        riskLevel = 'LOW'
-        reasons.push(`${count} instances targeted. Blast radius is LOW.`)
-      }
-    }
-
-    return {
-      score,
-      riskLevel,
-      resourceCount: count,
-      resourceIds: context?.targets?.map((t: any) => t.id) || [],
-      criticalResources: context?.targets?.filter((t: any) => t.tags.critical === 'true') || [],
-      affectedServices: [],
-      reasons
-    }
-  }
+if (require.main === module) {
+  const { app } = createDemoServer()
+  const port = Number(process.env.PORT ?? 3001)
+  // The demo trusts actor metadata and is deliberately local-only.
+  app.listen(port, '127.0.0.1', () => { console.log(`Demo server running on http://127.0.0.1:${port}`) })
 }
-
-class DemoBlastRadiusPolicy extends BlastRadiusPolicy {
-  evaluate(blast: any) {
-    if (blast.score > 80) {
-      return {
-        allowed: false,
-        reasons: ['CRITICAL blast radius exceeded acceptable limits. Action blocked.']
-      }
-    }
-    return {
-      allowed: true,
-      reasons: ['Blast radius within acceptable limits.']
-    }
-  }
-}
-
-class DemoExecutor implements Executor {
-  async execute(intent: Intent, context: unknown, identity: ExecutionIdentity) {
-    return {
-      success: true,
-      error: undefined
-    }
-  }
-}
-
-class DemoIdentityProvider implements IdentityProvider {
-  async issueIdentity(intent: Intent): Promise<ExecutionIdentity> {
-    return {
-      id: `demo-token-${randomUUID()}`,
-      intentId: intent.id,
-      issuedAt: Date.now(),
-      expiresAt: Date.now() + 30000,
-      metadata: { role: 'demo-execution-role', provider: 'demo-provider' },
-      permissions: ['ec2:TerminateInstances']
-    }
-  }
-  async revokeIdentity(identity: ExecutionIdentity) {}
-}
-
-const store = new InMemoryEventStore()
-const engine = new OpenKedgeEngine(
-  new DemoContextProvider(),
-  new DemoPolicyEvaluator(),
-  new DemoExecutor(),
-  new IdentityManager(new DemoIdentityProvider(), store),
-  store,
-  new DemoBlastRadiusEstimator(),
-  new DemoBlastRadiusPolicy()
-)
-const client = new OpenKedgeClient(engine, store)
-
-app.get('/mock/ec2', (req, res) => {
-  res.json(MOCK_EC2_INSTANCES)
-})
-
-app.post('/intent', async (req, res) => {
-  try {
-    const result = await client.submitIntent(req.body as Intent)
-    res.json(result)
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
-})
-
-app.get('/replay/:intentId', async (req, res) => {
-  try {
-    const replay = await client.replayIntent(req.params.intentId)
-    res.json(replay)
-  } catch (err: any) {
-    res.status(404).json({ error: 'Replay not found' })
-  }
-})
-
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  console.log(`Demo server running on port ${PORT}`)
-})

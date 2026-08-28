@@ -17,6 +17,7 @@ import { IdentityManager } from '../src/core/identity/IdentityManager'
 import { OpenKedgeClient } from '../src/sdk/client'
 import type { Intent } from '../src/interfaces/contracts'
 import { EventType } from '../src/interfaces/contracts'
+import { mintExecutionContract } from '../src/core/crypto/executionContracts'
 
 const terminateIntent: Intent = {
   id: 'intent-aws-1',
@@ -260,6 +261,18 @@ test('generatePolicy scopes terminate intent to the target instance ARN', () => 
       }
     ]
   })
+})
+
+test('AWS session policy enforces contract activation and cutoff remotely', () => {
+  const now = Date.now()
+  const contract = mintExecutionContract(terminateIntent, [], [],
+    { notBefore: now, notAfter: now + 30_000, maxDurationMs: 5_000 }, 'aws-test-signing-key-at-least-32-bytes', now)
+  const policy = generatePolicy(terminateIntent, 'arn:aws:iam::123456789012:role/OpenKedgeExecutionRole', 'us-east-1', contract)
+  const condition = policy.Statement[0].Condition!
+  expect(condition.DateGreaterThanEquals['aws:CurrentTime']).toBe(new Date(now).toISOString())
+  const cutoff = Date.parse(condition.DateLessThan['aws:CurrentTime'])
+  expect(cutoff).toBeLessThanOrEqual(Date.now() + 5_000)
+  expect(cutoff).toBeLessThan(contract.temporalBounds.notAfter)
 })
 
 test('AWS adapter decisions are replayable through the evidence chain', async () => {

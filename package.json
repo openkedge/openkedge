@@ -15,6 +15,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json --pretty false",
+    "bench:temporal": "ts-node scripts/benchmark-temporal.ts",
     "start": "node dist/cli/index.js serve",
     "dev": "ts-node src/cli/index.ts serve",
     "cli": "ts-node src/cli/index.ts",

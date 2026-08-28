@@ -2,10 +2,15 @@ import { OpenKedgeConfig } from './types'
 import { IntentBuilder } from './IntentBuilder'
 import { ExecutionHandle } from './ExecutionHandle'
 import { IntentProposal } from '../core'
+import type { CapabilityToken, IntentKind, TemporalBounds } from '../core'
 
 export interface ExecuteOptions {
   actor?: string
   metadata?: Record<string, any>
+  capabilities?: CapabilityToken[]
+  requiredCapabilities?: string[]
+  kind?: IntentKind
+  temporalBounds?: Partial<TemporalBounds>
 }
 
 export interface PreviewResult {
@@ -38,13 +43,17 @@ export class OpenKedgeClient {
     const intentId = generateIntentId()
 
     const proposal: IntentProposal = {
-      actor: { id: actorId },
-      target: { id: 'system' }, // Target can be derived or enhanced later
+      id: intentId,
+      actor: { id: actorId, type: 'unverified_agent', trust: 0 },
+      target: { id: 'system', type: 'system' },
+      capabilities: options?.capabilities,
+      requiredCapabilities: options?.requiredCapabilities,
+      kind: options?.kind,
+      temporalBounds: options?.temporalBounds,
       intent: type,
       proposedFacts: [
         {
-          entityId: 'system',
-          key: 'payload',
+          type: 'payload',
           value: payload as any
         }
       ],

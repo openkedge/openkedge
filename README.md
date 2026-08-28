@@ -276,6 +276,24 @@ This is the exact failure mode described in the paper — prevented in real time
 
 ---
 
+## Temporal Invariants & Capability Attenuation
+
+The execution engine supports HMAC-signed capabilities from successful reads,
+declarative preceding-event rules, sliding quotas, and rate limits. Atomic quota
+reservations prevent concurrent agents from overspending; signed execution
+contracts bind the intent, prerequisites, and strict credential time bounds.
+Indexed IEEC stores are available for memory, SQLite, and Postgres.
+
+Run the demo and click **Run Capability Attack** or **Run Budget Scenario** to
+see blocked parameter substitution and a shared `$500 / 24h` budget in replay.
+See [configuration, semantics, and deployment limits](docs/temporal-invariants.md).
+
+```sh
+npm test
+npm run typecheck
+npm run bench:temporal
+```
+
 ## 🧩 Use Cases
 
 * AI-driven DevOps automation

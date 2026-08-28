@@ -1,0 +1,373 @@
+{
+  "intentId": "temporal-budget-demo",
+  "originalIntent": {
+    "id": "temporal-budget-demo",
+    "type": "transfer",
+    "payload": {
+      "accountId": "shared",
+      "amount": 400
+    },
+    "metadata": {
+      "actor": "second-agent",
+      "timestamp": 1787895017036
+    },
+    "kind": "MUTATION"
+  },
+  "events": [
+    {
+      "id": "a8232d46-594b-4558-bf8b-023895718cb6",
+      "type": "IntentReceived",
+      "timestamp": 1787895017040,
+      "intentId": "temporal-budget-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "temporal-budget-demo",
+          "type": "transfer",
+          "payload": {
+            "accountId": "shared",
+            "amount": 400
+          },
+          "metadata": {
+            "actor": "second-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "reasoningTrail": [
+          "Intent submitted by actor=second-agent",
+          "Intent type=transfer"
+        ]
+      },
+      "sequence": 1,
+      "previousEventHash": null,
+      "currentHash": "5e145582f6e48069e9833fc4d9733c359949becb101d4800d354e6fc4464065e"
+    },
+    {
+      "id": "60eaf73b-5320-4e41-accd-9c950ed29dfb",
+      "type": "CapabilityVerified",
+      "timestamp": 1787895017040,
+      "intentId": "temporal-budget-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "temporal-budget-demo",
+          "type": "transfer",
+          "payload": {
+            "accountId": "shared",
+            "amount": 400
+          },
+          "metadata": {
+            "actor": "second-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "capabilities": [],
+        "reasoningTrail": [
+          "Capability signatures, actor, bound parameters, and successful source evidence verified"
+        ]
+      },
+      "sequence": 2,
+      "previousEventHash": "5e145582f6e48069e9833fc4d9733c359949becb101d4800d354e6fc4464065e",
+      "currentHash": "f3d9a3f2128a879fa47ae519bb38d497d47488d37947596cd7c74be4923958e6"
+    },
+    {
+      "id": "72ccec3a-384e-43a1-998d-22c042899fad",
+      "type": "ContextResolved",
+      "timestamp": 1787895017040,
+      "intentId": "temporal-budget-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "temporal-budget-demo",
+          "type": "transfer",
+          "payload": {
+            "accountId": "shared",
+            "amount": 400
+          },
+          "metadata": {
+            "actor": "second-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "contextSnapshot": {
+          "instances": [],
+          "environment": "demo-cloud"
+        },
+        "reasoningTrail": [
+          "Context provider resolved current execution context"
+        ]
+      },
+      "sequence": 3,
+      "previousEventHash": "f3d9a3f2128a879fa47ae519bb38d497d47488d37947596cd7c74be4923958e6",
+      "currentHash": "47d7b0605292b6e978dd8ffdbbe0fe996c276552d1fefd2805be1e3a96d0f63f"
+    },
+    {
+      "id": "14cfe4a2-be13-4b39-8b71-4d3250faa3e4",
+      "type": "TemporalEvaluated",
+      "timestamp": 1787895017040,
+      "intentId": "temporal-budget-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "temporal-budget-demo",
+          "type": "transfer",
+          "payload": {
+            "accountId": "shared",
+            "amount": 400
+          },
+          "metadata": {
+            "actor": "second-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "contextSnapshot": {
+          "instances": [],
+          "environment": "demo-cloud"
+        },
+        "temporalEvaluation": {
+          "allowed": false,
+          "decision": "REJECT",
+          "reasons": [
+            "SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+          ],
+          "budgets": [
+            {
+              "ruleId": "shared-transfer-budget",
+              "action": "transfer",
+              "windowMs": 86400000,
+              "used": 150,
+              "requested": 400,
+              "limit": 500,
+              "unit": "USD"
+            }
+          ],
+          "preconditionHashes": []
+        },
+        "reasoningTrail": [
+          "SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+        ]
+      },
+      "sequence": 4,
+      "previousEventHash": "47d7b0605292b6e978dd8ffdbbe0fe996c276552d1fefd2805be1e3a96d0f63f",
+      "currentHash": "0444701845bbf0c7ac19ca5359b3eaf003702559a974d379775fdbcb029c13e6"
+    },
+    {
+      "id": "7f607264-2406-41cb-83e6-a035d4dc607b",
+      "type": "EvaluationCompleted",
+      "timestamp": 1787895017040,
+      "intentId": "temporal-budget-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "temporal-budget-demo",
+          "type": "transfer",
+          "payload": {
+            "accountId": "shared",
+            "amount": 400
+          },
+          "metadata": {
+            "actor": "second-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "contextSnapshot": {
+          "instances": [],
+          "environment": "demo-cloud"
+        },
+        "evaluationResult": {
+          "allowed": false,
+          "reasons": [
+            "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+          ]
+        },
+        "temporalEvaluation": {
+          "allowed": false,
+          "decision": "REJECT",
+          "reasons": [
+            "SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+          ],
+          "budgets": [
+            {
+              "ruleId": "shared-transfer-budget",
+              "action": "transfer",
+              "windowMs": 86400000,
+              "used": 150,
+              "requested": 400,
+              "limit": 500,
+              "unit": "USD"
+            }
+          ],
+          "preconditionHashes": []
+        },
+        "reasoningTrail": [
+          "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+        ]
+      },
+      "sequence": 5,
+      "previousEventHash": "0444701845bbf0c7ac19ca5359b3eaf003702559a974d379775fdbcb029c13e6",
+      "currentHash": "d928e74cf48c42024ee7b911f7c5c7ea7ae9fd8656413633481a35efb91e6000"
+    },
+    {
+      "id": "d1dbd257-fc13-4454-b8d1-49c445ed7b5f",
+      "type": "ExecutionSkipped",
+      "timestamp": 1787895017040,
+      "intentId": "temporal-budget-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "temporal-budget-demo",
+          "type": "transfer",
+          "payload": {
+            "accountId": "shared",
+            "amount": 400
+          },
+          "metadata": {
+            "actor": "second-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "contextSnapshot": {
+          "instances": [],
+          "environment": "demo-cloud"
+        },
+        "evaluationResult": {
+          "allowed": false,
+          "reasons": [
+            "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+          ]
+        },
+        "temporalEvaluation": {
+          "allowed": false,
+          "decision": "REJECT",
+          "reasons": [
+            "SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+          ],
+          "budgets": [
+            {
+              "ruleId": "shared-transfer-budget",
+              "action": "transfer",
+              "windowMs": 86400000,
+              "used": 150,
+              "requested": 400,
+              "limit": 500,
+              "unit": "USD"
+            }
+          ],
+          "preconditionHashes": []
+        },
+        "executionResult": {
+          "success": false,
+          "error": "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500",
+          "errorCode": "TEMPORAL_CONSTRAINT_ERROR"
+        },
+        "reasoningTrail": [
+          "Execution was intentionally skipped because evaluation denied the intent"
+        ]
+      },
+      "sequence": 6,
+      "previousEventHash": "d928e74cf48c42024ee7b911f7c5c7ea7ae9fd8656413633481a35efb91e6000",
+      "currentHash": "543ae67d2be1e2fda21852f82978228aeb79ea16f767bcb439d46822898f0b47"
+    }
+  ],
+  "reasoningTrail": [
+    "Intent submitted by actor=second-agent",
+    "Intent type=transfer",
+    "Capability signatures, actor, bound parameters, and successful source evidence verified",
+    "Context provider resolved current execution context",
+    "SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500",
+    "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500",
+    "Execution was intentionally skipped because evaluation denied the intent"
+  ],
+  "replayable": true,
+  "reconstructed": {
+    "contextSnapshot": {
+      "instances": [],
+      "environment": "demo-cloud"
+    },
+    "evaluationResult": {
+      "allowed": false,
+      "reasons": [
+        "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+      ]
+    },
+    "executionResult": {
+      "success": false,
+      "error": "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500",
+      "errorCode": "TEMPORAL_CONSTRAINT_ERROR"
+    },
+    "temporalEvaluation": {
+      "allowed": false,
+      "decision": "REJECT",
+      "reasons": [
+        "SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+      ],
+      "budgets": [
+        {
+          "ruleId": "shared-transfer-budget",
+          "action": "transfer",
+          "windowMs": 86400000,
+          "used": 150,
+          "requested": 400,
+          "limit": 500,
+          "unit": "USD"
+        }
+      ],
+      "preconditionHashes": []
+    },
+    "finalOutcome": "blocked"
+  },
+  "steps": [
+    {
+      "eventType": "IntentReceived",
+      "timestamp": 1787895017040,
+      "summary": "Intent temporal-budget-demo received",
+      "reasoningTrail": [
+        "Intent submitted by actor=second-agent",
+        "Intent type=transfer"
+      ]
+    },
+    {
+      "eventType": "CapabilityVerified",
+      "timestamp": 1787895017040,
+      "summary": "Capabilities verified for temporal-budget-demo",
+      "reasoningTrail": [
+        "Capability signatures, actor, bound parameters, and successful source evidence verified"
+      ]
+    },
+    {
+      "eventType": "ContextResolved",
+      "timestamp": 1787895017040,
+      "summary": "Context resolved for temporal-budget-demo",
+      "reasoningTrail": [
+        "Context provider resolved current execution context"
+      ]
+    },
+    {
+      "eventType": "TemporalEvaluated",
+      "timestamp": 1787895017040,
+      "summary": "Temporal constraints evaluated for temporal-budget-demo",
+      "reasoningTrail": [
+        "SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+      ]
+    },
+    {
+      "eventType": "EvaluationCompleted",
+      "timestamp": 1787895017040,
+      "summary": "Policy blocked intent temporal-budget-demo",
+      "reasoningTrail": [
+        "TEMPORAL_CONSTRAINT_ERROR: SLIDING_WINDOW_QUOTA: shared-transfer-budget would use 550 of 500"
+      ]
+    },
+    {
+      "eventType": "ExecutionSkipped",
+      "timestamp": 1787895017040,
+      "summary": "Execution skipped for temporal-budget-demo",
+      "reasoningTrail": [
+        "Execution was intentionally skipped because evaluation denied the intent"
+      ]
+    }
+  ],
+  "integrity": {
+    "valid": true
+  }
+}

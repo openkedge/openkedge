@@ -9,6 +9,8 @@ import {
 import type { ExecutionIdentity } from '../../core/identity/Identity'
 import type { IdentityProvider } from '../../core/identity/IdentityProvider'
 import type { Intent } from '../../interfaces/contracts'
+import type { ExecutionContract } from '../../core/governance/types'
+import { assertContractBounds } from '../../core/crypto/executionContracts'
 import { extractInstanceIds } from './extractInstanceIds'
 
 interface StsClientLike {
@@ -19,6 +21,10 @@ interface AwsPolicyStatement {
   Effect: 'Allow'
   Action: string[]
   Resource: string[]
+  Condition?: {
+    DateGreaterThanEquals: { 'aws:CurrentTime': string }
+    DateLessThan: { 'aws:CurrentTime': string }
+  }
 }
 
 export interface AwsPolicyDocument {
@@ -69,7 +75,8 @@ function resolveRegion(explicitRegion?: string): string {
 export function generatePolicy(
   intent: Intent,
   roleArn: string,
-  region: string
+  region: string,
+  contract?: ExecutionContract
 ): AwsPolicyDocument {
   switch (intent.type) {
     case 'ec2:TerminateInstances': {
@@ -92,7 +99,12 @@ export function generatePolicy(
             Resource: instanceIds.map(
               (instanceId) =>
                 `arn:aws:ec2:${region}:${accountId}:instance/${instanceId}`
-            )
+            ),
+            ...(contract ? { Condition: {
+              DateGreaterThanEquals: { 'aws:CurrentTime': new Date(contract.temporalBounds.notBefore).toISOString() },
+              DateLessThan: { 'aws:CurrentTime': new Date(Math.min(contract.temporalBounds.notAfter,
+                Date.now() + contract.temporalBounds.maxDurationMs)).toISOString() }
+            } } : {})
           }
         ]
       }
@@ -116,7 +128,8 @@ export class AwsIdentityProvider implements IdentityProvider {
       })
   }
 
-  async issueIdentity(intent: Intent): Promise<ExecutionIdentity> {
+  async issueIdentity(intent: Intent, contract?: ExecutionContract): Promise<ExecutionIdentity> {
+    if (contract) assertContractBounds(contract, intent)
     const roleArn = this.options.roleArn ?? process.env.OPENKEDGE_AWS_EXECUTION_ROLE_ARN
 
     if (!roleArn) {
@@ -127,7 +140,7 @@ export class AwsIdentityProvider implements IdentityProvider {
 
     const region = resolveRegion(this.options.region)
     const sessionDurationSeconds = this.options.sessionDurationSeconds ?? 900
-    const sessionPolicy = generatePolicy(intent, roleArn, region)
+    const sessionPolicy = generatePolicy(intent, roleArn, region, contract)
     const issuedAt = Date.now()
     const response = await this.sts.send(
       new AssumeRoleCommand({
@@ -154,7 +167,8 @@ export class AwsIdentityProvider implements IdentityProvider {
       this.options.ttlSeconds === undefined
         ? Number.POSITIVE_INFINITY
         : this.options.ttlSeconds * 1000
-    const expiresAt = Math.min(assumedRoleExpiresAt, issuedAt + requestedTtlMs)
+    const expiresAt = Math.min(assumedRoleExpiresAt, issuedAt + requestedTtlMs,
+      contract?.temporalBounds.notAfter ?? Infinity, contract ? issuedAt + contract.temporalBounds.maxDurationMs : Infinity)
     const allowedInstanceIds = extractInstanceIds(intent)
 
     return {

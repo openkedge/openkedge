@@ -47,7 +47,7 @@ export function EventNode({
     <button
       type="button"
       onClick={() => onSelect(event)}
-      className={`group relative ml-6 w-full rounded-[24px] border p-5 text-left transition duration-300 ${
+      className={`group relative ml-6 w-[calc(100%-1.5rem)] break-words rounded-[24px] border p-5 text-left transition duration-300 ${
         isActive
           ? 'border-accent/60 bg-white/8 shadow-glow'
           : 'border-white/10 bg-panel/65 hover:border-white/20 hover:bg-white/8'
@@ -68,6 +68,11 @@ export function EventNode({
             </span>
           </div>
           <p className="mt-3 text-lg font-semibold text-ink">{summarize(event)}</p>
+          {event.payload.capabilities?.map(token => (
+            <span key={token.tokenId} className="mt-2 mr-2 inline-block rounded-full border border-violet-300/30 px-3 py-1 text-xs text-violet-200">
+              Capability · {token.tokenId.slice(0, 8)}
+            </span>
+          ))}
           <p className="mt-2 text-sm text-slate-300">
             {event.payload.reasoningTrail?.[0] ?? 'No reasoning attached to this event.'}
           </p>

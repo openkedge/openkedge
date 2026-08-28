@@ -1,4 +1,7 @@
 import type { ReplayResult } from './types'
+import capabilitySource from './fixtures/capability-source-demo.json'
+import capabilityInjection from './fixtures/capability-injection-demo.json'
+import temporalBudget from './fixtures/temporal-budget-demo.json'
 
 const baseTimestamp = Date.parse('2026-04-12T18:30:00.000Z')
 
@@ -659,5 +662,8 @@ function buildCriticalBlastReplay(): ReplayResult {
 export const mockReplays: Record<string, ReplayResult> = {
   'allowed-demo': buildAllowedReplay(),
   'blocked-demo': buildBlockedReplay(),
-  'critical-blast-demo': buildCriticalBlastReplay()
+  'critical-blast-demo': buildCriticalBlastReplay(),
+  'capability-injection-demo': capabilityInjection as ReplayResult,
+  'capability-source-demo': capabilitySource as ReplayResult,
+  'temporal-budget-demo': temporalBudget as ReplayResult
 }

@@ -8,6 +8,7 @@ export interface Executor {
   execute(
     intent: Intent,
     context: unknown,
-    identity: ExecutionIdentity
+    identity: ExecutionIdentity,
+    signal?: AbortSignal
   ): Promise<ExecutionResult>
 }

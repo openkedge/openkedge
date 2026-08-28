@@ -1,11 +1,14 @@
-import type { EvidenceEvent, ReplayStatusTheme } from '../types'
+import type { EvidenceEvent, ReplayResult, ReplayStatusTheme } from '../types'
 import { EventNode } from './EventNode'
+import { CapabilityLineage } from './CapabilityLineage'
 
 interface TimelineProps {
   events: EvidenceEvent[]
   selectedEventId: string | null
   visibleCount: number
   onSelect: (event: EvidenceEvent) => void
+  replay: ReplayResult
+  onNavigate: (intentId: string) => void
 }
 
 function themeForEvent(event: EvidenceEvent): ReplayStatusTheme {
@@ -44,7 +47,9 @@ export function Timeline({
   events,
   selectedEventId,
   visibleCount,
-  onSelect
+  onSelect,
+  replay,
+  onNavigate
 }: TimelineProps) {
   return (
     <section className="rounded-[28px] border border-white/10 bg-panel/70 p-6 backdrop-blur">
@@ -62,6 +67,7 @@ export function Timeline({
         </div>
       </div>
 
+      <CapabilityLineage replay={replay} onNavigate={onNavigate} />
       <div className="relative mt-8">
         <div className="absolute left-[1.35rem] top-2 h-[calc(100%-1rem)] w-px bg-gradient-to-b from-accent/50 via-white/10 to-transparent" />
         <div className="space-y-5">

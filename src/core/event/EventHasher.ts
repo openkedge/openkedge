@@ -17,7 +17,7 @@ function sortValue(value: unknown): unknown {
       .reduce<Record<string, unknown>>((acc, key) => {
         acc[key] = sortValue(record[key])
         return acc
-      }, {})
+      }, Object.create(null) as Record<string, unknown>)
   }
 
   return value

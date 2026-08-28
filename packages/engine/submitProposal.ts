@@ -9,6 +9,9 @@ export async function submitProposal(
   store: EventStore,
   adapter: PolicyAdapter = new CedarPolicyAdapter()
 ): Promise<PolicyDecision> {
+  if (proposal.capabilities !== undefined || proposal.requiredCapabilities !== undefined || proposal.temporalBounds !== undefined) {
+    return { allowed: false, reasons: ['GOVERNANCE_NOT_CONFIGURED_ERROR: Fact-only proposals do not execute temporal contracts; use ExecutionClient with a governed OpenKedgeEngine.'] }
+  }
   const context = buildContext(proposal.target.id, store)
 
   const input = {

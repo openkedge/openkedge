@@ -10,6 +10,7 @@ import type {
 import { EventType } from '../../interfaces/contracts'
 
 import { EventHasher } from './EventHasher'
+import type { ExecutionContract, TemporalEvaluationResult } from '../governance/types'
 
 export class ReplayEngine {
   async replayIntent(events: EvidenceEvent[]): Promise<ReplayResult> {
@@ -29,10 +30,14 @@ export class ReplayEngine {
     let blastRadius: BlastRadius | undefined
     let evaluationResult: EvaluationResult | undefined
     let executionResult: ExecutionResult | undefined
+    let temporalEvaluation: TemporalEvaluationResult | undefined
+    let executionContract: ExecutionContract | undefined
     const reasoningTrail: string[] = []
     const steps: ReplayStep[] = []
 
     for (const event of ordered) {
+      if (event.payload.temporalEvaluation) temporalEvaluation = event.payload.temporalEvaluation
+      if (event.payload.executionContract) executionContract = event.payload.executionContract
       if (event.payload.contextSnapshot !== undefined) {
         contextSnapshot = event.payload.contextSnapshot
       }
@@ -72,6 +77,8 @@ export class ReplayEngine {
         blastRadius,
         evaluationResult,
         executionResult,
+        temporalEvaluation,
+        executionContract,
         finalOutcome: this.computeFinalOutcome(
           evaluationResult,
           executionResult,
@@ -158,6 +165,16 @@ export class ReplayEngine {
         return event.payload.evaluationResult?.allowed
           ? `Policy allowed intent ${event.intentId}`
           : `Policy blocked intent ${event.intentId}`
+      case EventType.CapabilityVerified:
+        return `Capabilities verified for ${event.intentId}`
+      case EventType.CapabilityIssued:
+        return `Read capability issued by ${event.intentId}`
+      case EventType.TemporalEvaluated:
+        return `Temporal constraints evaluated for ${event.intentId}`
+      case EventType.ExecutionReserved:
+        return `Quota reserved and execution contract minted for ${event.intentId}`
+      case EventType.ExecutionCancelled:
+        return `Unused quota reservation cancelled for ${event.intentId}`
       case EventType.IdentityIssued:
         return `Identity ${event.payload.identitySnapshot?.identityId ?? 'unknown'} issued for ${event.intentId}`
       case EventType.IdentityUsed:

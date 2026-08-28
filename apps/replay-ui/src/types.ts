@@ -4,6 +4,11 @@ export type EventType =
   | 'ContextResolved'
   | 'BlastRadiusEvaluated'
   | 'EvaluationCompleted'
+  | 'CapabilityVerified'
+  | 'CapabilityIssued'
+  | 'TemporalEvaluated'
+  | 'ExecutionReserved'
+  | 'ExecutionCancelled'
   | 'IdentityIssued'
   | 'IdentityUsed'
   | 'IdentityRevoked'
@@ -28,6 +33,9 @@ export interface ExecutionResult {
   success: boolean
   result?: unknown
   error?: string
+  errorCode?: string
+  capabilities?: CapabilityToken[]
+  executionContract?: ExecutionContract
 }
 
 export interface IdentitySnapshot {
@@ -52,6 +60,8 @@ export interface EvidenceEvent {
       id: string
       type: string
       payload: unknown
+      kind?: 'READ' | 'PROBE' | 'MUTATION'
+      capabilities?: CapabilityToken[]
       metadata: {
         actor: string
         timestamp: number
@@ -62,6 +72,9 @@ export interface EvidenceEvent {
     evaluationResult?: EvaluationResult
     executionResult?: ExecutionResult
     identitySnapshot?: IdentitySnapshot
+    capabilities?: CapabilityToken[]
+    executionContract?: ExecutionContract
+    temporalEvaluation?: TemporalEvaluationResult
     error?: string
     reasoningTrail?: string[]
     metadata?: Record<string, unknown>
@@ -81,11 +94,14 @@ export interface ReplayResult {
   events: EvidenceEvent[]
   reasoningTrail: string[]
   replayable: boolean
+  capabilityLinks?: CapabilityLink[]
   reconstructed: {
     contextSnapshot?: unknown
     blastRadius?: BlastRadius
     evaluationResult?: EvaluationResult
     executionResult?: ExecutionResult
+    temporalEvaluation?: TemporalEvaluationResult
+    executionContract?: ExecutionContract
     finalOutcome: ReplayOutcome
   }
   steps: ReplayStep[]
@@ -100,3 +116,4 @@ export interface ReplayStatusTheme {
   badge: string
   panel: string
 }
+import type { CapabilityLink, CapabilityToken, ExecutionContract, TemporalEvaluationResult } from '../../../src/core/governance/types'

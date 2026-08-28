@@ -1,0 +1,243 @@
+{
+  "intentId": "capability-injection-demo",
+  "originalIntent": {
+    "id": "capability-injection-demo",
+    "type": "terminate_instance",
+    "payload": {
+      "resourceId": "i-0000001",
+      "targetAccountId": "acc-demo"
+    },
+    "capabilities": [
+      {
+        "tokenId": "e4a973d9-d6b7-4841-90bc-8e67d5e0f1ee",
+        "sourceProposalId": "capability-source-demo",
+        "sourceHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6",
+        "issuedAt": 1787895017039,
+        "expiresAt": 1787895917039,
+        "actorId": "demo-agent",
+        "boundAttributes": {
+          "resourceId": "i-0000016",
+          "targetAccountId": "acc-demo"
+        },
+        "signature": "e822e1bbd932f03272faca0626c38e500ae9585c6eb456155887a97e308c0bbe"
+      }
+    ],
+    "metadata": {
+      "actor": "demo-agent",
+      "timestamp": 1787895017036
+    },
+    "kind": "MUTATION"
+  },
+  "events": [
+    {
+      "id": "a8ad3b75-1fdb-4de8-8ee7-1d5306b5b4a3",
+      "type": "IntentReceived",
+      "timestamp": 1787895017039,
+      "intentId": "capability-injection-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-injection-demo",
+          "type": "terminate_instance",
+          "payload": {
+            "resourceId": "i-0000001",
+            "targetAccountId": "acc-demo"
+          },
+          "capabilities": [
+            {
+              "tokenId": "e4a973d9-d6b7-4841-90bc-8e67d5e0f1ee",
+              "sourceProposalId": "capability-source-demo",
+              "sourceHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6",
+              "issuedAt": 1787895017039,
+              "expiresAt": 1787895917039,
+              "actorId": "demo-agent",
+              "boundAttributes": {
+                "resourceId": "i-0000016",
+                "targetAccountId": "acc-demo"
+              },
+              "signature": "e822e1bbd932f03272faca0626c38e500ae9585c6eb456155887a97e308c0bbe"
+            }
+          ],
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "reasoningTrail": [
+          "Intent submitted by actor=demo-agent",
+          "Intent type=terminate_instance"
+        ]
+      },
+      "sequence": 1,
+      "previousEventHash": null,
+      "currentHash": "8eb63388fd50abd2db09e7534b4cb4f5634210cfcd26699bc031bb2113ea25d3"
+    },
+    {
+      "id": "c35306e2-2120-4c57-b9df-280d452f143f",
+      "type": "EvaluationCompleted",
+      "timestamp": 1787895017039,
+      "intentId": "capability-injection-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-injection-demo",
+          "type": "terminate_instance",
+          "payload": {
+            "resourceId": "i-0000001",
+            "targetAccountId": "acc-demo"
+          },
+          "capabilities": [
+            {
+              "tokenId": "e4a973d9-d6b7-4841-90bc-8e67d5e0f1ee",
+              "sourceProposalId": "capability-source-demo",
+              "sourceHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6",
+              "issuedAt": 1787895017039,
+              "expiresAt": 1787895917039,
+              "actorId": "demo-agent",
+              "boundAttributes": {
+                "resourceId": "i-0000016",
+                "targetAccountId": "acc-demo"
+              },
+              "signature": "e822e1bbd932f03272faca0626c38e500ae9585c6eb456155887a97e308c0bbe"
+            }
+          ],
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "evaluationResult": {
+          "allowed": false,
+          "reasons": [
+            "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId"
+          ]
+        },
+        "reasoningTrail": [
+          "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId"
+        ]
+      },
+      "sequence": 2,
+      "previousEventHash": "8eb63388fd50abd2db09e7534b4cb4f5634210cfcd26699bc031bb2113ea25d3",
+      "currentHash": "dc4c0e6b0918cef99d5f11ef973afffb1f97aacf5abdf7d344c324d929a958e7"
+    },
+    {
+      "id": "7ca59daf-9d80-4083-addd-0dd599d3f745",
+      "type": "ExecutionSkipped",
+      "timestamp": 1787895017039,
+      "intentId": "capability-injection-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-injection-demo",
+          "type": "terminate_instance",
+          "payload": {
+            "resourceId": "i-0000001",
+            "targetAccountId": "acc-demo"
+          },
+          "capabilities": [
+            {
+              "tokenId": "e4a973d9-d6b7-4841-90bc-8e67d5e0f1ee",
+              "sourceProposalId": "capability-source-demo",
+              "sourceHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6",
+              "issuedAt": 1787895017039,
+              "expiresAt": 1787895917039,
+              "actorId": "demo-agent",
+              "boundAttributes": {
+                "resourceId": "i-0000016",
+                "targetAccountId": "acc-demo"
+              },
+              "signature": "e822e1bbd932f03272faca0626c38e500ae9585c6eb456155887a97e308c0bbe"
+            }
+          ],
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "MUTATION"
+        },
+        "evaluationResult": {
+          "allowed": false,
+          "reasons": [
+            "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId"
+          ]
+        },
+        "executionResult": {
+          "success": false,
+          "error": "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId",
+          "errorCode": "CAPABILITY_MISMATCH_ERROR"
+        },
+        "reasoningTrail": [
+          "Execution was intentionally skipped because evaluation denied the intent"
+        ]
+      },
+      "sequence": 3,
+      "previousEventHash": "dc4c0e6b0918cef99d5f11ef973afffb1f97aacf5abdf7d344c324d929a958e7",
+      "currentHash": "c18678ddbfd7b4442700b3d166628ddde82d93a476214d762399b255ca4551e1"
+    }
+  ],
+  "reasoningTrail": [
+    "Intent submitted by actor=demo-agent",
+    "Intent type=terminate_instance",
+    "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId",
+    "Execution was intentionally skipped because evaluation denied the intent"
+  ],
+  "replayable": true,
+  "reconstructed": {
+    "evaluationResult": {
+      "allowed": false,
+      "reasons": [
+        "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId"
+      ]
+    },
+    "executionResult": {
+      "success": false,
+      "error": "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId",
+      "errorCode": "CAPABILITY_MISMATCH_ERROR"
+    },
+    "finalOutcome": "blocked"
+  },
+  "steps": [
+    {
+      "eventType": "IntentReceived",
+      "timestamp": 1787895017039,
+      "summary": "Intent capability-injection-demo received",
+      "reasoningTrail": [
+        "Intent submitted by actor=demo-agent",
+        "Intent type=terminate_instance"
+      ]
+    },
+    {
+      "eventType": "EvaluationCompleted",
+      "timestamp": 1787895017039,
+      "summary": "Policy blocked intent capability-injection-demo",
+      "reasoningTrail": [
+        "CAPABILITY_MISMATCH_ERROR: Capability does not authorize payload.resourceId"
+      ]
+    },
+    {
+      "eventType": "ExecutionSkipped",
+      "timestamp": 1787895017039,
+      "summary": "Execution skipped for capability-injection-demo",
+      "reasoningTrail": [
+        "Execution was intentionally skipped because evaluation denied the intent"
+      ]
+    }
+  ],
+  "integrity": {
+    "valid": true
+  },
+  "capabilityLinks": [
+    {
+      "tokenId": "e4a973d9-d6b7-4841-90bc-8e67d5e0f1ee",
+      "sourceProposalId": "capability-source-demo",
+      "sourceHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6",
+      "sourceVerified": true,
+      "capabilityVerified": false,
+      "boundAttributes": {
+        "resourceId": "i-0000016",
+        "targetAccountId": "acc-demo"
+      },
+      "sourceAction": "lookup_instance_cost",
+      "sourceTimestamp": 1787895017038
+    }
+  ]
+}

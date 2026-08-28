@@ -3,11 +3,17 @@ import type {
   IdentityAuditRecord
 } from '../core/identity/Identity'
 import type { BlastRadius } from '../core/blast/BlastRadiusTypes'
+import type { CapabilityLink, CapabilityToken, ExecutionContract, IntentKind, TemporalBounds, TemporalEvaluationResult } from '../core/governance/types'
 
 export interface Intent {
   id: string
   type: string
   payload: unknown
+  kind?: IntentKind
+  capabilities?: CapabilityToken[]
+  /** Caller-requested token IDs; server action requirements apply independently. */
+  requiredCapabilities?: string[]
+  temporalBounds?: Partial<TemporalBounds>
   metadata: {
     actor: string
     timestamp: number
@@ -25,6 +31,9 @@ export interface ExecutionResult {
   success: boolean
   result?: unknown
   error?: string
+  errorCode?: string
+  capabilities?: CapabilityToken[]
+  executionContract?: ExecutionContract
 }
 
 export interface ContextProvider {
@@ -43,7 +52,8 @@ export interface Executor {
   execute(
     intent: Intent,
     context: unknown,
-    identity: ExecutionIdentity
+    identity: ExecutionIdentity,
+    signal?: AbortSignal
   ): Promise<ExecutionResult>
 }
 
@@ -52,6 +62,11 @@ export enum EventType {
   ContextResolved = 'ContextResolved',
   BlastRadiusEvaluated = 'BlastRadiusEvaluated',
   EvaluationCompleted = 'EvaluationCompleted',
+  CapabilityVerified = 'CapabilityVerified',
+  CapabilityIssued = 'CapabilityIssued',
+  TemporalEvaluated = 'TemporalEvaluated',
+  ExecutionReserved = 'ExecutionReserved',
+  ExecutionCancelled = 'ExecutionCancelled',
   IdentityIssued = 'IdentityIssued',
   IdentityUsed = 'IdentityUsed',
   IdentityRevoked = 'IdentityRevoked',
@@ -67,6 +82,9 @@ export interface EvidenceEventPayload {
   evaluationResult?: EvaluationResult
   executionResult?: ExecutionResult
   identitySnapshot?: IdentityAuditRecord
+  capabilities?: CapabilityToken[]
+  temporalEvaluation?: TemporalEvaluationResult
+  executionContract?: ExecutionContract
   error?: string
   reasoningTrail?: string[]
   metadata?: Record<string, unknown>
@@ -106,11 +124,14 @@ export interface ReplayResult {
   events: EvidenceEvent[]
   reasoningTrail: string[]
   replayable: boolean
+  capabilityLinks?: CapabilityLink[]
   reconstructed: {
     contextSnapshot?: unknown
     blastRadius?: BlastRadius
     evaluationResult?: EvaluationResult
     executionResult?: ExecutionResult
+    temporalEvaluation?: TemporalEvaluationResult
+    executionContract?: ExecutionContract
     finalOutcome: 'allowed' | 'blocked' | 'failed' | 'unknown'
   }
   steps: ReplayStep[]
@@ -122,3 +143,4 @@ export interface ReplayResult {
 
 export type { ExecutionIdentity, IdentityAuditRecord }
 export type { BlastRadius }
+export type { CapabilityToken, ExecutionContract, TemporalBounds }

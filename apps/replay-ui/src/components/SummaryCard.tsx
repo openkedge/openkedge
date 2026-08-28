@@ -51,7 +51,7 @@ export function SummaryCard({ replay }: SummaryCardProps) {
             <div className="text-xs uppercase tracking-[0.24em] text-slate-400">
               Risk Level
             </div>
-            <div className="mt-2 text-xl font-semibold text-gold">
+            <div className="mt-2 break-words text-base font-semibold text-gold">
               {blastRadius?.riskLevel ?? 'UNKNOWN'}
             </div>
           </div>

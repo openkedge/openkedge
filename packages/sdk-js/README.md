@@ -107,3 +107,15 @@ if (!preview.allowed) {
 * **Zero Catastrophic Flow Breaks**: Rejections bounce gracefully into `success: false` constructs allowing orchestration branches to fall back safely.
 * **Auto Intent Lineage**: Cryptographic tracing intent `id` generation is obfuscated entirely within execution wrapping.
 * **First-Class Typing**: Completely typed TS definitions incorporating Generic typing inferences mapping custom payloads easily `execute<CustomPayload, ExpectedReturn>()`.
+
+## Temporal execution API
+
+For governed tool execution, use the exported `ExecutionClient` with a configured
+`OpenKedgeEngine`; `createExecutionClient` is the corresponding runtime factory.
+The root `openkedge` package exports these as `OpenKedgeClient` and
+`createOpenKedgeClient`. See [Temporal Invariants & Capability Attenuation](../../docs/temporal-invariants.md).
+
+The fact-proposal builder accepts `capabilities` and `requiredCapabilities` for
+custom engine integrations. The built-in fact-only engine rejects these fields
+because it cannot issue execution contracts. Use the execution API for native
+capability verification, atomic quotas, and credential bounds.

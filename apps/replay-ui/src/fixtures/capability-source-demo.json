@@ -1,0 +1,1031 @@
+{
+  "intentId": "capability-source-demo",
+  "originalIntent": {
+    "id": "capability-source-demo",
+    "type": "lookup_instance_cost",
+    "payload": {
+      "resourceId": "i-0000016"
+    },
+    "metadata": {
+      "actor": "demo-agent",
+      "timestamp": 1787895017036
+    },
+    "kind": "READ"
+  },
+  "events": [
+    {
+      "id": "c7db9abe-ea11-4f7e-bf75-2ed4cca8d14a",
+      "type": "IntentReceived",
+      "timestamp": 1787895017037,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "reasoningTrail": [
+          "Intent submitted by actor=demo-agent",
+          "Intent type=lookup_instance_cost"
+        ]
+      },
+      "sequence": 1,
+      "previousEventHash": null,
+      "currentHash": "fb80d1eaa80eade3f960f61d4ea042b92d8cbe4e82dfb7416de7e9671746a5de"
+    },
+    {
+      "id": "57a1c5e7-83d9-48b0-b439-78e8de4b4463",
+      "type": "CapabilityVerified",
+      "timestamp": 1787895017037,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "capabilities": [],
+        "reasoningTrail": [
+          "Capability signatures, actor, bound parameters, and successful source evidence verified"
+        ]
+      },
+      "sequence": 2,
+      "previousEventHash": "fb80d1eaa80eade3f960f61d4ea042b92d8cbe4e82dfb7416de7e9671746a5de",
+      "currentHash": "5f3c7b74c1261c28b9b31dd0d7ba098e40e5a65db49270f89b0ea72e230905f9"
+    },
+    {
+      "id": "9227c5a1-80c0-4345-afab-54e988637162",
+      "type": "ContextResolved",
+      "timestamp": 1787895017037,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "contextSnapshot": {
+          "instances": [
+            {
+              "instanceId": "i-0000016",
+              "tags": {
+                "env": "dev",
+                "critical": "false"
+              },
+              "state": "running"
+            }
+          ],
+          "environment": "demo-cloud"
+        },
+        "reasoningTrail": [
+          "Context provider resolved current execution context"
+        ]
+      },
+      "sequence": 3,
+      "previousEventHash": "5f3c7b74c1261c28b9b31dd0d7ba098e40e5a65db49270f89b0ea72e230905f9",
+      "currentHash": "63251d8d8ee9ada88541a8c6978eff2584ff1d4a58fe739521f28a4415df4da1"
+    },
+    {
+      "id": "34c1841d-689c-4dd5-bda7-0ef6979eb8e8",
+      "type": "TemporalEvaluated",
+      "timestamp": 1787895017037,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "contextSnapshot": {
+          "instances": [
+            {
+              "instanceId": "i-0000016",
+              "tags": {
+                "env": "dev",
+                "critical": "false"
+              },
+              "state": "running"
+            }
+          ],
+          "environment": "demo-cloud"
+        },
+        "temporalEvaluation": {
+          "allowed": true,
+          "decision": "ALLOW",
+          "reasons": [],
+          "budgets": [],
+          "preconditionHashes": []
+        },
+        "reasoningTrail": [
+          "Temporal preconditions and budgets satisfied"
+        ]
+      },
+      "sequence": 4,
+      "previousEventHash": "63251d8d8ee9ada88541a8c6978eff2584ff1d4a58fe739521f28a4415df4da1",
+      "currentHash": "9ba5285f0ebd384391381ec2f8e5dd9db70cc9cebde597d6de07856ae4da4eff"
+    },
+    {
+      "id": "a0ecc1c5-9910-41b7-a115-56839ad3c1e3",
+      "type": "BlastRadiusEvaluated",
+      "timestamp": 1787895017037,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "contextSnapshot": {
+          "instances": [
+            {
+              "instanceId": "i-0000016",
+              "tags": {
+                "env": "dev",
+                "critical": "false"
+              },
+              "state": "running"
+            }
+          ],
+          "environment": "demo-cloud"
+        },
+        "blastRadius": {
+          "resourceCount": 1,
+          "resourceIds": [
+            "i-0000016"
+          ],
+          "riskLevel": "LOW",
+          "reasons": [
+            "Intent targets 1 resource",
+            "Blast radius evaluated as LOW (1 resource)"
+          ]
+        },
+        "temporalEvaluation": {
+          "allowed": true,
+          "decision": "ALLOW",
+          "reasons": [],
+          "budgets": [],
+          "preconditionHashes": []
+        },
+        "reasoningTrail": [
+          "Intent targets 1 resource",
+          "Blast radius evaluated as LOW (1 resource)"
+        ]
+      },
+      "sequence": 5,
+      "previousEventHash": "9ba5285f0ebd384391381ec2f8e5dd9db70cc9cebde597d6de07856ae4da4eff",
+      "currentHash": "53c35cb7e3468c30200c9c5e270e740c33aabd126cb28341647d89eb8e90a7f5"
+    },
+    {
+      "id": "cb2d12f9-0241-4cd3-8305-aa136e172357",
+      "type": "EvaluationCompleted",
+      "timestamp": 1787895017037,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "contextSnapshot": {
+          "instances": [
+            {
+              "instanceId": "i-0000016",
+              "tags": {
+                "env": "dev",
+                "critical": "false"
+              },
+              "state": "running"
+            }
+          ],
+          "environment": "demo-cloud"
+        },
+        "blastRadius": {
+          "resourceCount": 1,
+          "resourceIds": [
+            "i-0000016"
+          ],
+          "riskLevel": "LOW",
+          "reasons": [
+            "Intent targets 1 resource",
+            "Blast radius evaluated as LOW (1 resource)"
+          ]
+        },
+        "evaluationResult": {
+          "allowed": true,
+          "reasons": [
+            "Demo safety policy passed",
+            "Intent targets 1 resource",
+            "Blast radius evaluated as LOW (1 resource)",
+            "Low blast radius accepted by policy"
+          ],
+          "enrichedContext": {
+            "instances": [
+              {
+                "instanceId": "i-0000016",
+                "tags": {
+                  "env": "dev",
+                  "critical": "false"
+                },
+                "state": "running"
+              }
+            ],
+            "environment": "demo-cloud"
+          }
+        },
+        "temporalEvaluation": {
+          "allowed": true,
+          "decision": "ALLOW",
+          "reasons": [],
+          "budgets": [],
+          "preconditionHashes": []
+        },
+        "reasoningTrail": [
+          "Demo safety policy passed",
+          "Intent targets 1 resource",
+          "Blast radius evaluated as LOW (1 resource)",
+          "Low blast radius accepted by policy",
+          "Intent approved for execution"
+        ]
+      },
+      "sequence": 6,
+      "previousEventHash": "53c35cb7e3468c30200c9c5e270e740c33aabd126cb28341647d89eb8e90a7f5",
+      "currentHash": "85eb5c6146d03cd01a0b343441f5a0cb0590309d87c9599ec5174de72d654e77"
+    },
+    {
+      "id": "5c000c9c-21af-4e23-a376-493a5badf44f",
+      "type": "ExecutionReserved",
+      "timestamp": 1787895017037,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "executionContract": {
+          "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+          "proposalId": "capability-source-demo",
+          "actorId": "demo-agent",
+          "action": "lookup_instance_cost",
+          "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+          "issuedAt": 1787895017037,
+          "temporalBounds": {
+            "notBefore": 1787895017037,
+            "notAfter": 1787895047037,
+            "maxDurationMs": 30000
+          },
+          "temporalValidity": {
+            "validAfter": 1787895017037,
+            "validBefore": 1787895047037
+          },
+          "linkedCapabilities": [],
+          "capabilities": [],
+          "preconditionHashes": [],
+          "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+        },
+        "temporalEvaluation": {
+          "allowed": true,
+          "decision": "ALLOW",
+          "reasons": [],
+          "budgets": [],
+          "preconditionHashes": []
+        },
+        "reasoningTrail": [
+          "Temporal check and quota reservation committed atomically before credential issuance"
+        ]
+      },
+      "sequence": 7,
+      "previousEventHash": "85eb5c6146d03cd01a0b343441f5a0cb0590309d87c9599ec5174de72d654e77",
+      "currentHash": "68d1313eb215acebf0c8301d4b3ae10be2b4bd0ea61c69a9cca0342abaf65bb6"
+    },
+    {
+      "id": "dbe9e0ca-39c5-4f79-ace2-1f0780084aaf",
+      "type": "IdentityIssued",
+      "timestamp": 1787895017038,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "identitySnapshot": {
+          "identityId": "demo-d634181a-ece2-4df0-add6-9b006d1c6d62",
+          "intentId": "capability-source-demo",
+          "issuedAt": 1787895017038,
+          "expiresAt": 1787895047037,
+          "permissions": [
+            "lookup_instance_cost"
+          ],
+          "executionContract": {
+            "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+            "proposalId": "capability-source-demo",
+            "actorId": "demo-agent",
+            "action": "lookup_instance_cost",
+            "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+            "issuedAt": 1787895017037,
+            "temporalBounds": {
+              "notBefore": 1787895017037,
+              "notAfter": 1787895047037,
+              "maxDurationMs": 30000
+            },
+            "temporalValidity": {
+              "validAfter": 1787895017037,
+              "validBefore": 1787895047037
+            },
+            "linkedCapabilities": [],
+            "capabilities": [],
+            "preconditionHashes": [],
+            "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+          },
+          "metadata": {
+            "provider": "demo"
+          }
+        },
+        "reasoningTrail": [
+          "Ephemeral execution identity issued for the approved intent"
+        ],
+        "metadata": {
+          "identityId": "demo-d634181a-ece2-4df0-add6-9b006d1c6d62",
+          "intentId": "capability-source-demo",
+          "expiration": "2026-08-28T05:30:47.037Z",
+          "permissionScope": [
+            "lookup_instance_cost"
+          ]
+        }
+      },
+      "sequence": 8,
+      "previousEventHash": "68d1313eb215acebf0c8301d4b3ae10be2b4bd0ea61c69a9cca0342abaf65bb6",
+      "currentHash": "1e5f5a2815ea61b63734b715e92201863fc01121087dbda80ccdc819598cf0ce"
+    },
+    {
+      "id": "64239b4c-07a3-4e7b-92cd-95fa58a03d68",
+      "type": "IdentityUsed",
+      "timestamp": 1787895017038,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "identitySnapshot": {
+          "identityId": "demo-d634181a-ece2-4df0-add6-9b006d1c6d62",
+          "intentId": "capability-source-demo",
+          "issuedAt": 1787895017038,
+          "expiresAt": 1787895047037,
+          "permissions": [
+            "lookup_instance_cost"
+          ],
+          "executionContract": {
+            "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+            "proposalId": "capability-source-demo",
+            "actorId": "demo-agent",
+            "action": "lookup_instance_cost",
+            "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+            "issuedAt": 1787895017037,
+            "temporalBounds": {
+              "notBefore": 1787895017037,
+              "notAfter": 1787895047037,
+              "maxDurationMs": 30000
+            },
+            "temporalValidity": {
+              "validAfter": 1787895017037,
+              "validBefore": 1787895047037
+            },
+            "linkedCapabilities": [],
+            "capabilities": [],
+            "preconditionHashes": [],
+            "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+          },
+          "metadata": {
+            "provider": "demo"
+          }
+        },
+        "reasoningTrail": [
+          "Execution identity bound to intent type lookup_instance_cost"
+        ],
+        "metadata": {
+          "identityId": "demo-d634181a-ece2-4df0-add6-9b006d1c6d62",
+          "intentId": "capability-source-demo",
+          "expiration": "2026-08-28T05:30:47.037Z",
+          "permissionScope": [
+            "lookup_instance_cost"
+          ]
+        }
+      },
+      "sequence": 9,
+      "previousEventHash": "1e5f5a2815ea61b63734b715e92201863fc01121087dbda80ccdc819598cf0ce",
+      "currentHash": "4e897357db714ec359dbf881e28e6ec35c5ce4cba4f16ca73dc1ec208094cfe7"
+    },
+    {
+      "id": "0a09e64f-ca3e-4566-8333-c78edec6331f",
+      "type": "ExecutionCompleted",
+      "timestamp": 1787895017038,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "contextSnapshot": {
+          "instances": [
+            {
+              "instanceId": "i-0000016",
+              "tags": {
+                "env": "dev",
+                "critical": "false"
+              },
+              "state": "running"
+            }
+          ],
+          "environment": "demo-cloud"
+        },
+        "blastRadius": {
+          "resourceCount": 1,
+          "resourceIds": [
+            "i-0000016"
+          ],
+          "riskLevel": "LOW",
+          "reasons": [
+            "Intent targets 1 resource",
+            "Blast radius evaluated as LOW (1 resource)"
+          ]
+        },
+        "evaluationResult": {
+          "allowed": true,
+          "reasons": [
+            "Demo safety policy passed",
+            "Intent targets 1 resource",
+            "Blast radius evaluated as LOW (1 resource)",
+            "Low blast radius accepted by policy"
+          ],
+          "enrichedContext": {
+            "instances": [
+              {
+                "instanceId": "i-0000016",
+                "tags": {
+                  "env": "dev",
+                  "critical": "false"
+                },
+                "state": "running"
+              }
+            ],
+            "environment": "demo-cloud"
+          }
+        },
+        "temporalEvaluation": {
+          "allowed": true,
+          "decision": "ALLOW",
+          "reasons": [],
+          "budgets": [],
+          "preconditionHashes": []
+        },
+        "executionContract": {
+          "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+          "proposalId": "capability-source-demo",
+          "actorId": "demo-agent",
+          "action": "lookup_instance_cost",
+          "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+          "issuedAt": 1787895017037,
+          "temporalBounds": {
+            "notBefore": 1787895017037,
+            "notAfter": 1787895047037,
+            "maxDurationMs": 30000
+          },
+          "temporalValidity": {
+            "validAfter": 1787895017037,
+            "validBefore": 1787895047037
+          },
+          "linkedCapabilities": [],
+          "capabilities": [],
+          "preconditionHashes": [],
+          "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+        },
+        "executionResult": {
+          "success": true,
+          "result": {
+            "resourceId": "i-0000016",
+            "targetAccountId": "acc-demo",
+            "hourlyCost": 0.12
+          },
+          "executionContract": {
+            "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+            "proposalId": "capability-source-demo",
+            "actorId": "demo-agent",
+            "action": "lookup_instance_cost",
+            "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+            "issuedAt": 1787895017037,
+            "temporalBounds": {
+              "notBefore": 1787895017037,
+              "notAfter": 1787895047037,
+              "maxDurationMs": 30000
+            },
+            "temporalValidity": {
+              "validAfter": 1787895017037,
+              "validBefore": 1787895047037
+            },
+            "linkedCapabilities": [],
+            "capabilities": [],
+            "preconditionHashes": [],
+            "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+          }
+        },
+        "reasoningTrail": [
+          "Executor completed successfully"
+        ]
+      },
+      "sequence": 10,
+      "previousEventHash": "4e897357db714ec359dbf881e28e6ec35c5ce4cba4f16ca73dc1ec208094cfe7",
+      "currentHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6"
+    },
+    {
+      "id": "1261d643-8f06-4638-b9ea-e78d732a086d",
+      "type": "IdentityRevoked",
+      "timestamp": 1787895017038,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "identitySnapshot": {
+          "identityId": "demo-d634181a-ece2-4df0-add6-9b006d1c6d62",
+          "intentId": "capability-source-demo",
+          "issuedAt": 1787895017038,
+          "expiresAt": 1787895047037,
+          "permissions": [
+            "lookup_instance_cost"
+          ],
+          "executionContract": {
+            "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+            "proposalId": "capability-source-demo",
+            "actorId": "demo-agent",
+            "action": "lookup_instance_cost",
+            "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+            "issuedAt": 1787895017037,
+            "temporalBounds": {
+              "notBefore": 1787895017037,
+              "notAfter": 1787895047037,
+              "maxDurationMs": 30000
+            },
+            "temporalValidity": {
+              "validAfter": 1787895017037,
+              "validBefore": 1787895047037
+            },
+            "linkedCapabilities": [],
+            "capabilities": [],
+            "preconditionHashes": [],
+            "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+          },
+          "metadata": {
+            "provider": "demo",
+            "revokedAt": 1787895017038
+          }
+        },
+        "reasoningTrail": [
+          "Ephemeral execution identity revoked after execution"
+        ],
+        "metadata": {
+          "identityId": "demo-d634181a-ece2-4df0-add6-9b006d1c6d62",
+          "intentId": "capability-source-demo",
+          "expiration": "2026-08-28T05:30:47.037Z",
+          "permissionScope": [
+            "lookup_instance_cost"
+          ]
+        }
+      },
+      "sequence": 11,
+      "previousEventHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6",
+      "currentHash": "41892172fbd03b5eda89c0b92570985d9fad9f9d4537db47fefb5f51858cbd5b"
+    },
+    {
+      "id": "92beabb8-3c63-402e-a3b2-6a7a7af6d38c",
+      "type": "CapabilityIssued",
+      "timestamp": 1787895017039,
+      "intentId": "capability-source-demo",
+      "payload": {
+        "intentSnapshot": {
+          "id": "capability-source-demo",
+          "type": "lookup_instance_cost",
+          "payload": {
+            "resourceId": "i-0000016"
+          },
+          "metadata": {
+            "actor": "demo-agent",
+            "timestamp": 1787895017036
+          },
+          "kind": "READ"
+        },
+        "contextSnapshot": {
+          "instances": [
+            {
+              "instanceId": "i-0000016",
+              "tags": {
+                "env": "dev",
+                "critical": "false"
+              },
+              "state": "running"
+            }
+          ],
+          "environment": "demo-cloud"
+        },
+        "blastRadius": {
+          "resourceCount": 1,
+          "resourceIds": [
+            "i-0000016"
+          ],
+          "riskLevel": "LOW",
+          "reasons": [
+            "Intent targets 1 resource",
+            "Blast radius evaluated as LOW (1 resource)"
+          ]
+        },
+        "evaluationResult": {
+          "allowed": true,
+          "reasons": [
+            "Demo safety policy passed",
+            "Intent targets 1 resource",
+            "Blast radius evaluated as LOW (1 resource)",
+            "Low blast radius accepted by policy"
+          ],
+          "enrichedContext": {
+            "instances": [
+              {
+                "instanceId": "i-0000016",
+                "tags": {
+                  "env": "dev",
+                  "critical": "false"
+                },
+                "state": "running"
+              }
+            ],
+            "environment": "demo-cloud"
+          }
+        },
+        "temporalEvaluation": {
+          "allowed": true,
+          "decision": "ALLOW",
+          "reasons": [],
+          "budgets": [],
+          "preconditionHashes": []
+        },
+        "executionContract": {
+          "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+          "proposalId": "capability-source-demo",
+          "actorId": "demo-agent",
+          "action": "lookup_instance_cost",
+          "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+          "issuedAt": 1787895017037,
+          "temporalBounds": {
+            "notBefore": 1787895017037,
+            "notAfter": 1787895047037,
+            "maxDurationMs": 30000
+          },
+          "temporalValidity": {
+            "validAfter": 1787895017037,
+            "validBefore": 1787895047037
+          },
+          "linkedCapabilities": [],
+          "capabilities": [],
+          "preconditionHashes": [],
+          "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+        },
+        "capabilities": [
+          {
+            "tokenId": "e4a973d9-d6b7-4841-90bc-8e67d5e0f1ee",
+            "sourceProposalId": "capability-source-demo",
+            "sourceHash": "231c412eaf09c7bc528d7f6cee082285d3dd492cc35426a9e6679ef7e46212f6",
+            "issuedAt": 1787895017039,
+            "expiresAt": 1787895917039,
+            "actorId": "demo-agent",
+            "boundAttributes": {
+              "resourceId": "i-0000016",
+              "targetAccountId": "acc-demo"
+            },
+            "signature": "e822e1bbd932f03272faca0626c38e500ae9585c6eb456155887a97e308c0bbe"
+          }
+        ],
+        "reasoningTrail": [
+          "Attenuated capabilities minted from successful trusted executor output"
+        ]
+      },
+      "sequence": 12,
+      "previousEventHash": "41892172fbd03b5eda89c0b92570985d9fad9f9d4537db47fefb5f51858cbd5b",
+      "currentHash": "85a69300d05715be30854516830b5be7011e5dec577592c58c9b49f67c3a7a1d"
+    }
+  ],
+  "reasoningTrail": [
+    "Intent submitted by actor=demo-agent",
+    "Intent type=lookup_instance_cost",
+    "Capability signatures, actor, bound parameters, and successful source evidence verified",
+    "Context provider resolved current execution context",
+    "Temporal preconditions and budgets satisfied",
+    "Intent targets 1 resource",
+    "Blast radius evaluated as LOW (1 resource)",
+    "Demo safety policy passed",
+    "Intent targets 1 resource",
+    "Blast radius evaluated as LOW (1 resource)",
+    "Low blast radius accepted by policy",
+    "Intent approved for execution",
+    "Temporal check and quota reservation committed atomically before credential issuance",
+    "Ephemeral execution identity issued for the approved intent",
+    "Execution identity bound to intent type lookup_instance_cost",
+    "Executor completed successfully",
+    "Ephemeral execution identity revoked after execution",
+    "Attenuated capabilities minted from successful trusted executor output"
+  ],
+  "replayable": true,
+  "reconstructed": {
+    "contextSnapshot": {
+      "instances": [
+        {
+          "instanceId": "i-0000016",
+          "tags": {
+            "env": "dev",
+            "critical": "false"
+          },
+          "state": "running"
+        }
+      ],
+      "environment": "demo-cloud"
+    },
+    "blastRadius": {
+      "resourceCount": 1,
+      "resourceIds": [
+        "i-0000016"
+      ],
+      "riskLevel": "LOW",
+      "reasons": [
+        "Intent targets 1 resource",
+        "Blast radius evaluated as LOW (1 resource)"
+      ]
+    },
+    "evaluationResult": {
+      "allowed": true,
+      "reasons": [
+        "Demo safety policy passed",
+        "Intent targets 1 resource",
+        "Blast radius evaluated as LOW (1 resource)",
+        "Low blast radius accepted by policy"
+      ],
+      "enrichedContext": {
+        "instances": [
+          {
+            "instanceId": "i-0000016",
+            "tags": {
+              "env": "dev",
+              "critical": "false"
+            },
+            "state": "running"
+          }
+        ],
+        "environment": "demo-cloud"
+      }
+    },
+    "executionResult": {
+      "success": true,
+      "result": {
+        "resourceId": "i-0000016",
+        "targetAccountId": "acc-demo",
+        "hourlyCost": 0.12
+      },
+      "executionContract": {
+        "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+        "proposalId": "capability-source-demo",
+        "actorId": "demo-agent",
+        "action": "lookup_instance_cost",
+        "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+        "issuedAt": 1787895017037,
+        "temporalBounds": {
+          "notBefore": 1787895017037,
+          "notAfter": 1787895047037,
+          "maxDurationMs": 30000
+        },
+        "temporalValidity": {
+          "validAfter": 1787895017037,
+          "validBefore": 1787895047037
+        },
+        "linkedCapabilities": [],
+        "capabilities": [],
+        "preconditionHashes": [],
+        "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+      }
+    },
+    "temporalEvaluation": {
+      "allowed": true,
+      "decision": "ALLOW",
+      "reasons": [],
+      "budgets": [],
+      "preconditionHashes": []
+    },
+    "executionContract": {
+      "contractId": "681a02cd-9b6c-4905-be62-33c2b6ccc0a4",
+      "proposalId": "capability-source-demo",
+      "actorId": "demo-agent",
+      "action": "lookup_instance_cost",
+      "intentHash": "c86ada83e7d7836d258d2056f1924b0005f1c3a8c8ed4716ce31c99ccb02c16c",
+      "issuedAt": 1787895017037,
+      "temporalBounds": {
+        "notBefore": 1787895017037,
+        "notAfter": 1787895047037,
+        "maxDurationMs": 30000
+      },
+      "temporalValidity": {
+        "validAfter": 1787895017037,
+        "validBefore": 1787895047037
+      },
+      "linkedCapabilities": [],
+      "capabilities": [],
+      "preconditionHashes": [],
+      "signature": "648bff997d4788f1a6112cc9c464aa16ce31f2ad9e50b34efcc1724cc16a535e"
+    },
+    "finalOutcome": "allowed"
+  },
+  "steps": [
+    {
+      "eventType": "IntentReceived",
+      "timestamp": 1787895017037,
+      "summary": "Intent capability-source-demo received",
+      "reasoningTrail": [
+        "Intent submitted by actor=demo-agent",
+        "Intent type=lookup_instance_cost"
+      ]
+    },
+    {
+      "eventType": "CapabilityVerified",
+      "timestamp": 1787895017037,
+      "summary": "Capabilities verified for capability-source-demo",
+      "reasoningTrail": [
+        "Capability signatures, actor, bound parameters, and successful source evidence verified"
+      ]
+    },
+    {
+      "eventType": "ContextResolved",
+      "timestamp": 1787895017037,
+      "summary": "Context resolved for capability-source-demo",
+      "reasoningTrail": [
+        "Context provider resolved current execution context"
+      ]
+    },
+    {
+      "eventType": "TemporalEvaluated",
+      "timestamp": 1787895017037,
+      "summary": "Temporal constraints evaluated for capability-source-demo",
+      "reasoningTrail": [
+        "Temporal preconditions and budgets satisfied"
+      ]
+    },
+    {
+      "eventType": "BlastRadiusEvaluated",
+      "timestamp": 1787895017037,
+      "summary": "Blast radius LOW for capability-source-demo",
+      "reasoningTrail": [
+        "Intent targets 1 resource",
+        "Blast radius evaluated as LOW (1 resource)"
+      ]
+    },
+    {
+      "eventType": "EvaluationCompleted",
+      "timestamp": 1787895017037,
+      "summary": "Policy allowed intent capability-source-demo",
+      "reasoningTrail": [
+        "Demo safety policy passed",
+        "Intent targets 1 resource",
+        "Blast radius evaluated as LOW (1 resource)",
+        "Low blast radius accepted by policy",
+        "Intent approved for execution"
+      ]
+    },
+    {
+      "eventType": "ExecutionReserved",
+      "timestamp": 1787895017037,
+      "summary": "Quota reserved and execution contract minted for capability-source-demo",
+      "reasoningTrail": [
+        "Temporal check and quota reservation committed atomically before credential issuance"
+      ]
+    },
+    {
+      "eventType": "IdentityIssued",
+      "timestamp": 1787895017038,
+      "summary": "Identity demo-d634181a-ece2-4df0-add6-9b006d1c6d62 issued for capability-source-demo",
+      "reasoningTrail": [
+        "Ephemeral execution identity issued for the approved intent"
+      ]
+    },
+    {
+      "eventType": "IdentityUsed",
+      "timestamp": 1787895017038,
+      "summary": "Identity demo-d634181a-ece2-4df0-add6-9b006d1c6d62 used for capability-source-demo",
+      "reasoningTrail": [
+        "Execution identity bound to intent type lookup_instance_cost"
+      ]
+    },
+    {
+      "eventType": "ExecutionCompleted",
+      "timestamp": 1787895017038,
+      "summary": "Execution succeeded for capability-source-demo",
+      "reasoningTrail": [
+        "Executor completed successfully"
+      ]
+    },
+    {
+      "eventType": "IdentityRevoked",
+      "timestamp": 1787895017038,
+      "summary": "Identity demo-d634181a-ece2-4df0-add6-9b006d1c6d62 revoked for capability-source-demo",
+      "reasoningTrail": [
+        "Ephemeral execution identity revoked after execution"
+      ]
+    },
+    {
+      "eventType": "CapabilityIssued",
+      "timestamp": 1787895017039,
+      "summary": "Read capability issued by capability-source-demo",
+      "reasoningTrail": [
+        "Attenuated capabilities minted from successful trusted executor output"
+      ]
+    }
+  ],
+  "integrity": {
+    "valid": true
+  }
+}

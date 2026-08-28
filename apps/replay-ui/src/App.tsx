@@ -32,7 +32,22 @@ export default function App() {
   const [selectedEvent, setSelectedEvent] = useState<EvidenceEvent | null>(null)
   const [playbackActive, setPlaybackActive] = useState(false)
   const [visibleCount, setVisibleCount] = useState(0)
+  const [scenarioError, setScenarioError] = useState<string | null>(null)
+  const [runningScenario, setRunningScenario] = useState(false)
   const displayReplay = data ?? mockReplays[intentId] ?? mockReplays['allowed-demo']
+
+  async function runScenario(name: 'capability-injection' | 'temporal-budget'): Promise<void> {
+    setScenarioError(null)
+    setRunningScenario(true)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_REPLAY_API_BASE_URL ?? ''}/scenarios/${name}`, { method: 'POST' })
+      if (!response.ok) throw new Error(`Scenario endpoint returned ${response.status}`)
+      const result = await response.json() as { intentId: string }
+      setIntentId(result.intentId)
+    } catch (error) {
+      setScenarioError(error instanceof Error ? error.message : 'Unable to run scenario')
+    } finally { setRunningScenario(false) }
+  }
 
   useEffect(() => {
     if (!displayReplay) {
@@ -75,6 +90,19 @@ export default function App() {
     }
   }, [displayReplay, playbackActive])
 
+  if (!loading && error && !data && !mockReplays[intentId]) {
+    return (
+      <main className="min-h-screen bg-canvas p-8 text-ink">
+        <h1 className="text-2xl font-semibold">Replay unavailable</h1>
+        <p role="alert" className="mt-4 text-rose-200">{error}</p>
+        <p className="mt-2 break-all text-slate-300">No evidence was found for {intentId}.</p>
+        <button type="button" className="mt-6 rounded-full bg-accent px-4 py-2 text-slate-950" onClick={() => setIntentId(demoIds[0])}>
+          Return to examples
+        </button>
+      </main>
+    )
+  }
+
   let selectedIntentLabel = intentId
 
   switch (intentId) {
@@ -106,6 +134,14 @@ export default function App() {
               </h2>
             </div>
             <div className="flex flex-wrap gap-3">
+              <button type="button" disabled={runningScenario} onClick={() => void runScenario('capability-injection')}
+                className="rounded-full border border-violet-300/30 bg-violet-400/15 px-4 py-2 text-sm text-violet-100 disabled:opacity-50">
+                Run Capability Attack
+              </button>
+              <button type="button" disabled={runningScenario} onClick={() => void runScenario('temporal-budget')}
+                className="rounded-full border border-cyan-300/30 bg-cyan-400/15 px-4 py-2 text-sm text-cyan-100 disabled:opacity-50">
+                Run Budget Scenario
+              </button>
               {demoIds.map((demoId) => (
                 <button
                   key={demoId}
@@ -133,7 +169,7 @@ export default function App() {
                 onClick={async () => {
                   try {
                     const id = crypto.randomUUID()
-                    await fetch('http://localhost:3001/intent', {
+                    await fetch(`${import.meta.env.VITE_REPLAY_API_BASE_URL ?? ''}/intent`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
@@ -163,10 +199,13 @@ export default function App() {
               Live replay fetch failed. Showing mock data when available. {error}
             </p>
           ) : null}
+          {scenarioError ? <p role="alert" className="mt-4 text-sm text-rose-200">{scenarioError}. Start the demo server to run live scenarios.</p> : null}
         </section>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_420px]">
           <Timeline
+            replay={displayReplay}
+            onNavigate={setIntentId}
             events={displayReplay.events}
             selectedEventId={selectedEvent?.id ?? null}
             visibleCount={visibleCount}

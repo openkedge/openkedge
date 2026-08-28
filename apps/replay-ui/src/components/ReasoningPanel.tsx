@@ -1,4 +1,5 @@
 import type { EvidenceEvent, ReplayResult } from '../types'
+import { TemporalPanel } from './TemporalPanel'
 
 interface ReasoningPanelProps {
   replay: ReplayResult
@@ -20,14 +21,15 @@ export function ReasoningPanel({
   const event = selectedEvent ?? replay.events[0] ?? null
 
   return (
-    <aside className="grid gap-4">
+    <aside className="grid min-w-0 content-start gap-4 [&>section]:min-w-0">
+      <TemporalPanel replay={replay} />
       <section className="rounded-[24px] border border-white/10 bg-panel/80 p-5 shadow-glow backdrop-blur">
         <p className="text-xs uppercase tracking-[0.3em] text-accent/70">
           Reasoning Trail
         </p>
         <ul className="mt-4 space-y-3 text-sm text-slate-200">
           {replay.reasoningTrail.map((line, index) => (
-            <li key={`${line}-${index}`} className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+            <li key={`${line}-${index}`} className="break-words rounded-2xl border border-white/8 bg-white/5 px-4 py-3 [overflow-wrap:anywhere]">
               {line}
             </li>
           ))}

@@ -1,4 +1,6 @@
 import type { Intent } from '../../interfaces/contracts'
+import type { ExecutionContract } from '../governance/types'
+import { assertContractBounds } from '../crypto/executionContracts'
 
 export interface ExecutionIdentity {
   id: string
@@ -10,6 +12,7 @@ export interface ExecutionIdentity {
   accessKeyId?: string
   secretAccessKey?: string
   sessionToken?: string
+  executionContract?: ExecutionContract
 }
 
 export interface IdentityAuditRecord {
@@ -19,6 +22,7 @@ export interface IdentityAuditRecord {
   expiresAt: number
   permissions: string[]
   metadata?: Record<string, unknown>
+  executionContract?: ExecutionContract
 }
 
 export function isIdentityExpired(
@@ -36,6 +40,12 @@ export function assertIdentityCanExecute(
   if (!identity) {
     throw new Error('Execution identity is required')
   }
+
+  if (![identity.issuedAt, identity.expiresAt, now].every(Number.isSafeInteger) || identity.issuedAt > now || identity.expiresAt <= identity.issuedAt) {
+    throw new Error('Execution identity has invalid validity timestamps')
+  }
+
+  if (identity.executionContract) assertContractBounds(identity.executionContract, intent, now)
 
   if (identity.intentId !== intent.id) {
     throw new Error(
@@ -71,6 +81,7 @@ export function toIdentityAuditRecord(
     issuedAt: identity.issuedAt,
     expiresAt: identity.expiresAt,
     permissions: [...identity.permissions],
+    ...(identity.executionContract ? { executionContract: identity.executionContract } : {}),
     metadata:
       identity.metadata === undefined
         ? undefined
