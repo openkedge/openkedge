@@ -37,7 +37,7 @@
     "executionResult": {
       "type": "object", "additionalProperties": false,
       "required": ["status", "intentId"],
-      "properties": { "status": { "enum": ["executed", "rejected", "failed", "uncertain"] },
+      "properties": { "status": { "enum": ["executed", "validated", "rejected", "failed", "uncertain"] },
         "intentId": { "type": "string" }, "policyVersion": { "type": "string" },
         "code": { "type": "string" }, "reason": { "type": "string" }, "result": {} }
     },

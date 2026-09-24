@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import type { ContextProvider, EvaluationResult, ExecutionResult, Intent } from '../interfaces/contracts'
+import type { EvaluationResult, ExecutionResult, Intent } from '../interfaces/contracts'
 import { EventType } from '../interfaces/contracts'
 import { AwsSafetyPolicyEvaluator } from '../adapters/aws/AwsSafetyPolicyEvaluator'
 import { BlastRadiusEstimator } from '../core/blast/BlastRadiusEstimator'
@@ -23,7 +23,8 @@ export interface JudgmentProvider {
   judge(intent: Intent, context: unknown): Promise<{ additionalAssurance: boolean; reasons: string[] }>
 }
 export interface AssuranceCheck { check(intent: Intent, context: unknown): Promise<boolean> }
-export interface TerminationAdapter { terminate(params: TerminateParameters): Promise<unknown> }
+export interface TerminationAdapter { terminate(params: TerminateParameters, identity?: ExecutionIdentity, intent?: Intent, grant?: ExecutionContract): Promise<unknown> }
+export interface GatewayContextResolver { resolve(intent: Intent): Promise<{ instances: Array<{ instanceId?: string; state?: string; tags: Record<string, string | undefined> }> }> }
 export class MockTerminationAdapter implements TerminationAdapter {
   readonly calls: TerminateParameters[] = []
   async terminate(params: TerminateParameters): Promise<unknown> {
@@ -36,7 +37,7 @@ export type GatewayDecision =
   | { status: 'allowed'; intentId: string; policyVersion: string; reasons: string[]; grant: ExecutionContract }
   | { status: 'denied' | 'remediation_required'; intentId: string; policyVersion?: string; reasons: string[]; code: string }
 export interface GatewayExecution {
-  status: 'executed' | 'rejected' | 'failed' | 'uncertain'
+  status: 'executed' | 'validated' | 'rejected' | 'failed' | 'uncertain'
   intentId: string
   policyVersion?: string
   code?: string
@@ -92,7 +93,10 @@ export class ExecutionGateway {
     store: IEECStore = new InMemoryIEECStore(),
     private readonly clock: () => number = Date.now,
     private readonly judgment?: JudgmentProvider,
-    private readonly assurance?: AssuranceCheck
+    private readonly assurance?: AssuranceCheck,
+    identityProvider?: IdentityProvider,
+    private readonly liveContext?: GatewayContextResolver,
+    private readonly contractTtlMs = 5_000
   ) {
     this.store = store
     this.claims = validateIdentity(identity)
@@ -101,7 +105,7 @@ export class ExecutionGateway {
         expiresAt: contract?.temporalBounds.notAfter ?? this.clock() + 5000, permissions: [OPERATION] }),
       revokeIdentity: async (identity: ExecutionIdentity) => { identity.metadata = { revokedAt: this.clock() } }
     }
-    this.identityManager = new IdentityManager(provider, store)
+    this.identityManager = new IdentityManager(identityProvider ?? provider, store)
   }
 
   async status(): Promise<{ policyVersion: string }> {
@@ -112,7 +116,7 @@ export class ExecutionGateway {
   private governance(snapshot: PolicySnapshot): TemporalGovernance {
     return new TemporalGovernance(this.store, {
       secretKey: this.signingKey, actions: { [OPERATION]: { kind: 'MUTATION' } },
-      rules: snapshot.policy.rules, contractTtlMs: 5_000, maxDurationMs: 5_000, clock: this.clock
+      rules: snapshot.policy.rules, contractTtlMs: this.contractTtlMs, maxDurationMs: this.contractTtlMs, clock: this.clock
     })
   }
 
@@ -144,7 +148,7 @@ export class ExecutionGateway {
       const governance = this.governance(snapshot)
       const normalized = governance.normalize(intent)
       await governance.verifyCapabilities(normalized)
-      const contextProvider: ContextProvider = { resolve: async () => contextFor(snapshot.policy, proposal) }
+      const contextProvider: GatewayContextResolver = this.liveContext ?? { resolve: async () => contextFor(snapshot.policy, proposal) }
       const context = await contextProvider.resolve(normalized)
       await this.event(normalized, EventType.ContextResolved, { contextSnapshot: context, metadata: { policyVersion: revision } })
       const temporal = await governance.evaluateProposal(normalized)
@@ -155,7 +159,7 @@ export class ExecutionGateway {
       const blastDecision = this.blastPolicy.evaluate(blast)
       const allowedTarget = snapshot.policy.allowedInstanceIds.includes(proposal.instanceId)
       const protectedTarget = snapshot.policy.protectedInstanceIds.includes(proposal.instanceId)
-      const state = snapshot.policy.instances[proposal.instanceId]?.state
+      const state = context.instances.find(instance => instance.instanceId === proposal.instanceId)?.state
       const paramsAllowed = !proposal.skipOsShutdown || snapshot.policy.allowSkipOsShutdown
       const reasons = [
         ...safety.reasons, ...blastDecision.reasons,
@@ -228,7 +232,7 @@ export class ExecutionGateway {
       await verifyExecutionContract(grant, intent, this.store, this.signingKey, this.clock())
       await governance.assertCanUnlock(grant, intent)
       const admissionContext = events.find(event => event.type === EventType.ContextResolved)?.payload.contextSnapshot
-      const currentContext = contextFor(snapshot.policy, actual)
+      const currentContext = this.liveContext ? await this.liveContext.resolve(intent) : contextFor(snapshot.policy, actual)
       if (hashJson(admissionContext) !== hashJson(currentContext)) throw new Error('STATE_GUARD_FAILED: Target state changed after admission')
       const result = await this.identityManager.withIdentity(intent, async (identity) => {
         assertIdentityCanExecute(intent, identity, this.clock())
@@ -242,7 +246,8 @@ export class ExecutionGateway {
         started = true
         const executionPolicy = await this.source.current()
         if (executionPolicy.revision !== revision) throw new Error('POLICY_VERSION_CONFLICT: Policy changed before adapter invocation')
-        if (hashJson(contextFor(executionPolicy.policy, actual)) !== hashJson(currentContext)) {
+        const dispatchContext = this.liveContext ? await this.liveContext.resolve(intent) : contextFor(executionPolicy.policy, actual)
+        if (hashJson(dispatchContext) !== hashJson(currentContext)) {
           throw new Error('STATE_GUARD_FAILED: Target state changed before adapter invocation')
         }
         let redemptionState
@@ -250,14 +255,14 @@ export class ExecutionGateway {
         catch { throw new Error('EVIDENCE_UNAVAILABLE: Redemption state cannot be verified') }
         if (redemptionState?.status !== 'RUNNING') throw new Error('EVIDENCE_UNAVAILABLE: Redemption state cannot be verified')
         adapterInvoked = true
-        const outcome = await this.adapter.terminate(actual)
+        const outcome = await this.adapter.terminate(actual, identity, intent, grant)
         adapterSucceeded = true
         const executionResult: ExecutionResult = { success: true, result: outcome, executionContract: grant }
         await this.event(intent, EventType.ExecutionCompleted, { contextSnapshot: currentContext, executionContract: grant,
           executionResult, metadata: { policyVersion: revision, actualOperation: OPERATION, actual } })
         return outcome
       }, { contract: grant, clock: this.clock, assertCanUnlock: () => governance.assertCanUnlock(grant, intent) })
-      return { status: 'executed', intentId: id, policyVersion: revision, result }
+      return { status: isRecord(result) && result.mode === 'dry-run' ? 'validated' : 'executed', intentId: id, policyVersion: revision, result }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
       try {
@@ -271,6 +276,9 @@ export class ExecutionGateway {
       } catch {
         return { status: adapterInvoked ? 'uncertain' : 'rejected', intentId: id, policyVersion: revision, code: 'EVIDENCE_UNAVAILABLE',
           reason: adapterInvoked ? 'Adapter outcome uncertain; evidence store unavailable' : 'Evidence store unavailable' }
+      }
+      if (adapterInvoked && error instanceof Error && 'definitive' in error && error.definitive === true) {
+        return { status: 'failed', intentId: id, policyVersion: revision, code: resultCode(error), reason }
       }
       if (adapterInvoked) return { status: 'uncertain', intentId: id, policyVersion: revision,
         code: 'OUTCOME_UNCERTAIN', reason: 'Adapter was invoked; inspect evidence and adapter state before retrying' }

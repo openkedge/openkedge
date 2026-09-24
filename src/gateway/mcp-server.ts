@@ -7,6 +7,7 @@ import type { ExecutionContract } from '../core/governance/types'
 import { ExecutionGateway, MockTerminationAdapter } from './Gateway'
 import { FilePolicySource } from './policy'
 import { loadGatewayConfig } from './config'
+import { AwsPilot, loadAwsPilotConfig } from './aws-pilot'
 
 const policyPath = resolve(process.env.OKG_POLICY_FILE ?? 'policies/gateway-local.json')
 const { DatabaseSync } = require('node:sqlite') as { DatabaseSync: new (path: string) => import('../core/event/SqlEventStore').SQLiteDatabase }
@@ -20,8 +21,9 @@ catch (error) {
 }
 const gatewayId = config.gatewayId
 const store = new SQLiteIEECStore(new DatabaseSync(evidencePath))
-const gateway = new ExecutionGateway(new FilePolicySource(policyPath), new MockTerminationAdapter(), config.signingKey,
-  config, store)
+const source = new FilePolicySource(policyPath)
+let gateway: ExecutionGateway
+let mode = 'mock'
 
 const grantSchema = z.object({
   contractId: z.string(), proposalId: z.string(), actorId: z.string(), action: z.string(), policyVersion: z.string(),
@@ -57,18 +59,18 @@ function createServer(): McpServer {
     return response(result, result.status !== 'allowed')
   })
   server.registerTool('execute_ec2_termination', {
-    description: 'Redeem an admitted grant for exactly one mock EC2 termination. The actual operation and parameters are checked again.',
+    description: 'Redeem an admitted grant for the configured mock or AWS pilot. AWS defaults to DryRun; real mutation requires separate test-account opt-in.',
     inputSchema: z.object({ grant: grantSchema, actual: actualSchema }).strict(),
     annotations: { destructiveHint: true, readOnlyHint: false }
   }, async ({ grant, actual }) => {
     const result = await gateway.execute(grant as ExecutionContract, actual)
-    return response(result, result.status !== 'executed')
+    return response(result, result.status !== 'executed' && result.status !== 'validated')
   })
   server.registerTool('openkedge_policy_status', {
     description: 'Read the authoritative policy version currently enforced by this gateway.',
     inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true }
   }, async () => {
-    try { return response({ gatewayId, ...await gateway.status() }) }
+    try { return response({ gatewayId, mode, ...await gateway.status() }) }
     catch (error) { return response({ gatewayId, code: 'POLICY_UNAVAILABLE', reason: String(error) }, true) }
   })
   server.registerTool('openkedge_replay', {
@@ -81,7 +83,25 @@ function createServer(): McpServer {
   return server
 }
 
-gateway.status().then(() => { serveStdio(createServer) }).catch(() => {
-  console.error('POLICY_UNAVAILABLE: Gateway policy is unavailable or malformed at startup')
+async function start(): Promise<void> {
+  if (process.env.OKG_AWS_PILOT_CONFIG) {
+    const pilotConfig = await loadAwsPilotConfig(resolve(process.env.OKG_AWS_PILOT_CONFIG))
+    const pilot = new AwsPilot(pilotConfig, source,
+      pilotConfig.mutationEnabled && process.env.OKG_AWS_PILOT_MUTATE === 'I_ACCEPT_DISPOSABLE_TEST_INSTANCE_TERMINATION')
+    await pilot.assertPolicy()
+    await pilot.assertGatewayPrincipal()
+    gateway = new ExecutionGateway(source, pilot, config.signingKey, config, store, Date.now,
+      undefined, undefined, pilot.identityProvider, pilot, 30_000)
+    mode = pilotConfig.mutationEnabled && process.env.OKG_AWS_PILOT_MUTATE === 'I_ACCEPT_DISPOSABLE_TEST_INSTANCE_TERMINATION'
+      ? 'aws-pilot-mutation' : 'aws-pilot-dry-run'
+  } else {
+    gateway = new ExecutionGateway(source, new MockTerminationAdapter(), config.signingKey, config, store)
+  }
+  await gateway.status()
+  await serveStdio(createServer)
+}
+
+start().catch(() => {
+  console.error('GATEWAY_STARTUP_FAILED: Policy, pilot configuration, or AWS principal validation failed')
   process.exitCode = 1
 })

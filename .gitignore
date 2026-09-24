@@ -28,6 +28,8 @@ go.work.sum
 
 # env file
 .env
+.openkedge-pilot/
+*.sqlite
 
 # Editor/IDE
 # .idea/

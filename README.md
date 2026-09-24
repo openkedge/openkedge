@@ -50,6 +50,10 @@ The demo copies [the local policy](./policies/gateway-local.json) to a temporary
 
 This is a mock execution boundary: the agent receives no adapter credential, and the gateway verifies a one use grant before invoking the mock EC2 action. Replay returns full proposal evidence only to the gateway's launcher-attested caller and delegator; policy status returns only the current revision. Real AWS enforcement also requires IAM and network controls that prevent agents from using direct AWS credentials or bypassing the gateway. See [deployment limits](./docs/mcp-gateway-implementation.md).
 
+### Disposable AWS pilot
+
+The optional [EC2 pilot](./docs/aws-pilot.md) protects one tagged, running test instance. The mock remains the default. Pilot startup needs a separate test-account config, exact AWS principal and target, and live `DescribeInstances`; execution defaults to AWS `TerminateInstances(DryRun=true)`. Real termination requires both `mutationEnabled: true` in that config and a separate `OKG_AWS_PILOT_MUTATE` launch flag. The AWS guide provides exact IAM setup, bypass preflight, independent MCP client, CloudTrail correlation, and teardown commands. No AWS account is used by `npm test` or `npm run demo:mcp`.
+
 ---
 
 ## 📄 Paper

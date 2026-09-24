@@ -24,6 +24,7 @@ interface AwsPolicyStatement {
   Condition?: {
     DateGreaterThanEquals: { 'aws:CurrentTime': string }
     DateLessThan: { 'aws:CurrentTime': string }
+    StringEquals?: Record<string, string>
   }
 }
 
@@ -38,6 +39,7 @@ export interface AwsIdentityProviderOptions {
   sessionDurationSeconds?: number
   ttlSeconds?: number
   stsClient?: StsClientLike
+  requiredResourceTag?: { key: string; value: string }
 }
 
 function maskAccessKeyId(accessKeyId: string): string {
@@ -76,7 +78,8 @@ export function generatePolicy(
   intent: Intent,
   roleArn: string,
   region: string,
-  contract?: ExecutionContract
+  contract?: ExecutionContract,
+  requiredResourceTag?: { key: string; value: string }
 ): AwsPolicyDocument {
   switch (intent.type) {
     case 'ec2:TerminateInstances': {
@@ -103,7 +106,8 @@ export function generatePolicy(
             ...(contract ? { Condition: {
               DateGreaterThanEquals: { 'aws:CurrentTime': new Date(contract.temporalBounds.notBefore).toISOString() },
               DateLessThan: { 'aws:CurrentTime': new Date(Math.min(contract.temporalBounds.notAfter,
-                Date.now() + contract.temporalBounds.maxDurationMs)).toISOString() }
+                Date.now() + contract.temporalBounds.maxDurationMs)).toISOString() },
+              ...(requiredResourceTag ? { StringEquals: { [`aws:ResourceTag/${requiredResourceTag.key}`]: requiredResourceTag.value } } : {})
             } } : {})
           }
         ]
@@ -140,7 +144,7 @@ export class AwsIdentityProvider implements IdentityProvider {
 
     const region = resolveRegion(this.options.region)
     const sessionDurationSeconds = this.options.sessionDurationSeconds ?? 900
-    const sessionPolicy = generatePolicy(intent, roleArn, region, contract)
+    const sessionPolicy = generatePolicy(intent, roleArn, region, contract, this.options.requiredResourceTag)
     const issuedAt = Date.now()
     const response = await this.sts.send(
       new AssumeRoleCommand({
@@ -183,6 +187,7 @@ export class AwsIdentityProvider implements IdentityProvider {
       metadata: {
         provider: 'aws-sts',
         roleArn,
+        assumedRoleArn: response.AssumedRoleUser?.Arn,
         region,
         expiration:
           credentials.Expiration?.toISOString() ??

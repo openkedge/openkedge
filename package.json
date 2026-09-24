@@ -26,6 +26,8 @@
     "demo:aws-identity": "ts-node src/examples/aws-identity-demo.ts",
     "demo:blast": "ts-node src/examples/blast-radius-demo.ts",
     "demo:mcp": "npm run build && node dist/gateway/demo.js",
+    "pilot:preflight": "npm run build && node dist/gateway/aws-pilot-preflight.js",
+    "pilot:mcp": "npm run build && node examples/aws-pilot-client.mjs",
     "build:replay-ui": "npm --workspace apps/replay-ui run build",
     "test": "jest --runInBand"
   },
