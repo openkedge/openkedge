@@ -17,6 +17,9 @@ export interface Intent {
   metadata: {
     actor: string
     timestamp: number
+    /** Attested by the trusted local launcher for the stdio gateway profile. */
+    delegatedBy?: string
+    gatewayId?: string
   }
 }
 

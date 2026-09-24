@@ -37,6 +37,16 @@
           "type": "string",
           "minLength": 1
         },
+        "delegatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Launcher-attested delegating principal in the local MCP stdio profile."
+        },
+        "gatewayId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Gateway instance that admitted the intent in the local MCP stdio profile."
+        },
         "timestamp": {
           "type": "integer",
           "minimum": 0,

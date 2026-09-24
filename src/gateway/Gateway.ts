@@ -15,6 +15,7 @@ import type { IdentityProvider } from '../core/identity/IdentityProvider'
 import type { ExecutionIdentity } from '../core/identity/Identity'
 import { assertIdentityCanExecute } from '../core/identity/Identity'
 import type { GatewayPolicy, PolicySnapshot, PolicySource } from './policy'
+import { validateIdentity, type GatewayIdentity } from './config'
 
 export interface TerminateParameters { instanceId: string; skipOsShutdown: boolean }
 export interface TerminateProposal extends TerminateParameters { reason?: string; memory?: string }
@@ -35,7 +36,7 @@ export type GatewayDecision =
   | { status: 'allowed'; intentId: string; policyVersion: string; reasons: string[]; grant: ExecutionContract }
   | { status: 'denied' | 'remediation_required'; intentId: string; policyVersion?: string; reasons: string[]; code: string }
 export interface GatewayExecution {
-  status: 'executed' | 'rejected' | 'failed'
+  status: 'executed' | 'rejected' | 'failed' | 'uncertain'
   intentId: string
   policyVersion?: string
   code?: string
@@ -77,7 +78,8 @@ function resultCode(error: unknown): string {
 
 export class ExecutionGateway {
   readonly store: IEECStore
-  private readonly identity: IdentityManager
+  private readonly identityManager: IdentityManager
+  private readonly claims: GatewayIdentity
   private readonly safety = new AwsSafetyPolicyEvaluator()
   private readonly blast = new BlastRadiusEstimator()
   private readonly blastPolicy = new BlastRadiusPolicy()
@@ -86,19 +88,20 @@ export class ExecutionGateway {
     private readonly source: PolicySource,
     private readonly adapter: TerminationAdapter,
     private readonly signingKey: string,
-    private readonly actor: string,
+    identity: GatewayIdentity,
     store: IEECStore = new InMemoryIEECStore(),
     private readonly clock: () => number = Date.now,
     private readonly judgment?: JudgmentProvider,
     private readonly assurance?: AssuranceCheck
   ) {
     this.store = store
+    this.claims = validateIdentity(identity)
     const provider: IdentityProvider = {
       issueIdentity: async (intent, contract) => ({ id: randomUUID(), intentId: intent.id, issuedAt: this.clock(),
         expiresAt: contract?.temporalBounds.notAfter ?? this.clock() + 5000, permissions: [OPERATION] }),
       revokeIdentity: async (identity: ExecutionIdentity) => { identity.metadata = { revokedAt: this.clock() } }
     }
-    this.identity = new IdentityManager(provider, store)
+    this.identityManager = new IdentityManager(provider, store)
   }
 
   async status(): Promise<{ policyVersion: string }> {
@@ -125,8 +128,15 @@ export class ExecutionGateway {
     catch (error) { return { status: 'denied', intentId: id, code: resultCode(error), reasons: [String(error)] } }
     const intent: Intent = { id, type: OPERATION, kind: 'MUTATION',
       payload: { instanceIds: [proposal.instanceId], skipOsShutdown: proposal.skipOsShutdown },
-      metadata: { actor: this.actor, timestamp: this.clock() } }
-    await this.event(intent, EventType.IntentReceived, { metadata: { untrustedProposal: proposal }, reasoningTrail: ['MCP arguments accepted as an untrusted proposal'] })
+      metadata: { actor: this.claims.callerId, delegatedBy: this.claims.delegatedBy,
+        gatewayId: this.claims.gatewayId, timestamp: this.clock() } }
+    try { await this.event(intent, EventType.IntentReceived, { metadata: {
+      trustClassification: 'UNTRUSTED_AGENT_INPUT', untrustedInputs: {
+        reason: proposal.reason, memory: proposal.memory, instanceId: proposal.instanceId,
+        skipOsShutdown: proposal.skipOsShutdown
+      }, launcherClaims: this.claims
+    }, reasoningTrail: ['MCP arguments are untrusted proposal data; launcher identity is separate'] }) }
+    catch { return { status: 'denied', intentId: id, code: 'EVIDENCE_UNAVAILABLE', reasons: ['Evidence store unavailable'] } }
     let revision: string | undefined
     try {
       const snapshot = await this.source.current()
@@ -178,21 +188,32 @@ export class ExecutionGateway {
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
       const evaluation: EvaluationResult = { allowed: false, reasons: [reason] }
-      await this.event(intent, EventType.EvaluationCompleted, { evaluationResult: evaluation, metadata: { policyVersion: revision } })
-      await this.event(intent, EventType.ExecutionSkipped, { evaluationResult: evaluation,
-        executionResult: { success: false, error: reason }, metadata: { policyVersion: revision } })
+      try {
+        await this.event(intent, EventType.EvaluationCompleted, { evaluationResult: evaluation, metadata: { policyVersion: revision } })
+        await this.event(intent, EventType.ExecutionSkipped, { evaluationResult: evaluation,
+          executionResult: { success: false, error: reason }, metadata: { policyVersion: revision } })
+      } catch { return { status: 'denied', intentId: id, policyVersion: revision, code: 'EVIDENCE_UNAVAILABLE', reasons: ['Evidence store unavailable'] } }
       return { status: 'denied', intentId: id, policyVersion: revision, code: resultCode(error), reasons: [reason] }
     }
   }
 
   async execute(grant: ExecutionContract, actualInput: unknown): Promise<GatewayExecution> {
     const id = isRecord(grant) && typeof grant.proposalId === 'string' ? grant.proposalId : ''
-    const events = id ? await this.store.getEventsByIntent(id) : []
+    let events
+    try { events = id ? await this.store.getEventsByIntent(id) : [] }
+    catch { return { status: 'rejected', intentId: id, code: 'EVIDENCE_UNAVAILABLE', reason: 'Evidence store unavailable' } }
     const intent = events[0]?.payload.intentSnapshot
     const revision = grant?.policyVersion
     if (!intent) return { status: 'rejected', intentId: id, policyVersion: revision, code: 'UNKNOWN_GRANT', reason: 'No admitted proposal found' }
     let started = false
+    let adapterInvoked = false
+    let adapterSucceeded = false
     try {
+      if (intent.metadata.actor !== this.claims.callerId || grant.actorId !== this.claims.callerId ||
+        intent.metadata.delegatedBy !== this.claims.delegatedBy) {
+        throw new Error('CALLER_MISMATCH: Grant belongs to a different launcher-attested caller or delegator')
+      }
+      if (intent.metadata.gatewayId !== this.claims.gatewayId) throw new Error('GATEWAY_MISMATCH: Grant was issued by another gateway')
       const actual = operation(actualInput)
       const payload = intent.payload as { instanceIds: string[]; skipOsShutdown: boolean }
       if (grant.action !== OPERATION || actual.instanceId !== payload.instanceIds[0] || actual.skipOsShutdown !== payload.skipOsShutdown) {
@@ -209,7 +230,7 @@ export class ExecutionGateway {
       const admissionContext = events.find(event => event.type === EventType.ContextResolved)?.payload.contextSnapshot
       const currentContext = contextFor(snapshot.policy, actual)
       if (hashJson(admissionContext) !== hashJson(currentContext)) throw new Error('STATE_GUARD_FAILED: Target state changed after admission')
-      const result = await this.identity.withIdentity(intent, async (identity) => {
+      const result = await this.identityManager.withIdentity(intent, async (identity) => {
         assertIdentityCanExecute(intent, identity, this.clock())
         // Atomically consume the one-use contract before entering the adapter.
         await this.store.transaction(async tx => {
@@ -224,7 +245,13 @@ export class ExecutionGateway {
         if (hashJson(contextFor(executionPolicy.policy, actual)) !== hashJson(currentContext)) {
           throw new Error('STATE_GUARD_FAILED: Target state changed before adapter invocation')
         }
+        let redemptionState
+        try { redemptionState = await this.store.getTrace(id) }
+        catch { throw new Error('EVIDENCE_UNAVAILABLE: Redemption state cannot be verified') }
+        if (redemptionState?.status !== 'RUNNING') throw new Error('EVIDENCE_UNAVAILABLE: Redemption state cannot be verified')
+        adapterInvoked = true
         const outcome = await this.adapter.terminate(actual)
+        adapterSucceeded = true
         const executionResult: ExecutionResult = { success: true, result: outcome, executionContract: grant }
         await this.event(intent, EventType.ExecutionCompleted, { contextSnapshot: currentContext, executionContract: grant,
           executionResult, metadata: { policyVersion: revision, actualOperation: OPERATION, actual } })
@@ -233,17 +260,30 @@ export class ExecutionGateway {
       return { status: 'executed', intentId: id, policyVersion: revision, result }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
-      if (started) {
-        await this.event(intent, EventType.ExecutionCompleted, { executionContract: grant,
-          executionResult: { success: false, error: reason }, metadata: { policyVersion: revision } })
-      } else {
-        await this.event(intent, EventType.ExecutionRejected, { executionContract: grant, error: reason,
-          metadata: { policyVersion: revision, untrustedActual: actualInput } })
+      try {
+        if (started && (!adapterInvoked || (adapterInvoked && !adapterSucceeded))) {
+          await this.event(intent, EventType.ExecutionCompleted, { executionContract: grant,
+            executionResult: { success: false, error: reason }, metadata: { policyVersion: revision } })
+        } else if (!started) {
+          await this.event(intent, EventType.ExecutionRejected, { executionContract: grant, error: reason,
+            metadata: { policyVersion: revision, trustClassification: 'UNTRUSTED_AGENT_INPUT', untrustedActual: actualInput } })
+        }
+      } catch {
+        return { status: adapterInvoked ? 'uncertain' : 'rejected', intentId: id, policyVersion: revision, code: 'EVIDENCE_UNAVAILABLE',
+          reason: adapterInvoked ? 'Adapter outcome uncertain; evidence store unavailable' : 'Evidence store unavailable' }
       }
+      if (adapterInvoked) return { status: 'uncertain', intentId: id, policyVersion: revision,
+        code: 'OUTCOME_UNCERTAIN', reason: 'Adapter was invoked; inspect evidence and adapter state before retrying' }
       return { status: started ? 'failed' : 'rejected', intentId: id, policyVersion: revision,
         code: resultCode(error), reason }
     }
   }
 
-  async replay(intentId: string) { return new ReplayEngine().replayIntent(await this.store.getEventsByIntent(intentId)) }
+  async replay(intentId: string) {
+    const events = await this.store.getEventsByIntent(intentId)
+    const metadata = events[0]?.payload.intentSnapshot.metadata
+    if (!metadata || metadata.actor !== this.claims.callerId || metadata.delegatedBy !== this.claims.delegatedBy ||
+      metadata.gatewayId !== this.claims.gatewayId) throw new Error('EVIDENCE_ACCESS_DENIED')
+    return new ReplayEngine().replayIntent(events)
+  }
 }

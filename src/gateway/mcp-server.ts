@@ -6,14 +6,22 @@ import { SQLiteIEECStore } from '../core/event/SqlEventStore'
 import type { ExecutionContract } from '../core/governance/types'
 import { ExecutionGateway, MockTerminationAdapter } from './Gateway'
 import { FilePolicySource } from './policy'
+import { loadGatewayConfig } from './config'
 
 const policyPath = resolve(process.env.OKG_POLICY_FILE ?? 'policies/gateway-local.json')
 const { DatabaseSync } = require('node:sqlite') as { DatabaseSync: new (path: string) => import('../core/event/SqlEventStore').SQLiteDatabase }
 const evidencePath = resolve(process.env.OKG_EVIDENCE_DB ?? '.openkedge-gateway.sqlite')
-const gatewayId = process.env.OKG_GATEWAY_ID ?? 'local-gateway'
-const signingKey = process.env.OKG_SIGNING_KEY ?? 'openkedge-local-demo-key-32-bytes-only'
+let config: ReturnType<typeof loadGatewayConfig>
+try { config = loadGatewayConfig(process.env) }
+catch (error) {
+  // Never print environment values, especially key material.
+  console.error(error instanceof Error ? error.message : 'INVALID_GATEWAY_CONFIG')
+  process.exit(1)
+}
+const gatewayId = config.gatewayId
 const store = new SQLiteIEECStore(new DatabaseSync(evidencePath))
-const gateway = new ExecutionGateway(new FilePolicySource(policyPath), new MockTerminationAdapter(), signingKey, gatewayId, store)
+const gateway = new ExecutionGateway(new FilePolicySource(policyPath), new MockTerminationAdapter(), config.signingKey,
+  config, store)
 
 const grantSchema = z.object({
   contractId: z.string(), proposalId: z.string(), actorId: z.string(), action: z.string(), policyVersion: z.string(),
@@ -68,9 +76,12 @@ function createServer(): McpServer {
     inputSchema: z.object({ intentId: z.string() }).strict(), annotations: { readOnlyHint: true }
   }, async ({ intentId }) => {
     try { return response(await gateway.replay(intentId)) }
-    catch (error) { return response({ code: 'EVIDENCE_NOT_FOUND', reason: String(error) }, true) }
+    catch { return response({ code: 'EVIDENCE_ACCESS_DENIED', reason: 'Evidence unavailable to this launcher-attested caller' }, true) }
   })
   return server
 }
 
-serveStdio(createServer)
+gateway.status().then(() => { serveStdio(createServer) }).catch(() => {
+  console.error('POLICY_UNAVAILABLE: Gateway policy is unavailable or malformed at startup')
+  process.exitCode = 1
+})

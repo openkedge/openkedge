@@ -5,6 +5,9 @@ import { Client } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
 import { writePolicyAtomically, type GatewayPolicy } from './policy'
 
+// Deliberately fixed only for this local, isolated, no-AWS demo.
+const DEMO_ONLY_SIGNING_KEY_HEX = 'd3d0e5b7186396cfb401046ec9f9526c0fca6d8571a1f52fe66a7380cef385d5'
+
 async function main(): Promise<void> {
   const directory = await mkdtemp(join(tmpdir(), 'openkedge-mcp-'))
   const policyPath = join(directory, 'policy.json')
@@ -16,7 +19,8 @@ async function main(): Promise<void> {
     await client.connect(new StdioClientTransport({ command: process.execPath,
       args: [resolve('dist/gateway/mcp-server.js')],
       env: { ...process.env, OKG_POLICY_FILE: policyPath, OKG_EVIDENCE_DB: join(directory, `${id}.sqlite`),
-        OKG_GATEWAY_ID: id, OKG_SIGNING_KEY: 'openkedge-local-demo-key-32-bytes-only' } as Record<string, string>
+        OKG_GATEWAY_ID: id, OKG_CALLER_ID: 'demo-agent', OKG_DELEGATED_BY: 'demo-operator',
+        OKG_SIGNING_KEY_HEX: DEMO_ONLY_SIGNING_KEY_HEX, OKG_DEMO_ONLY: '1' } as Record<string, string>
     }))
     clients.push(client)
     return client

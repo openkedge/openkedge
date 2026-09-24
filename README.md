@@ -30,11 +30,25 @@ npm run build
 npm run demo:mcp
 ```
 
-The demo's official MCP client starts **two stdio gateway processes** against one authoritative policy file, lists the protected tool, exercises admission and execution, updates the shared policy, and prints the evidence directory and proposal ID. It needs no model, API key or AWS account. To connect another MCP client, configure a stdio server with command `node`, argument `<repository>/dist/gateway/mcp-server.js`, and environment variables `OKG_POLICY_FILE=<absolute policy file>`, `OKG_EVIDENCE_DB=<absolute SQLite file>`, `OKG_GATEWAY_ID=<name>`, and `OKG_SIGNING_KEY=<private 32+ byte key>`. Give each gateway its own evidence DB for this local example. The tools are `request_ec2_termination`, `execute_ec2_termination`, `openkedge_policy_status`, and `openkedge_replay`.
+The demo's official MCP client starts **two stdio gateway processes** against one authoritative policy file, lists the protected tool, exercises admission and execution, updates the shared policy, and prints the evidence directory and proposal ID. It needs no model, API key or AWS account. Its fixed key is accepted only through the explicit demo-only launch setting.
+
+Run the separate MCP client example from the repository root. It starts a gateway child process through the SDK and shows tool discovery, an allowed mock action, a denial, and the caller's replay evidence:
+
+```bash
+npm install
+npm run build
+export OKG_SIGNING_KEY_HEX="$(openssl rand -hex 32)"
+export OKG_GATEWAY_ID=external-gateway
+export OKG_CALLER_ID=external-agent
+export OKG_DELEGATED_BY=local-operator
+node examples/mcp-external-client.mjs
+```
+
+For another MCP client, configure a stdio server with command `node`, argument `<repository>/dist/gateway/mcp-server.js`, and the same four required environment variables. Set `OKG_POLICY_FILE` and `OKG_EVIDENCE_DB` to absolute paths as needed. The **trusted launcher**, not an MCP tool argument, supplies the caller and delegator IDs. One stdio gateway process serves one caller; stdio does not authenticate multiple remote callers. Give each gateway its own evidence DB for this local example. The tools are `request_ec2_termination`, `execute_ec2_termination`, `openkedge_policy_status`, and `openkedge_replay`.
 
 The demo copies [the local policy](./policies/gateway-local.json) to a temporary directory. To change a copied policy while gateways are running, use `node dist/gateway/policy-cli.js <policy-file> deny-all` or `allow-dev`; `status` prints its content hashed version. The command replaces the file atomically. Each gateway reads the authoritative file on its next admission or execution; policy read failures deny destructive operations. To inspect evidence, call `openkedge_replay` with the printed proposal ID against the gateway that handled it. [The RFC](./rfcs/0006-mcp-execution-gateway.md) defines result and error semantics.
 
-This is a mock execution boundary: the agent receives no adapter credential, and the gateway verifies a one use grant before invoking the mock EC2 action. Real AWS enforcement also requires IAM and network controls that prevent agents from using direct AWS credentials or bypassing the gateway. See [deployment limits](./docs/mcp-gateway-implementation.md).
+This is a mock execution boundary: the agent receives no adapter credential, and the gateway verifies a one use grant before invoking the mock EC2 action. Replay returns full proposal evidence only to the gateway's launcher-attested caller and delegator; policy status returns only the current revision. Real AWS enforcement also requires IAM and network controls that prevent agents from using direct AWS credentials or bypassing the gateway. See [deployment limits](./docs/mcp-gateway-implementation.md).
 
 ---
 
