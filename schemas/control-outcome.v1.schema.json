@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkedge.dev/schemas/control-outcome.v1.schema.json",
+  "title": "OpenKedge gateway dispatch outcome v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocolVersion", "permitId", "proposalId", "contractId", "status", "evidenceHash", "observedAt"],
+  "properties": {
+    "protocolVersion": { "const": 1 },
+    "permitId": { "type": "string", "format": "uuid" },
+    "proposalId": { "type": "string", "minLength": 1 },
+    "contractId": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["executed", "validated", "failed", "uncertain"] },
+    "evidenceHash": { "oneOf": [{ "type": "string", "pattern": "^[a-f0-9]{64}$" }, { "type": "null" }] },
+    "observedAt": { "type": "integer", "minimum": 0 }
+  }
+}

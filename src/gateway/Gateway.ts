@@ -16,6 +16,7 @@ import type { ExecutionIdentity } from '../core/identity/Identity'
 import { assertIdentityCanExecute } from '../core/identity/Identity'
 import type { GatewayPolicy, PolicySnapshot, PolicySource } from './policy'
 import { validateIdentity, type GatewayIdentity } from './config'
+import type { DispatchAuthority, DispatchPermit } from '../control-plane/client'
 
 export interface TerminateParameters { instanceId: string; skipOsShutdown: boolean }
 export interface TerminateProposal extends TerminateParameters { reason?: string; memory?: string }
@@ -96,7 +97,8 @@ export class ExecutionGateway {
     private readonly assurance?: AssuranceCheck,
     identityProvider?: IdentityProvider,
     private readonly liveContext?: GatewayContextResolver,
-    private readonly contractTtlMs = 5_000
+    private readonly contractTtlMs = 5_000,
+    private readonly dispatchAuthority?: DispatchAuthority
   ) {
     this.store = store
     this.claims = validateIdentity(identity)
@@ -108,9 +110,9 @@ export class ExecutionGateway {
     this.identityManager = new IdentityManager(identityProvider ?? provider, store)
   }
 
-  async status(): Promise<{ policyVersion: string }> {
+  async status(): Promise<{ policyVersion: string; bundleId?: string; epoch?: number }> {
     const snapshot = await this.source.current()
-    return { policyVersion: snapshot.revision }
+    return { policyVersion: snapshot.revision, bundleId: snapshot.bundleId, epoch: snapshot.epoch }
   }
 
   private governance(snapshot: PolicySnapshot): TemporalGovernance {
@@ -120,8 +122,8 @@ export class ExecutionGateway {
     })
   }
 
-  private async event(intent: Intent, type: EventType, details: Record<string, unknown>): Promise<void> {
-    await this.store.append({ id: randomUUID(), type, timestamp: this.clock(), intentId: intent.id,
+  private async event(intent: Intent, type: EventType, details: Record<string, unknown>) {
+    return this.store.append({ id: randomUUID(), type, timestamp: this.clock(), intentId: intent.id,
       payload: { intentSnapshot: intent, ...details } })
   }
 
@@ -150,7 +152,8 @@ export class ExecutionGateway {
       await governance.verifyCapabilities(normalized)
       const contextProvider: GatewayContextResolver = this.liveContext ?? { resolve: async () => contextFor(snapshot.policy, proposal) }
       const context = await contextProvider.resolve(normalized)
-      await this.event(normalized, EventType.ContextResolved, { contextSnapshot: context, metadata: { policyVersion: revision } })
+      await this.event(normalized, EventType.ContextResolved, { contextSnapshot: context,
+        metadata: { policyVersion: revision, policyBundleId: snapshot.bundleId, policyEpoch: snapshot.epoch } })
       const temporal = await governance.evaluateProposal(normalized)
       await this.event(normalized, EventType.TemporalEvaluated, { contextSnapshot: context, temporalEvaluation: temporal, metadata: { policyVersion: revision } })
       const blast = this.blast.estimate(normalized, context)
@@ -180,7 +183,8 @@ export class ExecutionGateway {
       }
       const evaluation: EvaluationResult = { allowed, reasons, matchedRules: ['gateway-local-policy'], enrichedContext: context }
       await this.event(normalized, EventType.EvaluationCompleted, { contextSnapshot: context, blastRadius: blast,
-        temporalEvaluation: temporal, evaluationResult: evaluation, metadata: { policyVersion: revision } })
+        temporalEvaluation: temporal, evaluationResult: evaluation,
+        metadata: { policyVersion: revision, policyBundleId: snapshot.bundleId, policyEpoch: snapshot.epoch } })
       if (!allowed) {
         await this.event(normalized, EventType.ExecutionSkipped, { contextSnapshot: context, evaluationResult: evaluation,
           executionResult: { success: false, error: reasons.join('; ') }, metadata: { policyVersion: revision } })
@@ -212,6 +216,8 @@ export class ExecutionGateway {
     let started = false
     let adapterInvoked = false
     let adapterSucceeded = false
+    let permit: DispatchPermit | undefined
+    let permitFinished = false
     try {
       if (intent.metadata.actor !== this.claims.callerId || grant.actorId !== this.claims.callerId ||
         intent.metadata.delegatedBy !== this.claims.delegatedBy) {
@@ -254,12 +260,15 @@ export class ExecutionGateway {
         try { redemptionState = await this.store.getTrace(id) }
         catch { throw new Error('EVIDENCE_UNAVAILABLE: Redemption state cannot be verified') }
         if (redemptionState?.status !== 'RUNNING') throw new Error('EVIDENCE_UNAVAILABLE: Redemption state cannot be verified')
+        permit = await this.dispatchAuthority?.begin(intent, grant, actual)
+        if (permit && permit.expiresAt <= this.clock()) throw new Error('PERMIT_EXPIRED: Dispatch permit expired before adapter invocation')
         adapterInvoked = true
         const outcome = await this.adapter.terminate(actual, identity, intent, grant)
         adapterSucceeded = true
         const executionResult: ExecutionResult = { success: true, result: outcome, executionContract: grant }
-        await this.event(intent, EventType.ExecutionCompleted, { contextSnapshot: currentContext, executionContract: grant,
-          executionResult, metadata: { policyVersion: revision, actualOperation: OPERATION, actual } })
+        const completed = await this.event(intent, EventType.ExecutionCompleted, { contextSnapshot: currentContext, executionContract: grant,
+          executionResult, metadata: { policyVersion: revision, actualOperation: OPERATION, actual, dispatchPermitId: permit?.permitId } })
+        if (permit) { await permit.finish(isRecord(outcome) && outcome.mode === 'dry-run' ? 'validated' : 'executed', completed.currentHash); permitFinished = true }
         return outcome
       }, { contract: grant, clock: this.clock, assertCanUnlock: () => governance.assertCanUnlock(grant, intent) })
       return { status: isRecord(result) && result.mode === 'dry-run' ? 'validated' : 'executed', intentId: id, policyVersion: revision, result }
@@ -267,8 +276,13 @@ export class ExecutionGateway {
       const reason = error instanceof Error ? error.message : String(error)
       try {
         if (started && (!adapterInvoked || (adapterInvoked && !adapterSucceeded))) {
-          await this.event(intent, EventType.ExecutionCompleted, { executionContract: grant,
-            executionResult: { success: false, error: reason }, metadata: { policyVersion: revision } })
+          const failed = await this.event(intent, EventType.ExecutionCompleted, { executionContract: grant,
+            executionResult: { success: false, error: reason }, metadata: { policyVersion: revision, dispatchPermitId: permit?.permitId } })
+          if (permit && !permitFinished) {
+            const definitive = error instanceof Error && 'definitive' in error && error.definitive === true
+            await permit.finish(adapterInvoked && !definitive ? 'uncertain' : 'failed', failed.currentHash)
+            permitFinished = true
+          }
         } else if (!started) {
           await this.event(intent, EventType.ExecutionRejected, { executionContract: grant, error: reason,
             metadata: { policyVersion: revision, trustClassification: 'UNTRUSTED_AGENT_INPUT', untrustedActual: actualInput } })

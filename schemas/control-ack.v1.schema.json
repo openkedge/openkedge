@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkedge.dev/schemas/control-ack.v1.schema.json",
+  "title": "OpenKedge gateway activation acknowledgement v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocolVersion", "bundleId", "epoch", "policyVersion", "activatedAt"],
+  "properties": {
+    "protocolVersion": { "const": 1 },
+    "bundleId": { "type": "string", "format": "uuid" },
+    "epoch": { "type": "integer", "minimum": 1 },
+    "policyVersion": { "type": "string", "minLength": 1 },
+    "activatedAt": { "type": "integer", "minimum": 0 }
+  }
+}

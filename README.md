@@ -54,6 +54,19 @@ This is a mock execution boundary: the agent receives no adapter credential, and
 
 The optional [EC2 pilot](./docs/aws-pilot.md) protects one tagged, running test instance. The mock remains the default. Pilot startup needs a separate test-account config, exact AWS principal and target, and live `DescribeInstances`; execution defaults to AWS `TerminateInstances(DryRun=true)`. Real termination requires both `mutationEnabled: true` in that config and a separate `OKG_AWS_PILOT_MUTATE` launch flag. The AWS guide provides exact IAM setup, bypass preflight, independent MCP client, CloudTrail correlation, and teardown commands. No AWS account is used by `npm test` or `npm run demo:mcp`.
 
+### Controller and gateway distribution
+
+The [controller protocol](./rfcs/0007-controller-gateway-policy.md) replaces the shared local policy file as the distributed path. Gateways fetch Ed25519 signed bundles over an authenticated interface, persist a monotonic epoch, acknowledge activation, and obtain a short controller permit before consequential dispatch. The original shared-file demo remains a local example only. Run the two-gateway, two-client, separate-storage scenario and the [conformance fixtures and runner](./conformance/README.md) from the repository root:
+
+```sh
+npm run demo:controller
+npm run conformance:controller
+```
+
+The [observed local measurements](./docs/controller-measurements.md) include update, acknowledgement, admission and redemption delay, one pending-update rejection, and IEEC outcome reconciliation. The controller demo uses mock actions and no AWS credentials.
+
+The [implementer quickstart](./docs/controller-implementer.md) gives exact commands for a disposable controller, gateway and conformance run.
+
 ---
 
 ## 📄 Paper

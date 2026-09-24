@@ -1,0 +1,35 @@
+{
+  "protocolVersion": 1,
+  "bundleId": "9fd1985e-9a6c-4714-a8a0-cada16d0c1d4",
+  "epoch": 1,
+  "issuedAt": 1790200000000,
+  "leaseUntil": 1790200060000,
+  "policy": {
+    "protocolVersion": 1,
+    "version": "v1",
+    "allowedInstanceIds": [
+      "i-aaaaaaaaaaaaaaaaa"
+    ],
+    "protectedInstanceIds": [
+      "i-bbbbbbbbbbbbbbbbb"
+    ],
+    "allowSkipOsShutdown": false,
+    "instances": {
+      "i-aaaaaaaaaaaaaaaaa": {
+        "state": "running",
+        "tags": {
+          "env": "dev",
+          "critical": "false"
+        }
+      },
+      "i-bbbbbbbbbbbbbbbbb": {
+        "state": "running",
+        "tags": {
+          "env": "prod",
+          "critical": "true"
+        }
+      }
+    },
+    "rules": []
+  }
+}

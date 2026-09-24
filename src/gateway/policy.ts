@@ -2,6 +2,7 @@ import { readFile, rename, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { hashJson, immutableSnapshot, isRecord } from '../core/crypto/canonical'
 import type { TemporalRule } from '../core/governance/types'
+import { validateTemporalRule } from '../core/governance/temporal'
 
 export interface GatewayPolicy {
   protocolVersion: 1
@@ -13,7 +14,7 @@ export interface GatewayPolicy {
   rules: TemporalRule[]
 }
 
-export interface PolicySnapshot { policy: GatewayPolicy; revision: string }
+export interface PolicySnapshot { policy: GatewayPolicy; revision: string; bundleId?: string; epoch?: number }
 export interface PolicySource { current(): Promise<PolicySnapshot> }
 
 export function validatePolicy(value: unknown): PolicySnapshot {
@@ -25,8 +26,22 @@ export function validatePolicy(value: unknown): PolicySnapshot {
     throw new Error('POLICY_UNAVAILABLE: Invalid policy document')
   }
   for (const instance of Object.values(value.instances)) {
-    if (!isRecord(instance) || typeof instance.state !== 'string' || !isRecord(instance.tags) ||
+    if (!isRecord(instance) || Object.keys(instance).some(k => !['state', 'tags'].includes(k)) ||
+      typeof instance.state !== 'string' || !isRecord(instance.tags) ||
       Object.values(instance.tags).some(tag => typeof tag !== 'string')) throw new Error('POLICY_UNAVAILABLE: Invalid instance context')
+  }
+  for (const rule of value.rules) {
+    if (!isRecord(rule) || Object.keys(rule).some(k => !['id', 'type', 'targetAction', 'windowMs', 'scope', 'resourcePath',
+      'unit', 'metricPath', 'maxCumulativeValue', 'maxCount', 'requiredPrecedingAction', 'matches'].includes(k)) ||
+      typeof rule.type !== 'string' || typeof rule.targetAction !== 'string' ||
+      !Number.isSafeInteger(rule.windowMs) ||
+      (rule.matches !== undefined && (!Array.isArray(rule.matches) || !rule.matches.every(match =>
+        isRecord(match) && Object.keys(match).sort().join(',') === 'currentPath,historicalPath' &&
+        typeof match.currentPath === 'string' && typeof match.historicalPath === 'string')))) {
+      throw new Error('POLICY_UNAVAILABLE: Invalid temporal rule')
+    }
+    try { validateTemporalRule(rule as unknown as TemporalRule) }
+    catch { throw new Error('POLICY_UNAVAILABLE: Invalid temporal rule') }
   }
   const policy = immutableSnapshot(value as unknown as GatewayPolicy)
   return { policy, revision: `${policy.version}@${hashJson(policy)}` }

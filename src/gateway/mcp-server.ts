@@ -1,13 +1,15 @@
 import { resolve } from 'node:path'
+import { readFile } from 'node:fs/promises'
 import { McpServer } from '@modelcontextprotocol/server'
 import { serveStdio } from '@modelcontextprotocol/server/stdio'
 import * as z from 'zod'
 import { SQLiteIEECStore } from '../core/event/SqlEventStore'
 import type { ExecutionContract } from '../core/governance/types'
-import { ExecutionGateway, MockTerminationAdapter } from './Gateway'
-import { FilePolicySource } from './policy'
+import { ExecutionGateway, MockTerminationAdapter, type TerminationAdapter } from './Gateway'
+import { FilePolicySource, type PolicySource } from './policy'
 import { loadGatewayConfig } from './config'
 import { AwsPilot, loadAwsPilotConfig } from './aws-pilot'
+import { ControllerPolicyClient } from '../control-plane/client'
 
 const policyPath = resolve(process.env.OKG_POLICY_FILE ?? 'policies/gateway-local.json')
 const { DatabaseSync } = require('node:sqlite') as { DatabaseSync: new (path: string) => import('../core/event/SqlEventStore').SQLiteDatabase }
@@ -21,7 +23,8 @@ catch (error) {
 }
 const gatewayId = config.gatewayId
 const store = new SQLiteIEECStore(new DatabaseSync(evidencePath))
-const source = new FilePolicySource(policyPath)
+let source: PolicySource = new FilePolicySource(policyPath)
+let controller: ControllerPolicyClient | undefined
 let gateway: ExecutionGateway
 let mode = 'mock'
 
@@ -70,8 +73,16 @@ function createServer(): McpServer {
     description: 'Read the authoritative policy version currently enforced by this gateway.',
     inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true }
   }, async () => {
-    try { return response({ gatewayId, mode, ...await gateway.status() }) }
-    catch (error) { return response({ gatewayId, code: 'POLICY_UNAVAILABLE', reason: String(error) }, true) }
+    try { return response({ gatewayId, mode, ...await gateway.status(),
+      ...(controller ? { controllerReachable: true, ...await controller.status() } : {}) }) }
+    catch (error) {
+      if (controller) {
+        const code = error instanceof Error ? error.message.split(':')[0] : 'POLICY_UNAVAILABLE'
+        return response({ gatewayId, mode, controllerReachable: code !== 'CONTROLLER_UNAVAILABLE',
+          code, ...await controller.status() }, code !== 'CONTROLLER_UNAVAILABLE')
+      }
+      return response({ gatewayId, code: 'POLICY_UNAVAILABLE', reason: String(error) }, true)
+    }
   })
   server.registerTool('openkedge_replay', {
     description: 'Read the IEEC evidence and integrity result for a proposal ID.',
@@ -84,6 +95,15 @@ function createServer(): McpServer {
 }
 
 async function start(): Promise<void> {
+  if (process.env.OKG_CONTROLLER_URL) {
+    if (!process.env.OKG_CONTROLLER_GATEWAY_TOKEN || !process.env.OKG_CONTROLLER_PUBLIC_KEY ||
+      !process.env.OKG_CONTROLLER_STATE_FILE) throw new Error('INVALID_CONTROLLER_CONFIG')
+    controller = new ControllerPolicyClient({ url: process.env.OKG_CONTROLLER_URL, gatewayId,
+      token: process.env.OKG_CONTROLLER_GATEWAY_TOKEN,
+      publicKey: await readFile(resolve(process.env.OKG_CONTROLLER_PUBLIC_KEY), 'utf8'),
+      statePath: resolve(process.env.OKG_CONTROLLER_STATE_FILE) })
+    source = controller
+  }
   if (process.env.OKG_AWS_PILOT_CONFIG) {
     const pilotConfig = await loadAwsPilotConfig(resolve(process.env.OKG_AWS_PILOT_CONFIG))
     const pilot = new AwsPilot(pilotConfig, source,
@@ -91,11 +111,20 @@ async function start(): Promise<void> {
     await pilot.assertPolicy()
     await pilot.assertGatewayPrincipal()
     gateway = new ExecutionGateway(source, pilot, config.signingKey, config, store, Date.now,
-      undefined, undefined, pilot.identityProvider, pilot, 30_000)
+      undefined, undefined, pilot.identityProvider, pilot, 30_000, controller)
     mode = pilotConfig.mutationEnabled && process.env.OKG_AWS_PILOT_MUTATE === 'I_ACCEPT_DISPOSABLE_TEST_INSTANCE_TERMINATION'
       ? 'aws-pilot-mutation' : 'aws-pilot-dry-run'
   } else {
-    gateway = new ExecutionGateway(source, new MockTerminationAdapter(), config.signingKey, config, store)
+    const mock = new MockTerminationAdapter()
+    const delay = controller ? Number(process.env.OKG_CONTROLLER_TEST_DELAY_MS ?? 0) : 0
+    if (!Number.isSafeInteger(delay) || delay < 0 || delay > 2_000) throw new Error('INVALID_MOCK_DELAY')
+    const adapter: TerminationAdapter = delay ? { terminate: async params => {
+      await new Promise(resolve => setTimeout(resolve, delay))
+      return mock.terminate(params)
+    } } : mock
+    gateway = new ExecutionGateway(source, adapter, config.signingKey, config, store,
+      Date.now, undefined, undefined, undefined, undefined, 5_000, controller)
+    if (controller) mode = 'controller-mock'
   }
   await gateway.status()
   await serveStdio(createServer)

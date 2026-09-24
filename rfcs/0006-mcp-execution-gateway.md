@@ -2,6 +2,8 @@
 
 **Status:** Draft, local mock profile, September 2026.
 
+For independently deployed gateways, use [RFC-0007](./0007-controller-gateway-policy.md). The shared policy file below is only a local demonstration and is not the distributed policy channel.
+
 This profile carries the existing runtime `Intent` and signed `ExecutionContract` across an MCP tool boundary. It uses the official MCP TypeScript SDK over stdio. The MCP tool argument to `request_ec2_termination` is an untrusted proposal, normalized by the gateway to `Intent { id, type: "ec2:TerminateInstances", kind: "MUTATION", payload: { instanceIds, skipOsShutdown }, metadata: { actor, delegatedBy, gatewayId, timestamp } }`. The gateway supplies the ID, actor, delegator, gateway ID, timestamp and kind from trusted launcher configuration. The caller supplies `instanceId`, `skipOsShutdown`, optional reason and optional memory. Reason and memory appear under `metadata.untrustedInputs` with `trustClassification: "UNTRUSTED_AGENT_INPUT"` in IEEC and replay; neither is an approval record. Tool annotations, descriptions and retrieved text carry no authority.
 
 ## Stdio identity and secret boundary

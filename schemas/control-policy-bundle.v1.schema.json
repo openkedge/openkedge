@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkedge.dev/schemas/control-policy-bundle.v1.schema.json",
+  "title": "OpenKedge controller policy bundle v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocolVersion", "bundleId", "epoch", "issuedAt", "leaseUntil", "policy", "signature"],
+  "properties": {
+    "protocolVersion": { "const": 1 },
+    "bundleId": { "type": "string", "format": "uuid" },
+    "epoch": { "type": "integer", "minimum": 1 },
+    "issuedAt": { "type": "integer", "minimum": 0 },
+    "leaseUntil": { "type": "integer", "minimum": 1 },
+    "policy": { "$ref": "mcp-gateway.schema.json#/$defs/policy" },
+    "signature": { "type": "string", "minLength": 1, "contentEncoding": "base64" }
+  }
+}

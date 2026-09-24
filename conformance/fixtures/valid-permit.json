@@ -1,0 +1,11 @@
+{
+  "protocolVersion": 1,
+  "proposalId": "proposal-1",
+  "contractId": "contract-1",
+  "actorId": "agent-1",
+  "policyVersion": "1:v1@hash",
+  "instanceId": "i-aaaaaaaaaaaaaaaaa",
+  "skipOsShutdown": false,
+  "grantNotAfter": 1790200005000,
+  "action": "ec2:TerminateInstances"
+}

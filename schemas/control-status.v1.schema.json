@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkedge.dev/schemas/control-status.v1.schema.json",
+  "title": "OpenKedge controller policy state v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["epoch", "bundleId", "policyVersion", "acknowledgements", "activePermits", "outcomes"],
+  "properties": {
+    "epoch": { "type": "integer", "minimum": 1 },
+    "bundleId": { "type": "string", "format": "uuid" },
+    "policyVersion": { "type": "string", "minLength": 1 },
+    "acknowledgements": { "type": "array", "items": { "type": "object",
+      "required": ["gateway_id", "epoch", "bundle_id", "activated_at"] } },
+    "activePermits": { "type": "integer", "minimum": 0 },
+    "outcomes": { "type": "array", "items": { "type": "object",
+      "required": ["permit_id", "gateway_id", "proposal_id", "contract_id", "status", "evidence_hash", "observed_at"],
+      "properties": { "evidence_hash": { "oneOf": [{ "type": "string" }, { "type": "null" }] } } } }
+  }
+}

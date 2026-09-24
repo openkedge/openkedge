@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openkedge.dev/schemas/control-permit.v1.schema.json",
+  "title": "OpenKedge consequential dispatch permit request v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocolVersion", "proposalId", "contractId", "actorId", "action", "policyVersion", "instanceId", "skipOsShutdown", "grantNotAfter"],
+  "properties": {
+    "protocolVersion": { "const": 1 },
+    "proposalId": { "type": "string", "minLength": 1 },
+    "contractId": { "type": "string", "minLength": 1 },
+    "actorId": { "type": "string", "minLength": 1 },
+    "action": { "const": "ec2:TerminateInstances" },
+    "policyVersion": { "type": "string", "minLength": 1 },
+    "instanceId": { "type": "string", "pattern": "^i-[a-f0-9]{17}$" },
+    "skipOsShutdown": { "type": "boolean" },
+    "grantNotAfter": { "type": "integer", "minimum": 1 }
+  }
+}

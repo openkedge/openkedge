@@ -29,6 +29,7 @@ go.work.sum
 # env file
 .env
 .openkedge-pilot/
+.openkedge-controller/
 *.sqlite
 
 # Editor/IDE

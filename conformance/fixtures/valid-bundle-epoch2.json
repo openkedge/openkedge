@@ -1,0 +1,36 @@
+{
+  "protocolVersion": 1,
+  "bundleId": "3b77626a-3f76-45f0-92b7-2b1c9e0edc5c",
+  "epoch": 2,
+  "issuedAt": 1790200001000,
+  "leaseUntil": 1790200061000,
+  "policy": {
+    "protocolVersion": 1,
+    "version": "v2",
+    "allowedInstanceIds": [
+      "i-aaaaaaaaaaaaaaaaa"
+    ],
+    "protectedInstanceIds": [
+      "i-bbbbbbbbbbbbbbbbb"
+    ],
+    "allowSkipOsShutdown": false,
+    "instances": {
+      "i-aaaaaaaaaaaaaaaaa": {
+        "state": "running",
+        "tags": {
+          "env": "dev",
+          "critical": "false"
+        }
+      },
+      "i-bbbbbbbbbbbbbbbbb": {
+        "state": "running",
+        "tags": {
+          "env": "prod",
+          "critical": "true"
+        }
+      }
+    },
+    "rules": []
+  },
+  "signature": "YeUkC/RT9b/PtfH0gs/uUxoV/vb61FuTgbJjzxv+N3bQpsi8jlJcauLJ7jYFxmbFWfBi8F9M26H5EfjX9RAOCA=="
+}
