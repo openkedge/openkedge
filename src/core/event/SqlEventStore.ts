@@ -72,7 +72,7 @@ class SqlTransaction implements IEECTransaction {
   }
   async queryTrace(query: TraceQuery): Promise<IEECRecord[]> {
     const values: unknown[] = []
-    const clauses = (status: 'SUCCESS' | 'RESERVED'): string => {
+    const clauses = (status: 'SUCCESS' | 'RESERVED' | 'RUNNING'): string => {
       values.push(query.action, status, query.toInclusive)
       let where = 'e.action = ? AND e.trace_status = ? AND e.ts <= ?'
       if (query.actorId !== undefined) { where += ' AND e.actor_id = ?'; values.push(query.actorId) }
@@ -82,7 +82,7 @@ class SqlTransaction implements IEECTransaction {
       )`
     }
     const success = clauses('SUCCESS')
-    const sql = query.includeReservations ? `${success} UNION ALL ${clauses('RESERVED')}` : success
+    const sql = query.includeReservations ? `${success} UNION ALL ${clauses('RESERVED')} UNION ALL ${clauses('RUNNING')}` : success
     return (await this.rows(sql, values)).map(row => projectTrace(parseEvent(row))!)
   }
 }

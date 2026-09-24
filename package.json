@@ -25,6 +25,7 @@
     "demo:aws": "ts-node src/examples/aws-demo.ts",
     "demo:aws-identity": "ts-node src/examples/aws-identity-demo.ts",
     "demo:blast": "ts-node src/examples/blast-radius-demo.ts",
+    "demo:mcp": "npm run build && node dist/gateway/demo.js",
     "build:replay-ui": "npm --workspace apps/replay-ui run build",
     "test": "jest --runInBand"
   },
@@ -38,6 +39,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-ec2": "^3.1029.0",
-    "@aws-sdk/client-sts": "^3.1029.0"
+    "@aws-sdk/client-sts": "^3.1029.0",
+    "@modelcontextprotocol/client": "^2.1.0",
+    "@modelcontextprotocol/server": "^2.1.0",
+    "zod": "^4.6.5"
   }
 }

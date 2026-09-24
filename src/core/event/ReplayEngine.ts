@@ -173,6 +173,10 @@ export class ReplayEngine {
         return `Temporal constraints evaluated for ${event.intentId}`
       case EventType.ExecutionReserved:
         return `Quota reserved and execution contract minted for ${event.intentId}`
+      case EventType.ExecutionStarted:
+        return `One-use contract redeemed for ${event.intentId}`
+      case EventType.ExecutionRejected:
+        return `Execution attempt rejected for ${event.intentId}`
       case EventType.ExecutionCancelled:
         return `Unused quota reservation cancelled for ${event.intentId}`
       case EventType.IdentityIssued:

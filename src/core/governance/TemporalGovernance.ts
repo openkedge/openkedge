@@ -99,7 +99,7 @@ export class TemporalGovernance {
     return evaluateTemporalRules(intent, history, this.options.rules ?? [], now)
   }
 
-  async reserve(intent: Intent): Promise<{ contract: ExecutionContract; temporal: TemporalEvaluationResult }> {
+  async reserve(intent: Intent, policyVersion?: string): Promise<{ contract: ExecutionContract; temporal: TemporalEvaluationResult }> {
     return this.history.transaction(async tx => {
       if (await tx.getTrace(intent.id)) throw new GovernanceError('DUPLICATE_PROPOSAL_ERROR', 'Proposal has already been reserved or executed')
       const now = this.clock()
@@ -118,7 +118,7 @@ export class TemporalGovernance {
         throw new GovernanceError('CONTRACT_TEMPORAL_BOUNDS_ERROR', 'Execution window is not currently active')
       }
       const contract = mintExecutionContract(intent, intent.capabilities ?? [], [...temporal.preconditionHashes, ...sources.map(source => source.hash)],
-        { notBefore, notAfter, maxDurationMs }, this.options.secretKey, now)
+        { notBefore, notAfter, maxDurationMs }, this.options.secretKey, now, policyVersion)
       await tx.append({ id: randomUUID(), type: EventType.ExecutionReserved, timestamp: now, intentId: intent.id,
         payload: { intentSnapshot: intent, executionContract: contract, temporalEvaluation: temporal,
           reasoningTrail: ['Temporal check and quota reservation committed atomically before credential issuance'] } })

@@ -7,7 +7,7 @@ const DOMAIN = 'openkedge.execution-contract.v1'
 
 export function mintExecutionContract(
   intent: Intent, capabilities: CapabilityToken[], preconditionHashes: string[],
-  temporalBounds: TemporalBounds, secretKey: string, now: number = Date.now()
+  temporalBounds: TemporalBounds, secretKey: string, now: number = Date.now(), policyVersion?: string
 ): ExecutionContract {
   if (![now, temporalBounds.notBefore, temporalBounds.notAfter, temporalBounds.maxDurationMs].every(Number.isSafeInteger) ||
       temporalBounds.notAfter <= temporalBounds.notBefore || temporalBounds.maxDurationMs <= 0 ||
@@ -17,7 +17,7 @@ export function mintExecutionContract(
   }
   const unsigned = {
     contractId: randomUUID(), proposalId: intent.id, actorId: intent.metadata.actor,
-    action: intent.type, intentHash: hashJson(intent), issuedAt: now, temporalBounds,
+    action: intent.type, ...(policyVersion ? { policyVersion } : {}), intentHash: hashJson(intent), issuedAt: now, temporalBounds,
     temporalValidity: { validAfter: temporalBounds.notBefore, validBefore: temporalBounds.notAfter },
     linkedCapabilities: capabilities.map(token => token.tokenId), capabilities,
     preconditionHashes: [...new Set(preconditionHashes)]

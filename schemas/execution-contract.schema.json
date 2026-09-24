@@ -34,6 +34,10 @@
       "type": "string",
       "minLength": 1
     },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1
+    },
     "intentHash": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"

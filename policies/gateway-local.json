@@ -1,0 +1,12 @@
+{
+  "protocolVersion": 1,
+  "version": "v1",
+  "allowedInstanceIds": ["i-aaaaaaaaaaaaaaaaa"],
+  "protectedInstanceIds": ["i-bbbbbbbbbbbbbbbbb"],
+  "allowSkipOsShutdown": false,
+  "instances": {
+    "i-aaaaaaaaaaaaaaaaa": { "state": "running", "tags": { "env": "dev", "critical": "false" } },
+    "i-bbbbbbbbbbbbbbbbb": { "state": "running", "tags": { "env": "prod", "critical": "true" } }
+  },
+  "rules": []
+}

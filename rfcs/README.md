@@ -13,6 +13,7 @@ This directory contains Request for Comments (RFCs) for the OpenKedge project. R
 | 0003 | [Execution Identity (EI)](./0003-execution-identity.md) | Draft |
 | 0004 | [Replay & Simulation API (RSA)](./0004-replay-simulation-api.md) | Draft |
 | 0005 | [Sovereign Proxy Pattern (SPP)](./0005-sovereign-proxy-architecture.md) | Draft |
+| 0006 | [MCP execution gateway](./0006-mcp-execution-gateway.md) | Draft |
 
 ---
 
@@ -32,4 +33,3 @@ RFCs progress through the following standardized stages:
 - **Normative Focus:** RFCs define *what must be true*, not specific language implementations.
 - **IETF-Style Language:** RFCs utilize RFC 2119 normative language (MUST, SHOULD, MAY).
 - **Determinism:** Protocols and processes described must be deterministic, testable, and auditable.
-

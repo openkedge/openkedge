@@ -20,6 +20,22 @@ npm run build
 
 See exactly why a mutation would be blocked before it ever reaches production.
 
+## Local MCP gateway quickstart
+
+Use Node.js 22 or newer (the local gateway stores IEEC in `node:sqlite`).
+
+```bash
+npm install
+npm run build
+npm run demo:mcp
+```
+
+The demo's official MCP client starts **two stdio gateway processes** against one authoritative policy file, lists the protected tool, exercises admission and execution, updates the shared policy, and prints the evidence directory and proposal ID. It needs no model, API key or AWS account. To connect another MCP client, configure a stdio server with command `node`, argument `<repository>/dist/gateway/mcp-server.js`, and environment variables `OKG_POLICY_FILE=<absolute policy file>`, `OKG_EVIDENCE_DB=<absolute SQLite file>`, `OKG_GATEWAY_ID=<name>`, and `OKG_SIGNING_KEY=<private 32+ byte key>`. Give each gateway its own evidence DB for this local example. The tools are `request_ec2_termination`, `execute_ec2_termination`, `openkedge_policy_status`, and `openkedge_replay`.
+
+The demo copies [the local policy](./policies/gateway-local.json) to a temporary directory. To change a copied policy while gateways are running, use `node dist/gateway/policy-cli.js <policy-file> deny-all` or `allow-dev`; `status` prints its content hashed version. The command replaces the file atomically. Each gateway reads the authoritative file on its next admission or execution; policy read failures deny destructive operations. To inspect evidence, call `openkedge_replay` with the printed proposal ID against the gateway that handled it. [The RFC](./rfcs/0006-mcp-execution-gateway.md) defines result and error semantics.
+
+This is a mock execution boundary: the agent receives no adapter credential, and the gateway verifies a one use grant before invoking the mock EC2 action. Real AWS enforcement also requires IAM and network controls that prevent agents from using direct AWS credentials or bypassing the gateway. See [deployment limits](./docs/mcp-gateway-implementation.md).
+
 ---
 
 ## 📄 Paper

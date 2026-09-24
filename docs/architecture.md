@@ -1,5 +1,19 @@
 # OpenKedge Architecture
 
+## Agent control plane path
+
+```text
+Agent proposal generation (untrusted MCP arguments and retrieved text)
+  → optional typed JudgmentProvider (routes to more assurance; cannot authorize)
+  → deterministic ContextProvider, AWS safety policy, blast radius, CAC and temporal admission
+  → signed existing ExecutionContract with policy revision
+  → execution gateway checks actual operation, target, parameters, current policy and state
+  → mock adapter
+  → IEEC events and ReplayEngine verification
+```
+
+The gateway uses the runtime `Intent` and `TemporalGovernance` contract path. A future Jev integration can implement `JudgmentProvider` and request an additional assurance check; a judgment cannot supply missing authorization or replace the deterministic decision. See [the gateway RFC](../rfcs/0006-mcp-execution-gateway.md) and [implementation note](mcp-gateway-implementation.md).
+
 Agent → Intent → Context → Policy → Event → State
 
 1. **Agent** submits an `IntentProposal`.

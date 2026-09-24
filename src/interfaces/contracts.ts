@@ -66,6 +66,8 @@ export enum EventType {
   CapabilityIssued = 'CapabilityIssued',
   TemporalEvaluated = 'TemporalEvaluated',
   ExecutionReserved = 'ExecutionReserved',
+  ExecutionStarted = 'ExecutionStarted',
+  ExecutionRejected = 'ExecutionRejected',
   ExecutionCancelled = 'ExecutionCancelled',
   IdentityIssued = 'IdentityIssued',
   IdentityUsed = 'IdentityUsed',

@@ -13,6 +13,7 @@ export function finalizeEvent(input: EventInput, previous: EvidenceEvent | null)
 export function projectTrace(event: EvidenceEvent): IEECRecord | undefined {
   let status: IEECRecord['status']
   if (event.type === EventType.ExecutionReserved) status = 'RESERVED'
+  else if (event.type === EventType.ExecutionStarted) status = 'RUNNING'
   else if (event.type === EventType.ExecutionCancelled) status = 'FAILED'
   else if (event.type === EventType.ExecutionCompleted) status = event.payload.executionResult?.success ? 'SUCCESS' : 'FAILED'
   else return undefined
@@ -28,12 +29,15 @@ export function matchesQuery(record: IEECRecord, query: TraceQuery): boolean {
   return record.action === query.action && (query.actorId === undefined || record.actorId === query.actorId) &&
     record.timestamp <= query.toInclusive &&
     ((record.status === 'SUCCESS' && record.timestamp > query.fromExclusive) ||
-      (record.status === 'RESERVED' && query.includeReservations === true))
+      ((record.status === 'RESERVED' || record.status === 'RUNNING') && query.includeReservations === true))
 }
 
 export function assertTraceTransition(previous: IEECRecord | undefined, next: IEECRecord): void {
   if (!previous) return // Legacy successful executions need not have a reservation.
-  if (previous.status !== 'RESERVED' || next.status === 'RESERVED') throw new Error('Execution trace is already finalized or reserved')
+  if (!((previous.status === 'RESERVED' && next.status !== 'RESERVED') ||
+    (previous.status === 'RUNNING' && (next.status === 'SUCCESS' || next.status === 'FAILED')))) {
+    throw new Error('Execution trace is already finalized or reserved')
+  }
   if (hashJson(previous.intent) !== hashJson(next.intent)) throw new Error('Execution must retain the reserved intent snapshot')
   if (next.timestamp < previous.timestamp) throw new Error('Execution completion cannot precede its reservation')
 }

@@ -24,7 +24,7 @@ export interface IEECRecord {
   action: string
   kind: IntentKind
   timestamp: number
-  status: 'RESERVED' | 'SUCCESS' | 'FAILED'
+  status: 'RESERVED' | 'RUNNING' | 'SUCCESS' | 'FAILED'
   intent: Intent
   result?: unknown
   hash: string
@@ -128,6 +128,8 @@ export interface ExecutionContract {
   proposalId: string
   actorId: string
   action: string
+  /** Authenticated authoritative policy revision for gateway admission. */
+  policyVersion?: string
   intentHash: string
   issuedAt: number
   temporalBounds: TemporalBounds

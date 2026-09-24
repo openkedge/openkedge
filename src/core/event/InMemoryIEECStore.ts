@@ -98,7 +98,7 @@ export class InMemoryIEECStore implements IEECStore {
     this.latest.set(record.proposalId, record)
     for (const actor of [record.actorId, null]) {
       const key = JSON.stringify([record.action, actor])
-      if (record.status === 'RESERVED') {
+      if (record.status === 'RESERVED' || record.status === 'RUNNING') {
         const entries = this.reservations.get(key) ?? new Map<string, IEECRecord>()
         entries.set(record.proposalId, record)
         this.reservations.set(key, entries)
