@@ -30,6 +30,7 @@ import sqlite3
 from collections import deque
 from dataclasses import dataclass, field
 import itertools
+import json
 from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Sequence, Set, Tuple
 
 import numpy as np
@@ -307,13 +308,18 @@ class DeterministicRuleVerifier:
         self.invariants: Dict[str, InvariantConstraint] = {inv.invariant_id: inv for inv in invariants}
         self.secret_key = secret_key
 
-    def sign_telemetry(self, assumption_id: str, channel_id: str, failure_domain: str, epoch_revision: int, proposition: str) -> str:
-        payload = f"{assumption_id}:{channel_id}:{failure_domain}:{epoch_revision}:{proposition}".encode("utf-8")
+    def sign_telemetry(self, assumption_id: str, channel_id: str, failure_domain: str, epoch_revision: int, proposition: str, observation_version: int = 0, bit_index: int = 0) -> str:
+        payload = json.dumps(
+            [bit_index, assumption_id, channel_id, failure_domain, epoch_revision,
+             proposition, observation_version],
+            separators=(",", ":"), ensure_ascii=True,
+        ).encode("utf-8")
         return hmac.new(self.secret_key, payload, hashlib.sha256).hexdigest()[:16]
 
     def verify_assumption_signature(self, a: PrimitiveAssumption) -> bool:
         expected = self.sign_telemetry(
-            a.assumption_id, a.channel_id, a.failure_domain, a.epoch_revision, a.proposition
+            a.assumption_id, a.channel_id, a.failure_domain, a.epoch_revision,
+            a.proposition, a.observation_version, a.bit_index,
         )
         return hmac.compare_digest(a.signature, expected)
 
@@ -326,6 +332,8 @@ class DeterministicRuleVerifier:
         rule_id: str,
         assumptions_by_bit: Dict[int, PrimitiveAssumption],
     ) -> Optional[SignedJustification]:
+        if type(env_mask) is not int or not 0 <= env_mask < (1 << 64):
+            return None
         rule = self.rules.get(rule_id)
         if rule is None or rule.consequent != consequent:
             return None
@@ -365,6 +373,8 @@ class DeterministicRuleVerifier:
         invariant_id: str,
         assumptions_by_bit: Dict[int, PrimitiveAssumption],
     ) -> Optional[NogoodCertificate]:
+        if type(env_mask) is not int or not 0 <= env_mask < (1 << 64):
+            return None
         inv = self.invariants.get(invariant_id)
         if inv is None or env_mask == 0:
             return None
@@ -435,9 +445,15 @@ class BoundedATMSEngine:
         self.budget_exceeded: bool = False
 
     def register_assumption(self, assump: PrimitiveAssumption) -> bool:
-        if assump.bit_index < 0 or assump.bit_index >= self.max_assumptions:
+        if type(assump.bit_index) is not int or assump.bit_index < 0 or assump.bit_index >= self.max_assumptions:
             raise ValueError(f"bit_index {assump.bit_index} outside [0, {self.max_assumptions})")
         if not self.verifier.verify_assumption_signature(assump):
+            return False
+        existing = self.assumptions_by_bit.get(assump.bit_index)
+        if existing is not None:
+            return existing == assump
+        if any(other.assumption_id == assump.assumption_id
+               for other in self.assumptions_by_bit.values()):
             return False
         self.assumptions_by_bit[assump.bit_index] = assump
         return True
@@ -466,6 +482,8 @@ class BoundedATMSEngine:
         env_mask: int,
         rule_id: str,
     ) -> Optional[SignedJustification]:
+        if type(env_mask) is not int or not 0 <= env_mask < (1 << self.max_assumptions):
+            return None
         if env_mask.bit_count() > self.max_env_cardinality:
             self.budget_exceeded = True
             return None
@@ -2121,6 +2139,8 @@ class SQLiteProtectedResourceBoundary:
     """
 
     def __init__(self, db_path: str = ":memory:", initial_epoch: int = 10, max_drained_nodes: int = 1) -> None:
+        if type(max_drained_nodes) is not int or max_drained_nodes < 1:
+            raise ValueError("drain cap must be a positive integer")
         self.db_path = db_path
         self.max_drained_nodes = max_drained_nodes
         self.conn = sqlite3.connect(db_path, isolation_level=None)
@@ -2132,8 +2152,31 @@ class SQLiteProtectedResourceBoundary:
             "CREATE TABLE IF NOT EXISTS cluster_nodes (node_id TEXT PRIMARY KEY, status TEXT NOT NULL, committed_epoch INTEGER NOT NULL);"
         )
         self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS committed_ops (op_id TEXT PRIMARY KEY, action TEXT NOT NULL, commit_version INTEGER NOT NULL, status TEXT NOT NULL);"
+            "CREATE TABLE IF NOT EXISTS committed_ops (op_id TEXT PRIMARY KEY, action TEXT NOT NULL, commit_version INTEGER NOT NULL, status TEXT NOT NULL, identity_json TEXT);"
         )
+        if "identity_json" not in {
+            row[1] for row in self.conn.execute("PRAGMA table_info(committed_ops)")
+        }:
+            try:
+                self.conn.execute("ALTER TABLE committed_ops ADD COLUMN identity_json TEXT;")
+            except sqlite3.OperationalError:
+                if "identity_json" not in {
+                    row[1] for row in self.conn.execute("PRAGMA table_info(committed_ops)")
+                }:
+                    raise
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS resource_limits (resource_id TEXT PRIMARY KEY, max_drained_nodes INTEGER NOT NULL CHECK(max_drained_nodes > 0));"
+        )
+        self.conn.execute(
+            "INSERT OR IGNORE INTO resource_limits (resource_id, max_drained_nodes) VALUES ('db_cluster', ?);",
+            (max_drained_nodes,),
+        )
+        stored_cap = self.conn.execute(
+            "SELECT max_drained_nodes FROM resource_limits WHERE resource_id = 'db_cluster';"
+        ).fetchone()[0]
+        if stored_cap != max_drained_nodes:
+            self.conn.close()
+            raise ValueError("drain cap differs from durable resource configuration")
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS audit_journal (seq INTEGER PRIMARY KEY AUTOINCREMENT, action TEXT, epoch INTEGER, outcome TEXT);"
         )
@@ -2223,6 +2266,23 @@ class SQLiteProtectedResourceBoundary:
                predecessors with different sequence numbers or FENCED_NO_EFFECT settlement!)
           4. Cross-Root Exposure Conservation (total DRAINED nodes <= max_drained_nodes)
         """
+        operation_identity = json.dumps(
+            {
+                "certificate": {
+                    "action": cert.action,
+                    "support_mask": cert.support_mask,
+                    "admission_epoch": cert.admission_epoch,
+                    "packing_number": cert.packing_number,
+                    "plausible_worlds": cert.plausible_worlds,
+                    "signature": cert.signature,
+                },
+                "target_node": target_node,
+                "expected_predecessor_seq": expected_predecessor_seq,
+                "required_predecessor_op_ids": sorted(set(required_predecessor_op_ids)),
+                "min_committed_seq": min_committed_seq,
+            },
+            sort_keys=True, separators=(",", ":"),
+        )
         self.conn.execute("BEGIN IMMEDIATE;")
         try:
             row = self.conn.execute(
@@ -2233,11 +2293,16 @@ class SQLiteProtectedResourceBoundary:
 
             if op_id is not None:
                 prev = self.conn.execute(
-                    "SELECT commit_version, status FROM committed_ops WHERE op_id = ?;",
+                    "SELECT commit_version, status, identity_json FROM committed_ops WHERE op_id = ?;",
                     (op_id,),
                 ).fetchone()
                 if prev is not None:
                     self.conn.execute("COMMIT;")
+                    if prev[1] == "COMMITTED" and prev[2] != operation_identity:
+                        return TargetExecutionReceipt(
+                            False, "REJECTED_OP_ID_CONFLICT", cur_epoch, cert.action,
+                            "E2_SHARED_ATOMIC", commit_version=int(prev[0]),
+                        )
                     return TargetExecutionReceipt(
                         prev[1] == "COMMITTED",
                         "DUPLICATE_IDEMPOTENT_COMMITTED" if prev[1] == "COMMITTED" else "REJECTED_PREVIOUSLY_FENCED",
@@ -2295,10 +2360,26 @@ class SQLiteProtectedResourceBoundary:
                     )
 
             if cert.action.startswith("drain_"):
+                target_status = self.conn.execute(
+                    "SELECT status FROM cluster_nodes WHERE node_id = ?;", (target_node,)
+                ).fetchone()
+                if target_status is None:
+                    self.conn.execute("COMMIT;")
+                    return TargetExecutionReceipt(
+                        False, "REJECTED_OUTSIDE_DOMAIN", cur_epoch, cert.action, "E2_SHARED_ATOMIC"
+                    )
+                if target_status[0] != "ACTIVE":
+                    self.conn.execute("COMMIT;")
+                    return TargetExecutionReceipt(
+                        False, "REJECTED_ALREADY_DRAINED", cur_epoch, cert.action, "E2_SHARED_ATOMIC"
+                    )
                 drained_count = int(
                     self.conn.execute("SELECT COUNT(*) FROM cluster_nodes WHERE status = 'DRAINED';").fetchone()[0]
                 )
-                if drained_count + 1 > self.max_drained_nodes:
+                shared_cap = int(self.conn.execute(
+                    "SELECT max_drained_nodes FROM resource_limits WHERE resource_id = 'db_cluster';"
+                ).fetchone()[0])
+                if drained_count + 1 > shared_cap:
                     self.conn.execute(
                         "INSERT INTO audit_journal (action, epoch, outcome) VALUES (?, ?, 'REJECTED_EXPOSURE_CAP');",
                         (cert.action, cert.admission_epoch),
@@ -2307,10 +2388,12 @@ class SQLiteProtectedResourceBoundary:
                     return TargetExecutionReceipt(
                         False, "REJECTED_EXPOSURE_CAP", cur_epoch, cert.action, "E2_SHARED_ATOMIC"
                     )
-                self.conn.execute(
-                    "UPDATE cluster_nodes SET status = 'DRAINED', committed_epoch = ? WHERE node_id = ?;",
+                changed = self.conn.execute(
+                    "UPDATE cluster_nodes SET status = 'DRAINED', committed_epoch = ? WHERE node_id = ? AND status = 'ACTIVE';",
                     (cert.admission_epoch, target_node),
                 )
+                if changed.rowcount != 1:
+                    raise RuntimeError("target row changed before receipt commit")
 
             new_seq = cur_seq + 1
             self.conn.execute(
@@ -2319,8 +2402,8 @@ class SQLiteProtectedResourceBoundary:
             )
             if op_id is not None:
                 self.conn.execute(
-                    "INSERT INTO committed_ops (op_id, action, commit_version, status) VALUES (?, ?, ?, 'COMMITTED');",
-                    (op_id, cert.action, new_seq),
+                    "INSERT INTO committed_ops (op_id, action, commit_version, status, identity_json) VALUES (?, ?, ?, 'COMMITTED', ?);",
+                    (op_id, cert.action, new_seq, operation_identity),
                 )
             self.conn.execute(
                 "INSERT INTO audit_journal (action, epoch, outcome) VALUES (?, ?, 'COMMITTED');",

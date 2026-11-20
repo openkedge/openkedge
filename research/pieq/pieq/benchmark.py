@@ -341,7 +341,8 @@ def evaluate_policy_on_benchmark(
             prop = f"obs:ch{a_idx}"
             assump = PrimitiveAssumption(
                 a_idx, f"e_{idx}_{a_idx}", f"ch_{a_idx}", fd, 10, prop,
-                verifier.sign_telemetry(f"e_{idx}_{a_idx}", f"ch_{a_idx}", fd, 10, prop)
+                verifier.sign_telemetry(f"e_{idx}_{a_idx}", f"ch_{a_idx}", fd, 10, prop,
+                                        bit_index=a_idx)
             )
             atms.register_assumption(assump)
             if not sc.has_overlapping_conjunctive_trap:
@@ -747,7 +748,8 @@ def profile_proxy_admission_traces(n_traces: int = 1000, seed: int = 42) -> Dict
                     prop = f"obs:s_{i}"
                     a = PrimitiveAssumption(
                         i, f"e_{i}", f"ch_{i}", f"fd_{i}", 100 + t_idx, prop,
-                        verifier.sign_telemetry(f"e_{i}", f"ch_{i}", f"fd_{i}", 100 + t_idx, prop)
+                        verifier.sign_telemetry(f"e_{i}", f"ch_{i}", f"fd_{i}", 100 + t_idx, prop,
+                                                bit_index=i)
                     )
                     atms.register_assumption(a)
                     atms.add_verified_justification(f"ag_{i}", f"ctx_{i}", "act:promote", a.bitmask, f"r_{i}")

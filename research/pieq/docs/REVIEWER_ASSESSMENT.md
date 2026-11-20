@@ -1,34 +1,26 @@
-# Final Independent Reviewer Assessment (PIEQ Revision 4)
+# PIEQ Evidence Assessment (2026-11-17)
 
-**Manuscript:** *Provenance-Isolated Epistemic Quorums: Execution-Bound Evidence Certification and Plausible-World Safety Gating in Agentic Control Planes* (Fourth Revision, November 2026)  
-**Target Venue Standard:** Rigorous systems / distributed-systems research conference (e.g., SOSP / OSDI / NSDI / EuroSys / CCS)
+**Manuscript:** *Provenance-Isolated Epistemic Quorums: Execution-Bound Evidence Certification and Plausible-World Safety Gating in Agentic Control Planes* (Fourth Revision).
 
----
+This is an evidence audit, not a forecast of a venue decision. The manuscript's formal claims depend on stated soundness, candidate-world, fault-budget, writer-mediation, and target-enforcement assumptions. The 100-case `38% → 1%` result comes from a deterministic synthetic protocol simulator; its agent errors and scenario outcomes are not live LLM observations. The 1,000-trace latency profile measures pure CPU plus a local SQLite WAL check, not provider or production end-to-end latency.
 
-## Overall Verdict: **Weak Accept** (Strong Formal Core; Simulator-Only Agent Evaluation)
+## Acceptance status by evidence source
 
-### Summary of Strengths
-1. **Genuine Correctness & Formal Soundness:** All four P0/P1 formal gaps from Revision 3 are cleanly closed:
-   - *Theorem 5 Snapshot Semantics (Task 1):* Versioned snapshot advancement (`SnapshotContext`) cleanly eliminates double-counting of already-observed commits in $\mathcal{I}_C$ while preserving persistent exposure accounting, handling mixed-version observation intervals $[v_{\min}, v_{\max}]$, keeping `UNKNOWN` disjoint from `COMMITTED`, and supporting durable SQLite WAL restart reconciliation.
-   - *E1+ Lease-Expiration Gap (Task 2):* Explicitly separates control-plane lease expiry from target-enforced post-expiry exclusion; non-lease-fenced targets retain stalled non-cancellable operations in $\mathcal{I}_U$ and trade liveness for safety via indefinite blocking rather than unsafely declaring fence completion.
-   - *Concrete Mode C Verifier & Mode S Frontier (Task 3):* Replaces the abstract/circular $\mathsf{Compat}$ predicate with a deterministic finite-state verifier (`ModeCCompatibilityVerifier`, `K_conc = 4`) that checks all subset schedules, intermediate states, partial effects, and 3-way interactions, and fixes Mode S to use predecessor frontiers (`Pred(a) <= Settled`) rather than impossible multi-predecessor `seq(a) = seq(u) + 1`.
-   - *Multi-Resource Constraint Closure (Task 4):* Defines fixed-point closure $D^\star(a)$, atomic cross-domain reservation with pre-dispatch rollback, crash-safe $\mathcal{I}_U$ retention, and explicit external-writer drift boundaries.
-2. **Honest Empirical & Artifact Hygiene:** Synthetic lognormal latency overlays were removed from `profile_proxy_admission_traces` in favor of pure measured wall-clock timings (`0.076 ms` median, `0.271 ms` p99 on an on-disk SQLite WAL boundary), and the manuscript explicitly labels the 100-scenario evaluation as a synthetic protocol/fault-injection simulator rather than live LLM runs.
-3. **Tighter Scope & Presentation:** Moving audit tables and counterexample catalogs to supplementary material leaves a crisp 10-page main manuscript focused on complete-proof certification ($\nu_{\mathrm{pack}}$), fault-tolerant belief shielding ($\widehat{\mathcal{B}}_\tau^{(f)}$), and explicit KedgeFlow composition contracts.
+| Source | Observed result | Scope and status |
+| :--- | :--- | :--- |
+| Earlier Revision 4 formal/SQLite suite | 36/36 tests passed in the prior environment | Executable checks for theorem edge cases and boundary counterexamples; historical baseline. |
+| Expanded Python and OpenKedge checks | An earlier expanded Python run passed 109 with 10 etcd tests skipped; a final post-hardening count is pending. Node build passed; 16/16 Jest suites passed, with 104 tests passed and 1 skipped. | The focused local etcd suite was separately run with the binary. Node checks do not establish a PIEQ-to-gateway permit binding. |
+| POSIX SQLite fault suite and archived JSONL | 10 schedules × 20 = 200/200 invariant checks passed | Independent workers and a target process on one host. In 20/20 E1+ races, the local lease elapsed while the control worker was stopped; its target completed after revocation while a conflict was blocked. Forty of 200 schedules reported temporary liveness blocking by UNKNOWN. The SQLite boundary now persists its shared cap and full operation identity, rejects mismatched replay, and refuses absent/already-drained nodes. |
+| Local etcd 3.7.3 fault suite and archived JSON | 7 schedules × 20 = 140/140 invariant checks passed; 60 CAS conflicts | Three separate members and two clients on one host; endpoint/member mappings and injected member stops/restarts are archived. In the stale-resume schedule, 0/20 stale node-state effects occurred. Quorum loss and client isolation each returned 20/20 UNKNOWN receipts. |
+| Container-backed etcd acceptance | Not run | Docker is unavailable on this host. The local three-member run does not meet the plan's container-backed acceptance gate. |
+| Constructed 40-case proposer fixture and mock pilot | Fixed selection from 18 causal templates; deterministic three-case software pilot | Prompt and replay plumbing only. The fixture uses a private oracle and per-agent observations. Current fixture/trace hashes are not frozen for a real-model run. |
+| Live multi-LLM paired comparison | 0/800 planned primary real-model requests completed | No five-instance model IDs, provider traces, incident-level unsafe/correct/defer counts, uncertainty intervals, proof rejection rates, covariance/mimicry estimates, token costs, or whole-call latency. This is a major OPEN evaluation gap. |
+| OpenKedge gateway integration | Not run | No binding of PIEQ decision hash, epoch, action, target, and snapshot to a redeemable gateway permit is shown. |
 
----
+## Interpretation and limits
 
-## Remaining Issues by Severity
+The SQLite fault receipts support E1+ safety through blocking at the cost of liveness during the specified UNKNOWN races. The 0.5-second local lease elapsed during a real OS process pause in the E1+ and unresolved-crash schedules; this does not test remote clock skew. E2's stale-effect observations apply to the SQLite transaction and to the node-state fields inside etcd's multi-key CAS. They do not establish atomic fencing of an out-of-band drain RPC or another physical effect. The barrier schedules establish exact tested orderings; they do not measure coverage over arbitrary interleavings, network conditions, or remote hosts.
 
-### Blocker
-- **None** for the narrowed formal and single-node/simulator claims (all Stop Conditions are satisfied).
+The constructed incidents can test whether real proposers produce useful verifiable proofs only after live calls are captured and scored. Their 40 IDs share 18 authored causal templates, so case-level uncertainty estimates would still need to account for template clustering. Even a complete future live run would measure behavior on authored telemetry, not real incident frequency or ground-truth reliability. No current mock result should be counted as evidence of live-model safety or mitigation quality.
 
-### Major
-1. **No Live Multi-LLM Evaluation or Multi-Node Distributed Fault Injection:** Although honestly disclosed, the 100-scenario benchmark (`pieq/benchmark.py`) uses SVD-whitened Gaussian latents and deterministic scenario-encoded outcomes rather than real LLM agents producing Horn justifications over real telemetry, and Tier E1+-quiescence / multi-domain coordination are tested in a single-process Python state machine + on-disk SQLite WAL rather than a multi-process distributed cluster (`etcd` + networked adapters). Adding a small live-LLM-to-$\mathcal{V}_{\mathrm{rule}}$ trace case study and multi-process `etcd` integration test would elevate the paper from **Weak Accept** to **Accept**.
-
-### Minor
-1. **Mode C Scalability Beyond $K_{\mathrm{conc}} = 4$:** Exhaustive subset/permutation checking restricts Mode C to $|\mathcal{U}_C| \le 4$ unserialized finite-state operations, falling back to Mode S beyond that threshold. An explicit structural/monotone-resource fast path (with formal soundness proof) could widen concurrent throughput in future engineering.
-2. **OpenKedge TypeScript Gateway Integration:** The PIEQ prototype (`research/pieq/`) is implemented in Python + SQLite WAL, whereas OpenKedge's production MCP gateway (`src/gateway/`, `src/control-plane/`) is TypeScript/Node.js. Porting `DeterministicRuleVerifier`, `BoundedATMSEngine`, and `compute_disjoint_justification_packing_bounded` into `src/control-plane/` is straightforward future engineering.
-
-### Editorial
-1. One negligible `1.73 pt` overfull `\hbox` at line 388 of `epistemic_quorums_atms_paper.tex` and an unimportant Times small-caps-italic font substitution warning (`OT1/ptm/m/scit`) in the LaTeX log; no layout overlaps or undefined references exist.
+The strongest remaining evaluation need is the frozen five-instance, 40-case paired provider run with full failure and deferral accounting. Container-backed etcd acceptance and any claimed OpenKedge gateway path have separate unfinished gates. Future assessment should be updated only with passing test outputs and archived receipt or trace hashes; it should not infer a reviewer verdict from those gates.

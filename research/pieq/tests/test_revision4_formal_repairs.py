@@ -569,7 +569,7 @@ def test_task5_bounded_set_packing_truncation_fails_closed():
         prop = f"obs:e{i}"
         a = PrimitiveAssumption(
             i, f"e{i}", f"ch{i}", f"fd{i}", 1, prop,
-            verifier.sign_telemetry(f"e{i}", f"ch{i}", f"fd{i}", 1, prop)
+            verifier.sign_telemetry(f"e{i}", f"ch{i}", f"fd{i}", 1, prop, bit_index=i)
         )
         assumptions[i] = a
         witnesses.append(verifier.verify_justification(f"a{i}", f"ctx{i}", "refute:s_true", 1 << i, f"r_{i}", assumptions))

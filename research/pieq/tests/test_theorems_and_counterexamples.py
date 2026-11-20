@@ -106,7 +106,7 @@ def test_theorem_2_berkson_counterexample_and_minimal_subset_preservation():
     for idx, prop in enumerate(["obs:e0", "obs:e1_conflict", "obs:e2"]):
         a = PrimitiveAssumption(
             idx, f"e{idx}", f"ch{idx}", f"fd{idx}", 1, prop,
-            verifier.sign_telemetry(f"e{idx}", f"ch{idx}", f"fd{idx}", 1, prop)
+            verifier.sign_telemetry(f"e{idx}", f"ch{idx}", f"fd{idx}", 1, prop, bit_index=idx)
         )
         atms.register_assumption(a)
 
@@ -143,7 +143,8 @@ def test_second_review_issue1_menger_min_cut_vs_complete_justification_packing()
         prop = f"obs:e{idx+1}"
         assump = PrimitiveAssumption(
             idx, f"e{idx+1}", f"ch_{idx+1}", f"fd_{idx+1}", 1, prop,
-            verifier.sign_telemetry(f"e{idx+1}", f"ch_{idx+1}", f"fd_{idx+1}", 1, prop)
+            verifier.sign_telemetry(f"e{idx+1}", f"ch_{idx+1}", f"fd_{idx+1}", 1, prop,
+                                    bit_index=idx)
         )
         atms.register_assumption(assump)
 
@@ -228,7 +229,7 @@ def test_second_review_issue3_fault_tolerant_belief_set_requires_ka_refutations(
         prop = f"obs:not_partition_{i}"
         assump = PrimitiveAssumption(
             i, f"e_{i}", f"ch_{i}", f"fd_{i}", 1, prop,
-            verifier.sign_telemetry(f"e_{i}", f"ch_{i}", f"fd_{i}", 1, prop)
+            verifier.sign_telemetry(f"e_{i}", f"ch_{i}", f"fd_{i}", 1, prop, bit_index=i)
         )
         atms.register_assumption(assump)
 
@@ -339,7 +340,8 @@ def test_theorem_4_helly_three_world_and_provan_budget_overapproximation():
             prop = f"obs:{prefix}_{k}"
             a_obj = PrimitiveAssumption(
                 bit, f"e{prefix}_{k}", f"ch_{bit}", f"fd_{bit}", 1, prop,
-                verifier.sign_telemetry(f"e{prefix}_{k}", f"ch_{bit}", f"fd_{bit}", 1, prop)
+                verifier.sign_telemetry(f"e{prefix}_{k}", f"ch_{bit}", f"fd_{bit}", 1, prop,
+                                        bit_index=bit)
             )
             atms.register_assumption(a_obj)
         atms.register_nogood("checker", (1 << (2 * k)) | (1 << (2 * k + 1)), f"inv_{k}")
@@ -571,7 +573,7 @@ def test_revision3_task4_theorems2_to_4_subsumption_and_truncation():
         prop = f"obs:e{i}"
         a = PrimitiveAssumption(
             i, f"e{i}", f"ch{i}", f"fd{i}", 1, prop,
-            verifier.sign_telemetry(f"e{i}", f"ch{i}", f"fd{i}", 1, prop)
+            verifier.sign_telemetry(f"e{i}", f"ch{i}", f"fd{i}", 1, prop, bit_index=i)
         )
         atms.register_assumption(a)
 
