@@ -636,7 +636,8 @@ def _evaluate_heldout_configuration(
             # HardenedPIEQConfig when k_a >= f+1 still holds (for f=0, k_a=2 >= 1 IS valid in HardenedPIEQConfig!).
             # Only when shield_enabled=False do we bypass PlausibleWorldGate to test no-shield ablation cleanly.
             if shield_enabled:
-                config = HardenedPIEQConfig(
+                config = HardenedPIEQConfig(  # legacy temporal mode: archival Rev8 software eval
+                    legacy_temporal_mode_opt_in=True,
                     resource_id=case.resource_id,
                     epoch=case.epoch,
                     manifest_hash=case.manifest_hash,
@@ -1075,7 +1076,8 @@ def _evaluate_frozen40_configuration(
 
             if shield_enabled:
                 effective_f = case.f if refute_pack else 0
-                config = HardenedPIEQConfig(
+                config = HardenedPIEQConfig(  # legacy temporal mode: archival Rev8 software eval
+                    legacy_temporal_mode_opt_in=True,
                     resource_id="db_cluster", epoch=2000, manifest_hash=mhash, auth_epoch=3,
                     signing_key=COLLECTOR_KEY, f_fault_budget=effective_f, k_a=case.k_a,
                     require_positive_packing=pos_pack,

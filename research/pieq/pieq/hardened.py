@@ -149,6 +149,61 @@ class TargetRefinementAttestation:
 
 
 @dataclass(frozen=True)
+class MutationTemporalPolicy:
+    """
+    Revision 9 P1.2 — Trusted temporal-precondition policy for ONE mutation type.
+
+    The policy is authoritative action/policy metadata owned by the trusted control
+    plane — never supplied or modified by an untrusted LLM proposal.
+
+      - mode="SNAPSHOT_TRIGGERED": a valid historical precondition at the certified
+        snapshot is sufficient under the operation's specified semantics. No commit-time
+        revalidation is injected (no unnecessary revalidation).
+      - mode="COMMIT_TIME_SENSITIVE": the precondition must be soundly GUARANTEED at the
+        physical effect point through one of the two sufficient mechanisms:
+          (a) target-native atomic revalidation of `trusted_commit_predicates` inside the
+              Tier E2 indivisible effect boundary; or
+          (b) a trusted persistence guarantee attestation
+              (`persistence_guarantee_attested=True`) covering [v_snap, t_eff].
+        Neither mechanism is claimed NECESSARY for actual commit-time truth (a
+        precondition can dip and return, or persist coincidentally); they are the
+        sufficient mechanisms for a sound system guarantee (Rev8 P1.2 repair).
+
+    Fail-closed contract: an operation whose mode is COMMIT_TIME_SENSITIVE but whose
+    target cannot enforce either mechanism must be rejected, never silently downgraded
+    to snapshot-only validation.
+    """
+
+    action: str
+    mode: str  # "SNAPSHOT_TRIGGERED" | "COMMIT_TIME_SENSITIVE"
+    trusted_commit_predicates: Tuple[str, ...] = ()
+    persistence_guarantee_attested: bool = False
+
+    def __post_init__(self) -> None:
+        if self.mode not in ("SNAPSHOT_TRIGGERED", "COMMIT_TIME_SENSITIVE"):
+            raise ValueError(f"Unknown temporal policy mode: {self.mode!r}")
+        if self.mode == "COMMIT_TIME_SENSITIVE" and not (
+            self.trusted_commit_predicates or self.persistence_guarantee_attested
+        ):
+            raise ValueError(
+                "COMMIT_TIME_SENSITIVE policy requires trusted_commit_predicates "
+                "(atomic revalidation) or persistence_guarantee_attested"
+            )
+        if self.mode == "SNAPSHOT_TRIGGERED" and self.trusted_commit_predicates:
+            raise ValueError(
+                "SNAPSHOT_TRIGGERED policy must not carry commit predicates "
+                "(no unnecessary revalidation for snapshot-triggered actions)"
+            )
+
+    def canonical_string(self) -> str:
+        """Deterministic policy identity bound into the signed certificate."""
+        return (
+            f"{self.mode}|{','.join(sorted(self.trusted_commit_predicates))}"
+            f"|persist={int(self.persistence_guarantee_attested)}"
+        )
+
+
+@dataclass(frozen=True)
 class HardenedPIEQConfig:
     """
     Hardened evaluation configuration enforcing every Theorem 3-5 & Corollary 1 contract.
@@ -164,6 +219,25 @@ class HardenedPIEQConfig:
     k_a: int
     packing_expansions: int = 10000
     require_positive_packing: bool = True
+    # Revision 9 P1.1 — OPTIONAL conservative policy layer: additionally require selected
+    # justifications to carry pairwise-distinct proposer context tokens. This can only
+    # restrict packing (never raise nu_pack) and never redefines the physical
+    # failure-domain fault-tolerance bound f = k_a - 1, which is computed over
+    # Phi_phys (physical evidence footprints) regardless of this flag.
+    require_proposer_context_isolation: bool = False
+    # Revision 9 P1.2 — Trusted temporal-precondition policy registry.
+    #   None  => legacy pre-Revision 9 semantics (snapshot-only certification; caller-supplied
+    #            commit predicates pass through verbatim). Preserved ONLY so archived
+    #            Revision 7/8 runners keep reproducing their frozen results.
+    #   Tuple => MANDATORY exhaustive registry: every admitted mutation type MUST have a
+    #            registered policy; a missing policy fails closed, and commit-time-sensitive
+    #            operations enforce their trusted predicates regardless of caller input.
+    temporal_policies: Optional[Tuple[MutationTemporalPolicy, ...]] = None
+    # Revision 11 Phase-6(D): the legacy None registry is RESTRICTED to historical
+    # counterexample reproduction and archival runners. Hardened/release configurations
+    # must supply an exhaustive registry; constructing with temporal_policies=None now
+    # requires this explicit opt-in flag (fail-closed otherwise).
+    legacy_temporal_mode_opt_in: bool = False
     require_consistent_observation_version: bool = True
     require_versioned_commits: bool = True
     require_contiguous_versions: bool = True
@@ -191,6 +265,26 @@ class HardenedPIEQConfig:
             raise ValueError("HardenedPIEQConfig forbids admitting onto E0 or E1_ASYNC_FENCE targets")
         if "UNVERIFIED_ASYNC" in self.allowed_refinement_regimes:
             raise ValueError("HardenedPIEQConfig forbids admitting onto UNVERIFIED_ASYNC targets")
+        if self.temporal_policies is None and not self.legacy_temporal_mode_opt_in:
+            raise ValueError(
+                "HardenedPIEQConfig requires a mandatory temporal_policies registry; "
+                "the legacy None mode is restricted to historical counterexample "
+                "reproduction and needs legacy_temporal_mode_opt_in=True"
+            )
+        if self.temporal_policies is not None:
+            seen_actions = set()
+            for pol in self.temporal_policies:
+                if pol.action in seen_actions:
+                    raise ValueError(f"Duplicate temporal policy for action {pol.action!r}")
+                seen_actions.add(pol.action)
+
+    def temporal_policy_for(self, action: str) -> Optional[MutationTemporalPolicy]:
+        if self.temporal_policies is None:
+            return None
+        for pol in self.temporal_policies:
+            if pol.action == action:
+                return pol
+        return None
 
 
 @dataclass(frozen=True)
@@ -262,6 +356,7 @@ class HardenedAdmissionController:
         probe_executor=None,
         probe_budget: Optional[ProbeBudget] = None,
         override_expected_admission_revs: Optional[Dict[str, int]] = None,
+        evidence_completion_fn=None,
     ) -> HardenedAdmissionDecision:
         # 1. Fail-closed target capability & physical refinement attestation check:
         cap_ok, cap_reason = self.verify_target_capability()
@@ -329,6 +424,8 @@ class HardenedAdmissionController:
                 packing_expansions=self.config.packing_expansions,
                 inflight_mutations=inflight,
                 version_observer=self.target.current_seq,
+                proposer_context_isolation=self.config.require_proposer_context_isolation,
+                evidence_completion_fn=evidence_completion_fn,
             )
             if probe_res.outcome != "ADMIT_MUTATION" or probe_res.admitted_action is None:
                 return HardenedAdmissionDecision(
@@ -345,6 +442,8 @@ class HardenedAdmissionController:
             surv_ids = probe_res.surviving_worlds
             act_pack = probe_res.action_packing
         else:
+            if evidence_completion_fn is not None:
+                evidence_completion_fn(atms)
             gate = PlausibleWorldGate(worlds, ["defer", "probe"])
             refs = {w.world_id: atms.active_witness_justifications(f"refute:{w.world_id}") for w in worlds}
             survivors = gate.compute_fault_tolerant_belief_set(
@@ -358,6 +457,7 @@ class HardenedAdmissionController:
                 expected_epoch=self.config.epoch,
                 expected_resource_id=self.config.resource_id,
                 expected_manifest_hash=self.config.manifest_hash,
+                proposer_context_isolation=self.config.require_proposer_context_isolation,
             )
             surv_ids = tuple(sorted(w.world_id for w in survivors))
             act_pack = {}
@@ -378,6 +478,7 @@ class HardenedAdmissionController:
                     pos_wits,
                     atms.assumptions_by_bit,
                     max_expansions=self.config.packing_expansions,
+                    proposer_context_isolation=self.config.require_proposer_context_isolation,
                 )
                 truncated |= ex
                 act_pack[action] = cnt
@@ -396,6 +497,50 @@ class HardenedAdmissionController:
                     False, "defer", "DEFER_NO_UNIQUE_CERTIFIED_SAFE_ACTION", None, None, surv_ids, act_pack
                 )
             chosen_action = eligible[0]
+
+        # 5b. Revision 9 P1.2 — Mandatory trusted temporal-precondition policy resolution.
+        # The policy comes from trusted config metadata, NEVER from the untrusted proposal;
+        # caller-supplied predicates can add conservatism but can never remove or replace
+        # the trusted ones (an LLM omitting required commit-time validation is overridden).
+        effective_commit_predicates: Tuple[str, ...] = tuple(sorted(set(required_commit_predicates)))
+        cert_temporal_policy = ""
+        if self.config.temporal_policies is not None:
+            policy = self.config.temporal_policy_for(chosen_action)
+            if policy is None:
+                return HardenedAdmissionDecision(
+                    False,
+                    "defer",
+                    "REJECTED_MISSING_TEMPORAL_PRECONDITION_POLICY",
+                    None,
+                    None,
+                    surv_ids,
+                    act_pack,
+                    probe_res,
+                )
+            cert_temporal_policy = policy.canonical_string()
+            if policy.mode == "COMMIT_TIME_SENSITIVE":
+                atomic_revalidation_available = (
+                    self.attestation.tier == "E2_SHARED_ATOMIC"
+                    and bool(policy.trusted_commit_predicates)
+                )
+                if not atomic_revalidation_available and not policy.persistence_guarantee_attested:
+                    # Fail closed: target cannot soundly guarantee commit-time truth.
+                    return HardenedAdmissionDecision(
+                        False,
+                        "defer",
+                        "REJECTED_COMMIT_TIME_POLICY_UNENFORCEABLE",
+                        None,
+                        None,
+                        surv_ids,
+                        act_pack,
+                        probe_res,
+                    )
+                if atomic_revalidation_available:
+                    effective_commit_predicates = tuple(
+                        sorted(set(effective_commit_predicates) | set(policy.trusted_commit_predicates))
+                    )
+            # SNAPSHOT_TRIGGERED: no trusted predicates injected (no unnecessary
+            # revalidation); caller-supplied extras are retained as-is.
 
         # 6. Mandatory per-domain admission revision CAS + exposure reservation:
         ok_res, _, res_reason = self.ledger.admit_and_reserve(
@@ -443,6 +588,7 @@ class HardenedAdmissionController:
             snapshot_version=snapshot_context.snapshot_version,
             proof_manifest_digest=proof_digest,
             admission_revisions=tuple(sorted(observed_revs.items())),
+            temporal_policy=cert_temporal_policy,
         )
         signed_cert = EpistemicLeaseCertificate(
             action=unsigned_cert.action,
@@ -458,6 +604,7 @@ class HardenedAdmissionController:
             snapshot_version=unsigned_cert.snapshot_version,
             proof_manifest_digest=unsigned_cert.proof_manifest_digest,
             admission_revisions=unsigned_cert.admission_revisions,
+            temporal_policy=unsigned_cert.temporal_policy,
         )
 
         # 8. Execute atomically on Tier E2 durable SQLite WAL target boundary:
@@ -467,7 +614,10 @@ class HardenedAdmissionController:
             op_id=op_id,
             required_predecessor_op_ids=required_predecessor_op_ids,
             now_time=now_time,
-            required_commit_predicates=required_commit_predicates,
+            required_commit_predicates=effective_commit_predicates,
+            expected_temporal_policy=(
+                cert_temporal_policy if self.config.temporal_policies is not None else None
+            ),
         )
         if receipt.committed:
             self.ledger.confirm_commit(exposure_domain, op_id, commit_version=receipt.commit_version)

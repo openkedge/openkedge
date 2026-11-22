@@ -71,7 +71,7 @@ def _make_hardened_stack(tmp_dir: str, *, key: bytes = b"rev7-hardened-secret-ke
         FaultWorld("s_degraded", frozenset(), frozenset({"drain_node", "defer", "probe"})),
         FaultWorld("s_healthy", frozenset(), frozenset({"defer", "probe"})),
     ]
-    config = HardenedPIEQConfig(
+    config = HardenedPIEQConfig(legacy_temporal_mode_opt_in=True,
         resource_id="db_cluster",
         epoch=10,
         manifest_hash="mh_hardened_v7",
@@ -102,18 +102,18 @@ def _make_hardened_stack(tmp_dir: str, *, key: bytes = b"rev7-hardened-secret-ke
 
 def test_hardened_config_rejects_relaxed_parameters() -> None:
     with pytest.raises(ValueError):
-        HardenedPIEQConfig(
+        HardenedPIEQConfig(legacy_temporal_mode_opt_in=True,
             resource_id="db_cluster", epoch=10, manifest_hash="mh", auth_epoch=1,
             signing_key=b"12345678", f_fault_budget=2, k_a=2,  # k_a < f + 1
         )
     with pytest.raises(ValueError):
-        HardenedPIEQConfig(
+        HardenedPIEQConfig(legacy_temporal_mode_opt_in=True,
             resource_id="db_cluster", epoch=10, manifest_hash="mh", auth_epoch=1,
             signing_key=b"12345678", f_fault_budget=1, k_a=2,
             require_contiguous_versions=False,
         )
     with pytest.raises(ValueError):
-        HardenedPIEQConfig(
+        HardenedPIEQConfig(legacy_temporal_mode_opt_in=True,
             resource_id="db_cluster", epoch=10, manifest_hash="mh", auth_epoch=1,
             signing_key=b"12345678", f_fault_budget=1, k_a=2,
             allowed_refinement_regimes=frozenset({"R1_ATOMIC", "UNVERIFIED_ASYNC"}),

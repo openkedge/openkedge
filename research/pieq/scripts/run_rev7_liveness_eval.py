@@ -872,7 +872,8 @@ def run_controlled_five_condition_eval(cases: Sequence[LiveCase]) -> Dict[str, A
                         if not o.accepted and o.primary_category is not None:
                             metrics["rejections_by_category"][o.primary_category] += 1
 
-                config = HardenedPIEQConfig(
+                config = HardenedPIEQConfig(  # legacy temporal mode: archival Rev7 replay eval
+                    legacy_temporal_mode_opt_in=True,
                     resource_id="db_cluster",
                     epoch=2000,
                     manifest_hash=mhash,
@@ -1028,7 +1029,8 @@ def run_false_precondition_companion_slice() -> Dict[str, Any]:
                     FaultWorld("s_healthy", frozenset(), frozenset({"scale_out_cluster", "defer", "probe"})),
                     FaultWorld("s_dead", frozenset(), frozenset({"promote_replica", "defer", "probe"})),
                 ]
-                config = HardenedPIEQConfig(
+                config = HardenedPIEQConfig(  # legacy temporal mode: archival Rev7 replay eval
+                    legacy_temporal_mode_opt_in=True,
                     resource_id="db_cluster", epoch=10, manifest_hash=mhash, auth_epoch=3,
                     signing_key=COLLECTOR_KEY, f_fault_budget=1, k_a=2,
                     require_positive_packing=req_pos,
@@ -1197,7 +1199,8 @@ def run_interactive_oob_probe_resolution_eval(cases: Sequence[LiveCase]) -> Dict
                 initial_epoch=2000, signing_key=COLLECTOR_KEY, expected_manifest_hash=mhash,
             )
             target.revoke_authorization_atomically(3)
-            config = HardenedPIEQConfig(
+            config = HardenedPIEQConfig(  # legacy temporal mode: archival Rev7 replay eval
+                    legacy_temporal_mode_opt_in=True,
                 resource_id="db_cluster", epoch=2000, manifest_hash=mhash, auth_epoch=3,
                 signing_key=COLLECTOR_KEY, f_fault_budget=case.f, k_a=case.k_a,
                 require_positive_packing=True,

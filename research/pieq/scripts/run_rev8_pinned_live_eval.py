@@ -392,7 +392,8 @@ def run_pinned_live_evaluation(
                             "ik_pre", "op_pre", "pre_op", case.exposure_domain, case.preexisting_unknown_exposure
                         )
                         ledger.mark_timeout_or_cancel_race(case.exposure_domain, "op_pre", state="UNKNOWN")
-                    cfg = HardenedPIEQConfig(
+                    cfg = HardenedPIEQConfig(  # legacy temporal mode: pinned runner (frozen Rev8 protocol; E0-legacy comparability)
+                    legacy_temporal_mode_opt_in=True,
                         resource_id=case.resource_id, epoch=case.epoch, manifest_hash=case.manifest_hash,
                         auth_epoch=case.auth_epoch_cert, signing_key=HELDOUT_COLLECTOR_KEY,
                         f_fault_budget=case.f_budget, k_a=case.k_a, require_positive_packing=True,

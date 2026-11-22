@@ -1,6 +1,6 @@
 # Provenance-Isolated Epistemic Quorums (PIEQ) — Executable Artifact
 
-**Paper:** *Provenance-Isolated Epistemic Quorums: Execution-Bound Evidence Certification and Plausible-World Safety Gating in Agentic Control Planes* (Fourth Revision, November 2026)  
+**Paper:** *Provenance-Isolated Epistemic Quorums: Execution-Bound Evidence Certification and Plausible-World Safety Gating in Agentic Control Planes* (Ninth Revision, November 2026)  
 **Authors:** Jun He and Deying Yu (OpenKedge LLC)
 
 This directory (`research/pieq/` in `openkedge/openkedge`) contains the shareable Python implementation, regression test suite, deterministic benchmark simulator, and audit documentation for PIEQ.
@@ -15,6 +15,8 @@ This directory (`research/pieq/` in `openkedge/openkedge`) contains the shareabl
   - `tests/test_revision4_formal_repairs.py`
 - `scripts/run_benchmark.py` — Regenerates `results/benchmark_summary.json` and prints policy & latency tables.
 - `docs/` — Audit deliverables:
+  - [`docs/REVISION9_CLOSING_REPORT.md`](./docs/REVISION9_CLOSING_REPORT.md) — current revision status, P1.1/P1.2 closure, frozen P1.3 confirmation, and the two P0 blocker reports
+  - [`docs/REVISION8_AUDIT_AND_CONSOLIDATION_REPORT.md`](./docs/REVISION8_AUDIT_AND_CONSOLIDATION_REPORT.md)
   - [`docs/TRACEABILITY_MATRIX.md`](./docs/TRACEABILITY_MATRIX.md)
   - [`docs/COUNTEREXAMPLE_REPORT.md`](./docs/COUNTEREXAMPLE_REPORT.md)
   - [`docs/REPRODUCIBILITY_REPORT.md`](./docs/REPRODUCIBILITY_REPORT.md)
@@ -26,8 +28,16 @@ This directory (`research/pieq/` in `openkedge/openkedge`) contains the shareabl
 cd research/pieq
 python3 -m pip install -r requirements-eval.txt
 
-# 1. Run the expanded artifact suite, including the original 36 regression tests
+# 1. Run the expanded artifact suite (216 passed, 13 optional etcd/live tests skipped)
 python3 -m pytest -v tests/
+
+# 1b. Revision 9 frozen confirmation set (12/12; see docs/REVISION9_CLOSING_REPORT.md)
+python3 scripts/run_rev9_confirmation_eval.py
+
+# 1c. Revision 9 live CLI-wrapper LLM evaluation (executed Nov 2026; unpinned tier)
+#     Requires locally authenticated `claude` and `codex` CLIs.
+python3 scripts/run_rev9_cli_live_eval.py --protocols full_pieq
+python3 scripts/score_rev9_cli_live.py
 
 # 2. Run the 100-scenario synthetic simulator & 1,000-trace pure wall-clock WAL profiler
 python3 scripts/run_benchmark.py

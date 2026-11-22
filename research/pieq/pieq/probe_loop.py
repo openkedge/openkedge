@@ -273,6 +273,7 @@ def _evaluate_gate_state(
     packing_expansions: int = 10000,
     inflight_mutations: Sequence = (),
     contested_leaf_mask: int = 0,
+    proposer_context_isolation: bool = False,
 ) -> Tuple[List[FaultWorld], Dict[str, int], Dict[str, int], List[str], bool, bool]:
     """
     Run the unchanged core TCB PlausibleWorldGate + bounded disjoint packing,
@@ -305,6 +306,7 @@ def _evaluate_gate_state(
         expected_epoch=atms.expected_epoch if check_snap else None,
         expected_resource_id=atms.expected_resource_id if check_snap else None,
         expected_manifest_hash=atms.expected_manifest_hash if check_snap else None,
+        proposer_context_isolation=proposer_context_isolation,
     )
     truncated = atms.budget_exceeded
     snapshot_inconsistent = False
@@ -322,7 +324,10 @@ def _evaluate_gate_state(
             )
             snapshot_inconsistent |= inc_r
         cnt, _, ex = compute_disjoint_justification_packing_bounded(
-            filtered_refs, atms.assumptions_by_bit, max_expansions=packing_expansions
+            filtered_refs,
+            atms.assumptions_by_bit,
+            max_expansions=packing_expansions,
+            proposer_context_isolation=proposer_context_isolation,
         )
         truncated |= ex
         ref_pack[wid] = cnt
@@ -348,6 +353,7 @@ def _evaluate_gate_state(
             pos_wits,
             atms.assumptions_by_bit,
             max_expansions=packing_expansions,
+            proposer_context_isolation=proposer_context_isolation,
         )
         truncated |= ex
         act_pack[action] = cnt
@@ -498,6 +504,8 @@ def run_active_diagnostic_probe_loop(
     inflight_mutations: Sequence = (),
     version_observer: Optional[Callable[[], int]] = None,
     manifest_observer: Optional[Callable[[], str]] = None,
+    proposer_context_isolation: bool = False,
+    evidence_completion_fn: Optional[Callable[[BoundedATMSEngine], Tuple[int, bool]]] = None,
 ) -> ProbeLoopResult:
     """
     Execute the bounded 10-step active diagnostic probe workflow with Revision 8 P1.3
@@ -585,6 +593,11 @@ def run_active_diagnostic_probe_loop(
             temporal_violation_reasons=tuple(temporal_violations),
         )
 
+    # Rev11 EXP-06: optional bounded deterministic completion over ALREADY-registered
+    # authenticated evidence (fail-closed; None preserves pre-Rev11 behavior exactly):
+    if evidence_completion_fn is not None:
+        evidence_completion_fn(atms)
+
     # Step 1: Evaluate current passive ATMS state before probing
     survivors, act_pack, ref_pack, eligible, truncated, snap_inc = _evaluate_gate_state(
         atms=atms,
@@ -598,6 +611,7 @@ def run_active_diagnostic_probe_loop(
         expected_snapshot_version=effective_expected_ver,
         packing_expansions=packing_expansions,
         inflight_mutations=inflight_mutations,
+        proposer_context_isolation=proposer_context_isolation,
     )
     if snap_inc:
         temporal_violations.append("TEMPORAL_VIOLATION_PASSIVE_PROOF_SNAPSHOT_INCONSISTENT")
@@ -877,6 +891,10 @@ def run_active_diagnostic_probe_loop(
                 )
             )
 
+        # Rev11 EXP-06: re-run bounded completion over the enlarged authenticated set:
+        if evidence_completion_fn is not None:
+            evidence_completion_fn(atms)
+
         # Step 7 & 8: Re-evaluate belief set, positive packing, and safety shield
         survivors, act_pack, ref_pack, eligible, truncated, snap_inc = _evaluate_gate_state(
             atms=atms,
@@ -891,6 +909,7 @@ def run_active_diagnostic_probe_loop(
             packing_expansions=packing_expansions,
             inflight_mutations=inflight_mutations,
             contested_leaf_mask=contested_leaf_mask,
+            proposer_context_isolation=proposer_context_isolation,
         )
         if snap_inc and "TEMPORAL_VIOLATION_CROSS_SNAPSHOT_PACKING" not in temporal_violations:
             temporal_violations.append("TEMPORAL_VIOLATION_CROSS_SNAPSHOT_PACKING")

@@ -882,7 +882,15 @@ def compute_provenance_min_cut(
     assumptions_by_bit: Dict[int, PrimitiveAssumption],
 ) -> int:
     """
-    Compute the vertex-capacitated Menger max-flow / min-cut upper bound on G_prov.
+    Compute the vertex-capacitated Menger max-flow / min-cut upper bound on the PHYSICAL
+    provenance graph G_prov: FailureDomain -> Channel -> Assumption -> Witness.
+
+    Revision 9 P1.1: proposer context vertices are EXCLUDED from this graph. The packing
+    number nu_pack is defined over physical evidence footprints Phi_phys, so a shared
+    proof-construction context must not act as a unit-capacity bottleneck (three proofs
+    over three disjoint physical domains sharing one context have nu_pack = 3, and this
+    diagnostic must remain an upper bound for that quantity).
+
     Warning (Second Review Critical Issue #1): For multi-premise conjunctive justifications
     such as J_1={e_1,e_2}, J_2={e_2,e_3}, J_3={e_1,e_3}, Menger max-flow counts vertex-disjoint
     paths (3) rather than pairwise-disjoint complete justifications (1).
@@ -900,17 +908,10 @@ def compute_provenance_min_cut(
     seen_fd: Set[str] = set()
     seen_ch: Set[str] = set()
     seen_assump: Set[str] = set()
-    seen_ctx: Set[str] = set()
 
     for idx, w in enumerate(witnesses):
-        ctx_node = f"ctx:{w.context_id}"
-        if ctx_node not in seen_ctx:
-            seen_ctx.add(ctx_node)
-            g.add_unit_vertex(ctx_node)
-
         w_node = f"wit:{idx}:{w.merkle_hash}"
         g.add_unit_vertex(w_node)
-        g.add_link(ctx_node, w_node, cap=1)
         g._add_directed_edge(f"{w_node}::out", sink, 1)
 
         mask = w.env_mask
@@ -938,7 +939,7 @@ def compute_provenance_min_cut(
 
                 g.add_link(fd_node, ch_node, cap=1)
                 g.add_link(ch_node, as_node, cap=1)
-                g.add_link(as_node, ctx_node, cap=1)
+                g.add_link(as_node, w_node, cap=1)
             mask ^= lsb
 
     return g.max_flow(src, sink)
@@ -947,14 +948,35 @@ def compute_provenance_min_cut(
 def justification_dependency_footprint(
     j: SignedJustification,
     assumptions_by_bit: Dict[int, PrimitiveAssumption],
+    *,
+    include_proposer_contexts: bool = True,
 ) -> FrozenSet[str]:
     """
-    Complete recursive dependency footprint Phi(Pi) of a verified derivation-DAG certificate Pi:
-      - Leaf e_m: Phi(e_m) = {FailureDomain(e_m), Collector(e_m), AssumptionID(e_m)}
-      - Internal rule node v: Phi(v) = {ctx(v)} union cup_{u in ch(v)} Phi(u)
-    By structural induction over finite DAGs, Phi(Pi) equals the union of all ancestor
-    proposer contexts plus all ancestor primitive telemetry domains, collectors, and IDs.
-    Two complete proofs Pi_1, Pi_2 are structurally provenance-disjoint iff Phi(Pi_1) cap Phi(Pi_2) == empty.
+    Complete recursive dependency footprint of a verified derivation-DAG certificate Pi.
+
+    Revision 9 P1.1 separates two distinct notions that earlier revisions conflated:
+
+      1. PHYSICAL EVIDENCE INDEPENDENCE FOOTPRINT Phi_phys(Pi)
+         (`include_proposer_contexts=False`):
+           - Leaf e_m contributes {FailureDomain(e_m), Collector(e_m), AssumptionID(e_m)}.
+           - Internal rule nodes contribute nothing of their own; shared upstream evidence
+             remains visible because the traversal collects every ancestor leaf in the DAG.
+         This is the footprint the deterministic f = k_a - 1 fault-threshold theorem
+         (Theorem 3) actually requires: its soundness rests on trusted derivation rules and
+         independent physical telemetry failure domains, NOT on statistical independence
+         among proposer (LLM) reasoning instances.
+
+      2. PROPOSER-CONTEXT ISOLATION TOKENS ctx(v)
+         (`include_proposer_contexts=True`, the historical Phi(Pi)):
+           - Additionally unions {ctx(v)} over every derivation node v.
+         Context identifiers are proof-construction labels. Distinct context IDs MUST NOT be
+         represented as evidence of independently generated reasoning; shared context IDs MAY
+         be used by an optional conservative policy to exclude same-context proofs from
+         counting separately. Either way they never substitute for, and never weaken,
+         physical-domain overlap detection in Phi_phys.
+
+    Two complete proofs are physically provenance-disjoint iff
+    Phi_phys(Pi_1) cap Phi_phys(Pi_2) == empty.
     """
     deps: Set[str] = set()
     visited: Set[int] = set()
@@ -966,7 +988,8 @@ def justification_dependency_footprint(
         if node_key in visited:
             continue
         visited.add(node_key)
-        deps.add(f"ctx:{node.context_id}")
+        if include_proposer_contexts:
+            deps.add(f"ctx:{node.context_id}")
 
         mask = node.env_mask if not node.sub_justifications else (
             node.direct_env_mask if node.direct_env_mask is not None else node.env_mask
@@ -989,16 +1012,49 @@ def justification_dependency_footprint(
     return frozenset(deps)
 
 
+def physical_evidence_footprint(
+    j: SignedJustification,
+    assumptions_by_bit: Dict[int, PrimitiveAssumption],
+) -> FrozenSet[str]:
+    """
+    Revision 9 P1.1 — Physical evidence independence footprint Phi_phys(Pi):
+    the union of {FailureDomain, Collector, AssumptionID} over every ancestor primitive
+    leaf in the derivation DAG, with NO proposer-context tokens. This is the sole
+    independence notion the deterministic f = k_a - 1 theorem depends on.
+    """
+    return justification_dependency_footprint(
+        j, assumptions_by_bit, include_proposer_contexts=False
+    )
+
+
 def compute_disjoint_justification_packing_bounded(
     witnesses: Sequence[SignedJustification],
     assumptions_by_bit: Dict[int, PrimitiveAssumption],
     max_expansions: Optional[int] = 10000,
+    *,
+    proposer_context_isolation: bool = False,
 ) -> Tuple[int, List[SignedJustification], bool]:
     """
     Theorem 3 (Bounded Exact Complete-Justification Set Packing Solver):
     Finds a maximum-cardinality family J_a subseteq W(a) of complete verified justifications
     such that for all distinct J_i, J_j in J_a:
-        D(J_i) cap D(J_j) == empty.
+        Phi_phys(J_i) cap Phi_phys(J_j) == empty.
+
+    Revision 9 P1.1 — Independence semantics:
+      - The packing number nu_pack is computed over the PHYSICAL EVIDENCE footprint
+        Phi_phys (failure domains, collectors, assumption IDs). A single false assumption
+        from one physical domain therefore can never be counted repeatedly through separate
+        derivations, regardless of how many distinct context IDs label those derivations.
+      - Multiple verified derivations from ONE model/agent DO contribute distinct physical
+        evidence when their trusted evidence domains genuinely differ; conversely, five
+        agents sharing one physical domain can never pack above 1.
+      - `proposer_context_isolation=True` is an OPTIONAL, strictly more conservative POLICY
+        layer: it additionally requires selected justifications to carry pairwise-distinct
+        proposer context tokens. It can only reduce nu_pack (policy restriction), never
+        raise it, and never redefines the physical fault-tolerance bound.
+      - Witnesses with an EMPTY physical footprint (no authenticated primitive leaf) are
+        excluded: a proof resting on no authenticated observation cannot certify anything
+        and must not inflate nu_pack.
 
     Uses 64-bit integer dependency bitmasks and branch-and-bound pruning with an explicit
     search-expansion budget `max_expansions`:
@@ -1010,13 +1066,23 @@ def compute_disjoint_justification_packing_bounded(
     if not witnesses:
         return 0, [], False
 
-    # Map every distinct dependency token in union_J D(J) to a bit position
+    # Map every distinct dependency token in union_J Phi_phys(J) to a bit position
     dep_to_bit: Dict[str, int] = {}
     items: List[Tuple[int, SignedJustification]] = []
     seen_footprints: Set[int] = set()
 
     for w in witnesses:
-        fp = justification_dependency_footprint(w, assumptions_by_bit)
+        fp = physical_evidence_footprint(w, assumptions_by_bit)
+        if not fp:
+            # No authenticated primitive evidence anywhere in the DAG: cannot count.
+            continue
+        if proposer_context_isolation:
+            # Optional policy layer: full footprint (physical tokens + ctx tokens) so
+            # same-context proofs additionally conflict. Superset of Phi_phys, so this
+            # can only restrict, never enlarge, the physically disjoint packing.
+            fp = justification_dependency_footprint(
+                w, assumptions_by_bit, include_proposer_contexts=True
+            )
         mask = 0
         for token in fp:
             if token not in dep_to_bit:
@@ -2190,6 +2256,7 @@ class PlausibleWorldGate:
         expected_epoch: Optional[int] = None,
         expected_resource_id: Optional[str] = None,
         expected_manifest_hash: Optional[str] = None,
+        proposer_context_isolation: bool = False,
     ) -> List[FaultWorld]:
         """
         Construct the conservative f-fault-tolerant plausible belief set hat{B}_tau^{(f)}:
@@ -2231,7 +2298,10 @@ class PlausibleWorldGate:
                     surviving.append(w)
                     continue
             packing_num, _, packing_truncated = compute_disjoint_justification_packing_bounded(
-                refs, assumptions_by_bit, max_expansions=max_packing_expansions
+                refs,
+                assumptions_by_bit,
+                max_expansions=max_packing_expansions,
+                proposer_context_isolation=proposer_context_isolation,
             )
             if packing_truncated or packing_num < required_disjoint_refutations:
                 surviving.append(w)
@@ -2670,6 +2740,12 @@ class EpistemicLeaseCertificate:
     snapshot_version: Optional[int] = None
     proof_manifest_digest: str = ""
     admission_revisions: Tuple[Tuple[str, int], ...] = ()
+    # Revision 9 P1.2 — canonical trusted temporal-precondition policy string under which
+    # this certificate was minted (e.g. "SNAPSHOT_TRIGGERED|" or
+    # "COMMIT_TIME_SENSITIVE|pred_a,pred_b|persist=0"). Signed into the certificate so a
+    # stale certificate minted under a superseded temporal policy is rejected at the
+    # physical effect boundary. Empty string preserves pre-Revision 9 certificates.
+    temporal_policy: str = ""
 
     def canonical_payload_bytes(self) -> bytes:
         payload = {
@@ -2685,6 +2761,7 @@ class EpistemicLeaseCertificate:
             "snapshot_version": self.snapshot_version,
             "proof_manifest_digest": self.proof_manifest_digest,
             "admission_revisions": [[d, r] for d, r in self.admission_revisions],
+            "temporal_policy": self.temporal_policy,
         }
         return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
 
@@ -3308,6 +3385,7 @@ class SQLiteProtectedResourceBoundary:
         now_time: Optional[int] = None,
         required_commit_predicates: Sequence[str] = (),
         commit_precondition_check: Optional[Callable[[sqlite3.Connection], bool]] = None,
+        expected_temporal_policy: Optional[str] = None,
     ) -> TargetExecutionReceipt:
         """
         Executes a Tier E2 atomic transaction checking:
@@ -3347,6 +3425,8 @@ class SQLiteProtectedResourceBoundary:
             cert_identity["proof_manifest_digest"] = cert.proof_manifest_digest
         if cert.admission_revisions:
             cert_identity["admission_revisions"] = [[d, r] for d, r in cert.admission_revisions]
+        if cert.temporal_policy:
+            cert_identity["temporal_policy"] = cert.temporal_policy
 
         op_identity_payload: Dict[str, object] = {
             "certificate": cert_identity,
@@ -3387,6 +3467,19 @@ class SQLiteProtectedResourceBoundary:
                 self.conn.execute("COMMIT;")
                 return TargetExecutionReceipt(
                     False, "REJECTED_STALE_MANIFEST_HASH", cur_epoch, cert.action, "E2_SHARED_ATOMIC"
+                )
+
+            # Revision 9 P1.2 — Reject certificates minted under a superseded trusted
+            # temporal-precondition policy. Checked atomically inside BEGIN IMMEDIATE so a
+            # policy rotation between admission and effectuation can never be bypassed.
+            if expected_temporal_policy is not None and cert.temporal_policy != expected_temporal_policy:
+                self.conn.execute(
+                    "INSERT INTO audit_journal (action, epoch, outcome) VALUES (?, ?, 'REJECTED_STALE_TEMPORAL_POLICY');",
+                    (cert.action, cert.admission_epoch),
+                )
+                self.conn.execute("COMMIT;")
+                return TargetExecutionReceipt(
+                    False, "REJECTED_STALE_TEMPORAL_POLICY", cur_epoch, cert.action, "E2_SHARED_ATOMIC"
                 )
 
             if op_id is not None:
