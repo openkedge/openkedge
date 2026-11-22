@@ -1,0 +1,127 @@
+{
+  "generated_utc": "2026-11-22T10:12:39.904978+00:00",
+  "claims": [
+    {
+      "claim": "hardened live: 9/9 mitig, 17/17 defer, 0/31 unsafe, 0/5 FPre; H30 blocked atomically",
+      "artifact": "results/rev10_live_scored.json"
+    },
+    {
+      "claim": "EXP-05: 240 executions; 0 unsafe, 0 FPre commits; CN01/02 20/20; CN10 11/20; CN12 9/20; failures = omitted derivations",
+      "artifact": "results/rev11/exp05/exp05_analysis.json"
+    },
+    {
+      "claim": "EXP-06: C1/C2 20/20 on CN10/CN12 paired, 0 within-assumption regressions, 0 true-world refutations (480 replays); CN11 OOA flips 0/20 -> 20/20",
+      "artifact": "results/rev11/exp06/"
+    },
+    {
+      "claim": "EXP-07A: 3 Rev10 promotions causally attributed to PIEQ dispatch",
+      "artifact": "results/rev11/exp07/exp07a_causality_audit.json"
+    },
+    {
+      "claim": "EXP-07B: P0 9.9s native; P1 deterministic supervisor promotes; P2 PIEQ event-stamped promotion; P5 partition deferral",
+      "artifact": "experiments/pg_patroni_failover/rev10_logs/"
+    },
+    {
+      "claim": "EXP-08: 10-point E2 contract, 12 scenarios, SUM=10<=cap on real Patroni primary",
+      "artifact": "results/rev11/exp08/exp08_results.json"
+    },
+    {
+      "claim": "EXP-09: 5 paired reps; S1 43/45 (H32 FB x2) vs H1/M1 45/45; 0 unsafe/FPre in 540 execs; multi-agent = liveness redundancy at 4-6x cost",
+      "artifact": "results/rev11/exp09/exp09_analysis.json",
+      "status": "complete"
+    },
+    {
+      "claim": "229 passing tests",
+      "artifact": "pytest (see reproducibility doc)"
+    },
+    {
+      "claim": "EXP-09 analysis + closing docs",
+      "artifact": "results/rev11/exp09/exp09_analysis.json; docs/REVISION11_AGENT_COUNT_STUDY.md; docs/REVISION11_CLOSING_REPORT.md"
+    }
+  ],
+  "artifact_hashes_sha256": {
+    "results/rev11/REVISION11_EVIDENCE_MANIFEST.json": "f49cb01b51e0f8cc4e478aadb2f6a56ca7918fbbffa0d53dabb0876dc3924281",
+    "results/rev11/rev11_phase0_freeze.json": "ade039d6c23b20e08f9faa96d58c6beb38a1cb83da86217be239363b492469b4",
+    "results/rev11/exp08/prereg.json": "d418b60cc8bd95c0cbe5505334daafbda9bc7ca4839df568b2211ad0155e5f1b",
+    "results/rev11/exp08/exp08_results_firstrun.json": "505ffd3435368d91c795d877cd5f6b4fbb983c25850469f4068b49c09ddbfb32",
+    "results/rev11/exp08/exp08_results.json": "3558ce6e771a205e52631be3c9f798d887da2ec5616e7d2e06ac4185c0232b69",
+    "results/rev11/exp09/rep4_H1.summary.json": "0873278a4ab05b02839ff9228204b4d0569705fb7a53a511b4ffd11d025a2fa1",
+    "results/rev11/exp09/rep5_S1.summary.json": "ca7ab2fea0045f6a3e0eb5571561aac584c9f68822daf1cda2dbecb46c344d59",
+    "results/rev11/exp09/rep2_E1.summary.json": "3241f7c047a4f1d4e6f764bf449090f297af8ad1b5e577b6bfa0f5917e9f4ecc",
+    "results/rev11/exp09/rep5_E1.summary.json": "411390d573067fdce6320cf237fe7dbcb2c9589c53faf383665fb426c18b17e2",
+    "results/rev11/exp09/rep2_S1.summary.json": "39c6ca84b7d16776a6c2a6ead54b4d0a6ef4c8410c96045248d5fb11d8ba4546",
+    "results/rev11/exp09/rep3_H1.summary.json": "d52ae5e46bf03e2bc05e4aa9379a7015586a37745a76f73d6d92269e0b720600",
+    "results/rev11/exp09/rep4_E1.summary.json": "a4d696cdf8751cff5e69a098c7b066177b96d2018f8d87cfb2a6e12ee2c3fa60",
+    "results/rev11/exp09/rep3_S1.summary.json": "b5a627d81d1090485386bf0ddfd133b0fe70d607c1f4d1363e633478faf675cf",
+    "results/rev11/exp09/rep2_H1.summary.json": "6b2bf3823cb432c69754be886f4e257f97910e0d97dd007151529dbd69420b75",
+    "results/rev11/exp09/rep5_H1.summary.json": "8682728ac5c624821dae2d61ab244691458e84ceb0e8c605fb84937206944e4f",
+    "results/rev11/exp09/rep4_S1.summary.json": "175c55dd3451c938780c6b087b1caf06c17d334c2ceec26311e8d0f3c6bd03f2",
+    "results/rev11/exp09/exp09_analysis.json": "405ceaec0b67931e27970496bd20d40755044d8b1f6fd4d1540e6f61193ee7ee",
+    "results/rev11/exp09/rep3_E1.summary.json": "63315475821f6175ca0a1eedd2c0692b55e01cb739a5fd8b419172740a684603",
+    "results/rev11/exp09/rep1_S1.summary.json": "9be3d8f2cf72704ceb85624fba267c273ffa7e11cff30439da28228155503897",
+    "results/rev11/exp09/rep1_E1.summary.json": "d9676481b64661b8fd104993e57235dc94a05c44ece7ae94bf9bcfd1c33e47ae",
+    "results/rev11/exp09/rep1_H1.summary.json": "8a68501fa477a9310f688367c36e9f91448377e482179bfc16fa97f219108c13",
+    "results/rev11/exp07/prereg.json": "093fb746c885570cfeaf4b0b6ce48c81b4ccb58ba066cd742f0a618cd430f3b6",
+    "results/rev11/exp07/exp07a_causality_audit.json": "a38ca1379e10a48980fabbacb138e51eddc62d9ff3f67f365ccdb8c6e77f4c37",
+    "results/rev11/exp05/run_19.summary.json": "197d14be9d0733a13b5e8753c761c1dc31a68b2d726d8607254b0fe8d08a9351",
+    "results/rev11/exp05/run_18.summary.json": "3112a24b835d47ce13ae9e1f30258b6688745a708b339c8f81f2e68683e444f5",
+    "results/rev11/exp05/run_07.summary.json": "58939dc49c06944953e4b75c7d47ba5231d46a92d41be2aa7b6d5504929a4410",
+    "results/rev11/exp05/run_12.summary.json": "b39224895262959b17f4bb5f3bf3b4e8c7f0c4acdf359bb5537d887aad4fd2ca",
+    "results/rev11/exp05/run_15.summary.json": "d89643a96a5c52a23cad82fb3f27c75549c468fa78a8a2ab734bc3f3eb9a606b",
+    "results/rev11/exp05/run_14.summary.json": "9b9df3beff9aeea9ffc1f216dea304035bb63f8eb49e8557c42c186f9d7f2d67",
+    "results/rev11/exp05/run_13.summary.json": "e86b2e8e6b3fc4ffbfcd5ac65577714eb8d79164b4441c3af25df137cdb7b881",
+    "results/rev11/exp05/run_06.summary.json": "b1b926ee5b24c784bec5b62f1add3163b0a5b03ea68d5e70a63d4956a7026201",
+    "results/rev11/exp05/run_01.summary.json": "f3c6d5f9c2418eb94edf6f57da93d0b93c921e22fff3d76b4c4148132dea82d8",
+    "results/rev11/exp05/run_20.summary.json": "5e5aa88045a52e9aab48c29eef859ac785eefb65314c8d40f1f9d2fa00c20790",
+    "results/rev11/exp05/run_11.summary.json": "da3a26d53eb7b42b4cf2fb620dd90d3e8be7ed224d5d000c00576271deef4122",
+    "results/rev11/exp05/run_16.summary.json": "4be47adf771f6e444e5a8e184590e9d5aeb0e6a063dbf8940aa792a5ec3449a3",
+    "results/rev11/exp05/run_03.summary.json": "68cd54aeee40b5cb9fc51465494c70b91ef431f50b12b41a56d4dd932b5b5e06",
+    "results/rev11/exp05/run_04.summary.json": "fbc5e5ef19ec8f789477c1fd771b2e0bbd56f6062c9f7013f9b9119f717cbed7",
+    "results/rev11/exp05/run_05.summary.json": "2fc34ba3320171f2e0c7a1f32d45b99c44ee6ee7ed67ca4924064d01df412c2c",
+    "results/rev11/exp05/run_02.summary.json": "f11c7fcb8a2ae8812f9a06c898d4db9eb7ec31566d3656c405bb2ae457f3a760",
+    "results/rev11/exp05/run_17.summary.json": "f64df1826ba6ce0da96d4f11103e1cf7aec52436ee5536a7632e262f1c4bf25e",
+    "results/rev11/exp05/run_10.summary.json": "e37712763e3ecd4f8593c8a02e76dbee62ae7311a9f6bf59da698dc46a8cd10b",
+    "results/rev11/exp05/run_08.summary.json": "cbacc6fcf4ea6bd82285ab0cadc4cc97ae66efaece301967be25636c7c8e01fc",
+    "results/rev11/exp05/exp05_analysis.json": "1d47978b63b7eee9307881ec8b6808f6e3cb0b8c1d5a88ba5e311e9f3a9410ce",
+    "results/rev11/exp05/run_09.summary.json": "75bff2689e7b106cf81aa1a9c49a683d0691e0348438b09662d11f9873678ca8",
+    "results/rev11/exp06/c2_results.jsonl": "2bd4cca7bb0d935e9dc7eae49877e3d59d8e6bb9512e76b0a53d69b44b2cb2a7",
+    "results/rev11/exp06/c1_results.jsonl": "f628298e863b6e3cc439196eb66851da8b190b917ec3512cf085ae949bd0fde0",
+    "results/rev11/exp06/c3_results.jsonl": "6e4d88cfae31678bf935d9dbd798b901a4470356ad41813f9e3898307cd3be67",
+    "results/rev11/exp09/rep1_S1.jsonl": "021b6c694be826779354481379fa40e59e3e190fe3ae69f865eed23f04e8125a",
+    "results/rev11/exp09/rep2_H1.jsonl": "e7d4b02b13d09f5740ac037654b583073d5c1239595e08868c1d0aa924292b07",
+    "results/rev11/exp09/rep3_H1.jsonl": "0e770785aecbd88523daf6ffdb2460c7fe77c875b5c901d39508d5318be71362",
+    "results/rev11/exp09/rep1_E1.jsonl": "8892b6c3d3de2b587d15ff17ab47b95bf50f64562a742848f615029bdd7d4cc6",
+    "results/rev11/exp09/rep5_H1.jsonl": "b521877e1b73f1454a6107a1b8de2f6aee9d23346fbb9542194f93627a6de340",
+    "results/rev11/exp09/rep4_H1.jsonl": "5b98f3528d63b084e72fb3bd415d8088109820d4d2af445d9cd1c2645665e112",
+    "results/rev11/exp09/rep2_E1.jsonl": "2dd696e257600cd519d5df63cff6bf3f33a096cbb2a7abc582156d41c37d25ba",
+    "results/rev11/exp09/rep3_E1.jsonl": "da5ce15416153b5af116ed1327cda9dcf276205816f4c4aba21c82ed8e5a3dc1",
+    "results/rev11/exp09/rep1_H1.jsonl": "963ee57ce2d0f27f1ba91306a47d057c7a016c349d1451f93e88a66c5438096c",
+    "results/rev11/exp09/rep3_S1.jsonl": "cf92318267d1bf9f1b8bf747329dd0f7682e0b8f6e017ead04726a4ca9ba040e",
+    "results/rev11/exp09/rep2_S1.jsonl": "088a3f22c4b6359d4270986bd6fe8e767d94bf89b5826642cb0552881d93c3b7",
+    "results/rev11/exp09/rep4_S1.jsonl": "e14604da93e7a75afeb17e9dbc06aa31d7e1650765516612b2abea145e9bbe29",
+    "results/rev11/exp09/rep5_S1.jsonl": "4d72b182b71447c14572dff324a7ad07d7bca608a0d534b13ba32137c7263775",
+    "results/rev11/exp09/rep5_E1.jsonl": "d0c4111633d646c5d62ba9d3840bcd1d9988d962619176aabc5f50fcb3166736",
+    "results/rev11/exp09/rep4_E1.jsonl": "8fb8e3eb208cf9b960f2c33f6adc83fcc8d3dc5d0d35a580513bde37e3e1fbf5",
+    "results/rev11/exp05/run_14.jsonl": "7b446d8dddfd6064ec92966b17458dcaf4308fe282836ddaf18a4eccce33a478",
+    "results/rev11/exp05/run_16.jsonl": "982799549eab1a249932e1c29ea3f5462741a61c935d0661a32a18ed9eccab04",
+    "results/rev11/exp05/run_12.jsonl": "2f5ca2730ca87dd5bfd1ca50eafd86b2f2a9a1bd96bb77e4526a3dda449b769f",
+    "results/rev11/exp05/run_10.jsonl": "5bc58d586f343d6c61f10b808ae80278e3e7b7d95937b851e02d74465e21ec60",
+    "results/rev11/exp05/run_09.jsonl": "53c393d5dae6788063a7773c470450ec5f8edf6453a9465f93c3cc459088ba73",
+    "results/rev11/exp05/run_17.jsonl": "c92e5d52e6446063e9894f398efbfad6486269c3f22a015c545775dd51e08df1",
+    "results/rev11/exp05/run_15.jsonl": "668c8fb25512065441c67874c42368213254a083b170b8b152e9315af53231f9",
+    "results/rev11/exp05/run_11.jsonl": "125a21beb0757fa6b39d27e7da78ae743a0d3df12273ebc87d82a131519bb793",
+    "results/rev11/exp05/run_08.jsonl": "a55e87ca912be2c2d76197849c545993b4f5a20eb3795393d2c61cb8bde9f387",
+    "results/rev11/exp05/run_13.jsonl": "68691ab2fd3af841db7f8eb8362777146b0ff1fd2c1fd1f33e85a10f1e75eb68",
+    "results/rev11/exp05/run_06.jsonl": "98a74e8077ed04e1e8c87b353e57f7293e151ee0415c15f34238d340574971c5",
+    "results/rev11/exp05/run_04.jsonl": "fb9f4532c5dafe9f3f471a9ef14ddf55ad90396b56b5f6bc9e5c44ecba643452",
+    "results/rev11/exp05/run_20.jsonl": "58b4fcaea8063fb0b2f94e6b0148dd5ad8fc566f291e82865ab986c0d55fe878",
+    "results/rev11/exp05/run_19.jsonl": "12ee76492757f9a110bd828dcf9109e9361c1c15457733bd652d3e6245988481",
+    "results/rev11/exp05/run_02.jsonl": "1c6e14083ea0e6f1765930320893e4039b630a0174a0717ed303393f2d30a13c",
+    "results/rev11/exp05/run_05.jsonl": "d59e64b633ff464bbf3440399d0a6c5841689503ef7330c4eb16519e93ab0b53",
+    "results/rev11/exp05/run_07.jsonl": "b50bcd6611d7130b8cf0181bf74f4d9392b67c4f1761212a57d00049b2b9e16f",
+    "results/rev11/exp05/run_03.jsonl": "106da65a2ee1fbacd80a7f41f6ff51cf3358757a98bd83be0cc6526326f8b9f7",
+    "results/rev11/exp05/run_18.jsonl": "4f7963b7cda557b4a438ff665f634c0a3e263751bd2354d874ba3cf2d649c05a",
+    "results/rev11/exp05/run_01.jsonl": "e45cb89ce2fa0c318095e14375cb4a2257d0e445e04a741578080793c1f63554"
+  },
+  "finalized_utc": "2026-11-22T17:09:16.989702+00:00"
+}

@@ -1,0 +1,62 @@
+{
+  "scenario": "f2_p1_asymmetric_partition",
+  "initial_leader": "pg2",
+  "monitor": "pg3",
+  "candidate": "pg1",
+  "fault": "iptables cuts monitor<->leader DATA-net path only; leader alive, etcd lease held, OOB reachable",
+  "partition_injection": {
+    "rc": 0,
+    "err": ""
+  },
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_alive",
+    "D_etcd": "obs:etcd_lease_held"
+  },
+  "p1_telemetry": "full",
+  "llm": {
+    "model": "claude-sonnet-5-5",
+    "elapsed_ms": 7800.2,
+    "usage": {
+      "reported_cost_usd": 0.028388299999999998,
+      "input_tokens": 21425,
+      "output_tokens": 505
+    },
+    "proposed_action": "probe",
+    "accepted_derivations": 1,
+    "rejected_derivations": 0,
+    "raw_reply": "{\"proposed_action\":\"probe\",\"hypothesized_worlds\":[\"s_asym_partition\"],\"requested_probes\":[\"sql_leader_alive_from_independent_vantage\",\"oob_leader_status_recheck\",\"etcd_lease_holder_and_ttl\"],\"derivations\":[{\"rule_id\":\"r_ref_dead_oob\",\"evidence_handles\":[\"a_D_oob_rest_1795336203\"]}]}"
+  },
+  "naive_policy_dispatches": "probe",
+  "observer_file": "f2_p1_20261122T082954Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 20,
+  "client_writes_failed": 0,
+  "final_state": {
+    "t_utc": "2026-11-22T08:30:16.778404+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 3,
+        "witness_rows": 149
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 149
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 3,
+        "witness_rows": 149
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  }
+}

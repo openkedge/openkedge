@@ -1,0 +1,10 @@
+{
+  "experiment": "EXP-08 real PostgreSQL Tier E2 transactional adapter",
+  "frozen_before_execution": true,
+  "target": "Patroni primary (spilo PG16) in the rev10 testbed; schema pieq_e2; roles pieq_executor (mediated) / untrusted_agent (no grants)",
+  "contract": "10-point single-transaction E2 contract (signature via in-DB pgcrypto HMAC with server-stored key, control-row FOR UPDATE serialization, auth epoch+TTL, admission rev, predecessors, idempotency/conflict, exposure cap, commit-time predicate, temporal-policy binding, mutation)",
+  "scenarios": ["valid","expired auth","revoked pre-effect","stale revision","false commit-time precondition (H30-analog)","duplicate idempotent + identity conflict","concurrent capacity race (2 threads)","abort+retry","crash before commit","crash after commit before ack","lost-response reconciliation (no auto-redispatch; idempotent re-presentation)","unmediated agent write denied vs admin bypass disclosed"],
+  "acceptance": "no contract violation in the executed fault set; final SUM(reservations) <= capacity_limit verified by independent superuser SQL read; any violation -> classify adapter below E2 or narrow the action",
+  "explicit_non_claims": "SERIALIZABLE success does not establish complete physical mediation, host fault-domain independence, or all of Refines_D; Patroni REST promotion adapter remains E0",
+  "safety_failure": "any committed mutation violating a contract point; SUM > cap"
+}

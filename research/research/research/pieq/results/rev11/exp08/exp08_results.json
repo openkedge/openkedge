@@ -1,0 +1,44 @@
+{
+  "experiment": "EXP-08",
+  "leader": "172.28.0.21",
+  "scenarios": {
+    "1_valid": "COMMITTED",
+    "2_expired_auth": "REJECTED_AUTHORIZATION_EXPIRED",
+    "3_revoked_pre_effect": "REJECTED_AUTHORIZATION_REVOKED",
+    "4_stale_revision": "REJECTED_STALE_ADMISSION_REVISION",
+    "5_false_commit_precondition": "REJECTED_COMMIT_PRECONDITION_FALSE",
+    "6a_duplicate_idempotent": "DUPLICATE_IDEMPOTENT_COMMITTED",
+    "6b_op_id_conflict": "REJECTED_OP_ID_CONFLICT",
+    "7_concurrent_capacity": {
+      "b": "COMMITTED",
+      "a": "SERIALIZATION_ABORT_RETRYABLE"
+    },
+    "8_abort_then_retry": {
+      "first": "REJECTED_STALE_ADMISSION_REVISION",
+      "retry": "COMMITTED"
+    },
+    "9_crash_before_commit": {
+      "status": "CRASHED_BEFORE_COMMIT",
+      "row_exists_after": false
+    },
+    "10_11_crash_after_commit_and_reconciliation": {
+      "status": "CRASHED_AFTER_COMMIT_BEFORE_ACK",
+      "reconciled_status": "COMMITTED",
+      "idempotent_representation": "DUPLICATE_IDEMPOTENT_COMMITTED"
+    },
+    "12a_unmediated_agent_write": "DENIED:42501",
+    "12b_admin_bypass_outside_mediation": "SUCCEEDS (superuser is outside the mediation assumption, as declared)"
+  },
+  "final_state": {
+    "reservation_total": 10,
+    "capacity_limit": 10,
+    "committed_ops": [
+      "admin_bypass",
+      "op_conc_b",
+      "op_crash_post",
+      "op_retry",
+      "op_valid_1"
+    ]
+  },
+  "invariant_total_le_cap": true
+}

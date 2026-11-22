@@ -1,0 +1,73 @@
+{
+  "scenario": "f2_p4_asymmetric_partition",
+  "initial_leader": "pg2",
+  "monitor": "pg3",
+  "candidate": "pg1",
+  "fault": "iptables cuts monitor<->leader DATA-net path only; leader alive, etcd lease held, OOB reachable",
+  "partition_injection": {
+    "rc": 0,
+    "err": ""
+  },
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_alive",
+    "D_etcd": "obs:etcd_lease_held"
+  },
+  "llm": {
+    "model": "claude-sonnet-5-5",
+    "elapsed_ms": 11868.9,
+    "usage": {
+      "reported_cost_usd": 0.027858299999999996,
+      "input_tokens": 21425,
+      "output_tokens": 452
+    },
+    "proposed_action": "defer",
+    "accepted_derivations": 1,
+    "rejected_derivations": 0,
+    "raw_reply": "{\"proposed_action\":\"defer\",\"hypothesized_worlds\":[\"s_asym_partition\"],\"requested_probes\":[],\"derivations\":[{\"rule_id\":\"r_ref_dead_oob\",\"evidence_handles\":[\"a_D_oob_rest_1795323920\"]}]}"
+  },
+  "pieq_decision": {
+    "surviving_worlds": [
+      "s_asym_partition",
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 0,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "SNAPSHOT_TRIGGERED||persist=0",
+    "admitted": false,
+    "reason": "DEFER_PLAUSIBLE_WORLD_AMBIGUITY"
+  },
+  "f3_shared_domain_nu_pack_on_live_evidence": 1,
+  "observer_file": "f2_p4_20261122T050508Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 20,
+  "client_writes_failed": 0,
+  "final_state": {
+    "t_utc": "2026-11-22T05:05:43.260450+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 67
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 67
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 2,
+        "witness_rows": 67
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  }
+}

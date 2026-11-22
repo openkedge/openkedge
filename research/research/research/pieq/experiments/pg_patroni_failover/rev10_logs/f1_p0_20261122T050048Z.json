@@ -1,0 +1,64 @@
+{
+  "scenario": "f1_p0_native_baseline",
+  "initial_leader": "pg2",
+  "fault": "docker stop pieq-pg2 (true leader process death)",
+  "policy": "P0 native Patroni auto-failover (unpaused)",
+  "before": {
+    "t_utc": "2026-11-22T05:00:48.244470+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 0
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 1,
+        "witness_rows": 0
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 1
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  },
+  "new_leader": "pg3",
+  "native_failover_seconds": 10.2,
+  "observer_file": "f1_p0_20261122T050048Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 11,
+  "client_writes_failed": 1,
+  "final_state": {
+    "t_utc": "2026-11-22T05:01:01.632303+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 11
+      },
+      "pg2": {
+        "reachable": false,
+        "error": "Error response from daemon: container dfc0d51269e205094c4286c44da5e02b7c2096cb09b6a28abcb766edbdb138b5 is not running"
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 2,
+        "witness_rows": 11
+      }
+    },
+    "writable_primaries": [
+      "pg3"
+    ],
+    "dual_primary": false
+  }
+}

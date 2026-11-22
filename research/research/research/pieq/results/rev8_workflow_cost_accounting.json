@@ -1,0 +1,134 @@
+{
+  "archived_r4_live_llm_inference_costs": {
+    "note": "codex_cli & local_openai reported $0.00 in trace; Qwen3-32B local server reported 0 token counts.",
+    "reported_claude_cli_cost_usd_all_rounds": 5.1314,
+    "reported_claude_cli_cost_usd_round0": 1.1515,
+    "round0_calls": 200,
+    "round0_input_tokens_recorded": 4351665,
+    "round0_output_tokens_recorded": 153919,
+    "round0_parallel_wall_clock_per_case": {
+      "mean_ms": 37079.3088,
+      "n": 40,
+      "p50_ms": 24249.2199,
+      "p95_ms": 97614.8037
+    },
+    "round0_sequential_wall_clock_per_case": {
+      "mean_ms": 95789.8247,
+      "n": 40,
+      "p50_ms": 82735.1839,
+      "p95_ms": 178701.6071
+    },
+    "single_call_latency": {
+      "mean_ms": 19980.8747,
+      "n": 800,
+      "p50_ms": 15719.3513,
+      "p95_ms": 40745.8034
+    },
+    "source": "results/live_llm_traces_r4.jsonl (exploratory archived pilot; unpinned codex_cli)",
+    "total_calls_all_rounds": 800,
+    "total_input_tokens_recorded": 19784249,
+    "total_output_tokens_recorded": 606917
+  },
+  "distributed_coordination_etcd_costs": {
+    "documented_range_ms": "45-2467 ms schedule medians across normal CAS, faulted leader, and quorum-loss timeout",
+    "schedule_summary": {},
+    "source": "results/etcd_local_fault_evidence.json (140 single-host 3-member etcd v3.7.3 trials)",
+    "total_trials": 140
+  },
+  "heldout36_proof_generation_funnel_1A_FullTel_DomainIsolated": {
+    "cases_admitted_after_active_probing": 4,
+    "cases_correctly_deferred": 21,
+    "cases_reaching_ka_after_probes": 25,
+    "cases_reaching_ka_before_probes": 21,
+    "cases_rejected_insufficient_evidence": 12,
+    "certificates_accepted_after_retry": 204,
+    "first_attempt_derivations_accepted": 204,
+    "first_attempt_derivations_horn_valid": 204,
+    "first_attempt_derivations_provenance_valid": 204,
+    "first_attempt_derivations_schema_valid": 204,
+    "first_attempt_derivations_submitted": 204,
+    "first_attempt_horn_valid_proposals": 36,
+    "first_attempt_proposals_submitted": 36,
+    "first_attempt_provenance_valid_proposals": 36,
+    "first_attempt_schema_valid_proposals": 36,
+    "raw_proposals_submitted_total": 36,
+    "retry_count": 0,
+    "retry_exhaustion_count": 0
+  },
+  "heldout36_proof_generation_funnel_5A_PartTel": {
+    "cases_admitted_after_active_probing": 4,
+    "cases_correctly_deferred": 21,
+    "cases_reaching_ka_after_probes": 25,
+    "cases_reaching_ka_before_probes": 21,
+    "cases_rejected_insufficient_evidence": 12,
+    "certificates_accepted_after_retry": 205,
+    "first_attempt_derivations_accepted": 205,
+    "first_attempt_derivations_horn_valid": 205,
+    "first_attempt_derivations_provenance_valid": 205,
+    "first_attempt_derivations_schema_valid": 241,
+    "first_attempt_derivations_submitted": 277,
+    "first_attempt_horn_valid_proposals": 144,
+    "first_attempt_proposals_submitted": 180,
+    "first_attempt_provenance_valid_proposals": 144,
+    "first_attempt_schema_valid_proposals": 144,
+    "raw_proposals_submitted_total": 216,
+    "retry_count": 36,
+    "retry_exhaustion_count": 0
+  },
+  "local_tcb_stage_profiling_heldout36": {
+    "atms_packing_and_shield_cpu": {
+      "mean_ms": 0.0371,
+      "n": 36,
+      "p50_ms": 0.031,
+      "p95_ms": 0.0592
+    },
+    "end_to_end_local_tcb_to_useful_action": {
+      "mean_ms": 0.5053,
+      "n": 9,
+      "p50_ms": 0.5305,
+      "p95_ms": 0.5758
+    },
+    "first_attempt_build_and_verify_cpu": {
+      "mean_ms": 0.1013,
+      "n": 36,
+      "p50_ms": 0.088,
+      "p95_ms": 0.1892
+    },
+    "probe_loop_tcb_audit_cpu": {
+      "mean_ms": 0.1906,
+      "n": 9,
+      "p50_ms": 0.1845,
+      "p95_ms": 0.3035
+    },
+    "retry_verification_overhead_cpu": {
+      "mean_ms": 0.0036,
+      "n": 36,
+      "p50_ms": 0.0023,
+      "p95_ms": 0.0128
+    },
+    "simulated_oob_probe_io_when_invoked": {
+      "mean_ms": 26.3892,
+      "n": 8,
+      "p50_ms": 20.0151,
+      "p95_ms": 38.0194
+    },
+    "sqlite_wal_synchronous_full_commit": {
+      "mean_ms": 0.0984,
+      "n": 15,
+      "p50_ms": 0.1008,
+      "p95_ms": 0.118
+    },
+    "sqlite_wal_synchronous_full_reject": {
+      "mean_ms": 0.1262,
+      "n": 6,
+      "p50_ms": 0.0973,
+      "p95_ms": 0.1174
+    }
+  },
+  "physical_db_failover_recovery_time": {
+    "reason": "PostgreSQL/Patroni/Docker runtime unavailable on authoring host; SQLite WAL commit (~0.1-0.4 ms) is explicitly NOT substituted for PostgreSQL physical promotion time.",
+    "status": "UNEXECUTED"
+  },
+  "scale_separation_summary": "Local TCB verification, packing, probing audit, and pre-initialized SQLite WAL commit complete in ~0.1-0.6 ms total CPU+WAL (sub-millisecond); real incident-level time to authorized useful action is dominated by LLM inference (p50 ~22-27 s parallel Round-0 wall-clock in archived r4, +retry RTT when retries fire), OOB probe RPCs (~10-50 ms simulated / real BMC RTT), and distributed Raft coordination (45-2467 ms in local 3-node etcd).",
+  "schema_version": "pieq-rev8-workflow-cost-accounting-v1"
+}

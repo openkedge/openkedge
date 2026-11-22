@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PIEQ live JSONL record",
+  "description": "Each line validates independently. The protocol also verifies manifest hashes, exact prompts, request IDs, parsed replies, and stored decisions across lines before resume or replay.",
+  "type": "object",
+  "required": ["record_type"],
+  "properties": {
+    "record_type": {"enum": ["manifest", "attempt_started", "attempt_result", "request", "decision"]},
+    "manifest_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "provider_endpoints": {"type": "object", "additionalProperties": {"type": "string"}},
+    "scoring_fixture_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "request_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "decision_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "collector_fixture_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "run_id": {"type": "string"},
+    "case_id": {"type": "integer"},
+    "agent_id": {"enum": ["agent_0", "agent_1", "agent_2", "agent_3", "agent_4"]},
+    "round": {"type": "integer", "minimum": 0, "maximum": 3},
+    "prompt": {"type": "string"},
+    "raw_reply": {"type": ["string", "null"]},
+    "parsed_proposal": {"type": ["object", "null"]},
+    "status": {"enum": ["ok", "timeout", "rate_limit", "api_error", "malformed_output", "budget_exhaustion", "interrupted_unknown_outcome"]},
+    "usage": {"type": "object"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "elapsed_seconds": {"type": "number", "minimum": 0},
+    "tcb_elapsed_seconds": {"type": "number", "minimum": 0},
+    "attempt": {"type": "integer", "minimum": 1},
+    "attempts": {"type": "integer", "minimum": 0},
+    "model_version": {"type": ["string", "null"]},
+    "http_status": {"type": ["integer", "null"]},
+    "error_type": {"type": ["string", "null"]},
+    "action": {"type": "string"},
+    "gate_reason": {"type": "string"},
+    "verifier_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["agent_id", "proposal", "accepted", "reason"],
+        "properties": {
+          "agent_id": {"enum": ["agent_0", "agent_1", "agent_2", "agent_3", "agent_4"]},
+          "accepted": {"type": "boolean"},
+          "reason": {"type": "string"}
+        }
+      }
+    },
+    "nogood_results": {"type": "array"},
+    "gate_results": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"record_type": {"const": "manifest"}}},
+     "then": {"required": ["manifest", "manifest_hash", "scoring_fixture_hash"]}},
+    {"if": {"properties": {"record_type": {"const": "attempt_started"}}},
+     "then": {"required": ["request_id", "attempt", "case_id", "agent_id", "timestamp"]}},
+    {"if": {"properties": {"record_type": {"const": "attempt_result"}}},
+     "then": {"required": ["request_id", "attempt", "status", "raw_reply", "usage", "timestamp", "elapsed_seconds"]}},
+    {"if": {"properties": {"record_type": {"const": "request"}}},
+     "then": {"required": ["request_id", "run_id", "case_id", "agent_id", "condition", "round", "prompt", "raw_reply", "parsed_proposal", "collector_fixture_hash", "status", "usage", "timestamp", "elapsed_seconds", "attempts"]}},
+    {"if": {"properties": {"record_type": {"const": "decision"}}},
+     "then": {"required": ["decision_id", "run_id", "case_id", "condition", "action", "gate_reason", "verifier_results", "collector_fixture_hash", "timestamp", "tcb_elapsed_seconds"]}}
+  ]
+}

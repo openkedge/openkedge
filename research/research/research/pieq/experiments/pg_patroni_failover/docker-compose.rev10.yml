@@ -1,0 +1,134 @@
+# =============================================================================
+# REVISION 10 EXECUTED VARIANT of the archived (previously UNEXECUTED) testbed.
+# The original docker-compose.yml is preserved untouched; this file fixes two
+# latent configuration defects discovered at first real execution:
+#   1. etcd v3.7.3 removed the --enable-v2 flag (containers exited code 2).
+#   2. spilo ignores PATRONI_* env and mounted /etc/patroni/patroni.yml; it
+#      requires spilo-native SCOPE / ETCD3_HOSTS and SPILO_CONFIGURATION.
+# Native HA parameters (ttl=30, loop_wait=5, retry_timeout=10, synchronous_mode,
+# pg_rewind) are injected identically on every node via SPILO_CONFIGURATION so
+# Patroni-native safety stays constant across all compared policies.
+# Deploy ONLY in an isolated disposable environment.
+# =============================================================================
+networks:
+  pieq_db_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+  pieq_oob_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
+
+x-etcd-common: &etcd_common
+  image: quay.io/coreos/etcd:v3.7.3
+
+x-spilo-common: &spilo_common
+  image: ghcr.io/zalando/spilo-16:3.3-p1
+  cap_add: ["NET_ADMIN"]
+  environment: &spilo_env
+    SCOPE: pieq-pg-cluster
+    PGVERSION: "16"
+    ETCD3_HOSTS: "'172.28.0.11:2379','172.28.0.12:2379','172.28.0.13:2379'"
+    SPILO_CONFIGURATION: |
+      bootstrap:
+        dcs:
+          ttl: 30
+          loop_wait: 5
+          retry_timeout: 10
+          maximum_lag_on_failover: 1048576
+          synchronous_mode: true
+          synchronous_mode_strict: false
+          postgresql:
+            use_pg_rewind: true
+            use_slots: true
+
+services:
+  etcd1:
+    <<: *etcd_common
+    container_name: pieq-etcd1
+    hostname: etcd1
+    command:
+      - etcd
+      - --name=etcd1
+      - --initial-advertise-peer-urls=http://172.28.0.11:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://172.28.0.11:2379
+      - --initial-cluster-token=pieq-etcd-cluster-1
+      - --initial-cluster=etcd1=http://172.28.0.11:2380,etcd2=http://172.28.0.12:2380,etcd3=http://172.28.0.13:2380
+      - --initial-cluster-state=new
+    networks:
+      pieq_db_net:
+        ipv4_address: 172.28.0.11
+
+  etcd2:
+    <<: *etcd_common
+    container_name: pieq-etcd2
+    hostname: etcd2
+    command:
+      - etcd
+      - --name=etcd2
+      - --initial-advertise-peer-urls=http://172.28.0.12:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://172.28.0.12:2379
+      - --initial-cluster-token=pieq-etcd-cluster-1
+      - --initial-cluster=etcd1=http://172.28.0.11:2380,etcd2=http://172.28.0.12:2380,etcd3=http://172.28.0.13:2380
+      - --initial-cluster-state=new
+    networks:
+      pieq_db_net:
+        ipv4_address: 172.28.0.12
+
+  etcd3:
+    <<: *etcd_common
+    container_name: pieq-etcd3
+    hostname: etcd3
+    command:
+      - etcd
+      - --name=etcd3
+      - --initial-advertise-peer-urls=http://172.28.0.13:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://172.28.0.13:2379
+      - --initial-cluster-token=pieq-etcd-cluster-1
+      - --initial-cluster=etcd1=http://172.28.0.11:2380,etcd2=http://172.28.0.12:2380,etcd3=http://172.28.0.13:2380
+      - --initial-cluster-state=new
+    networks:
+      pieq_db_net:
+        ipv4_address: 172.28.0.13
+
+  pg1:
+    <<: *spilo_common
+    container_name: pieq-pg1
+    hostname: pg1
+    depends_on: [etcd1, etcd2, etcd3]
+    networks:
+      pieq_db_net:
+        ipv4_address: 172.28.0.21
+      pieq_oob_net:
+        ipv4_address: 172.29.0.21
+
+  pg2:
+    <<: *spilo_common
+    container_name: pieq-pg2
+    hostname: pg2
+    depends_on: [etcd1, etcd2, etcd3]
+    networks:
+      pieq_db_net:
+        ipv4_address: 172.28.0.22
+      pieq_oob_net:
+        ipv4_address: 172.29.0.22
+
+  pg3:
+    <<: *spilo_common
+    container_name: pieq-pg3
+    hostname: pg3
+    depends_on: [etcd1, etcd2, etcd3]
+    networks:
+      pieq_db_net:
+        ipv4_address: 172.28.0.23
+      pieq_oob_net:
+        ipv4_address: 172.29.0.23

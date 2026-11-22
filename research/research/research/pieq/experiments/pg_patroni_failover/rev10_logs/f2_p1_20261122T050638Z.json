@@ -1,0 +1,62 @@
+{
+  "scenario": "f2_p1_asymmetric_partition",
+  "initial_leader": "pg2",
+  "monitor": "pg3",
+  "candidate": "pg1",
+  "fault": "iptables cuts monitor<->leader DATA-net path only; leader alive, etcd lease held, OOB reachable",
+  "partition_injection": {
+    "rc": 0,
+    "err": ""
+  },
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_alive",
+    "D_etcd": "obs:etcd_lease_held"
+  },
+  "p1_telemetry": "silo",
+  "llm": {
+    "model": "PROVIDER_FAILURE:claude_cli",
+    "elapsed_ms": 17727.9,
+    "usage": {
+      "provider_failure": "CLIError: claude exit 1: ue to invalid posture. Error: Request Forbidden. AEA verification failed: used_too_late\n\nError getting AWS credentials from awsCredentialExport (in settings or ~/.claude.json): awsCredentialExport did not return a valid value\nError getting AWS credentials from awsCredentialExport (in ",
+      "input_tokens": 0,
+      "output_tokens": 0
+    },
+    "proposed_action": "defer",
+    "accepted_derivations": 0,
+    "rejected_derivations": 0,
+    "raw_reply": "{\"proposed_action\": \"defer\", \"hypothesized_worlds\": [], \"requested_probes\": [], \"derivations\": []}"
+  },
+  "naive_policy_dispatches": "defer",
+  "observer_file": "f2_p1_20261122T050638Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 23,
+  "client_writes_failed": 0,
+  "final_state": {
+    "t_utc": "2026-11-22T05:07:18.131396+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 3,
+        "witness_rows": 90
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 90
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 2,
+        "witness_rows": 90
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "scenario": "f1_p4_full_pieq_supervised",
+  "initial_leader": "pg2",
+  "monitor": "pg3",
+  "candidate": "pg1",
+  "mode": "patronictl pause (supervised failover; leader lock + native promotion safety INTACT, automatic failover disabled)",
+  "fault": "docker stop pieq-pg2",
+  "events": [
+    {
+      "t_utc": "2026-11-22T09:46:01.816517+00:00",
+      "event": "paused"
+    },
+    {
+      "t_utc": "2026-11-22T09:46:11.646789+00:00",
+      "event": "fault_injected_leader_stopped"
+    },
+    {
+      "t_utc": "2026-11-22T09:46:51.882590+00:00",
+      "event": "observations_collected"
+    },
+    {
+      "t_utc": "2026-11-22T09:46:58.232729+00:00",
+      "event": "llm_proposal_complete"
+    },
+    {
+      "t_utc": "2026-11-22T09:46:58.232828+00:00",
+      "event": "pieq_decision_made"
+    },
+    {
+      "t_utc": "2026-11-22T09:46:58.232830+00:00",
+      "event": "dispatching_failover"
+    },
+    {
+      "t_utc": "2026-11-22T09:46:59.329206+00:00",
+      "event": "dispatch_returned"
+    }
+  ],
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_unreachable",
+    "D_etcd": "obs:etcd_lease_absent"
+  },
+  "llm": {
+    "model": "claude-sonnet-5-5",
+    "elapsed_ms": 6349.6,
+    "usage": {
+      "reported_cost_usd": 0.028565800000000002,
+      "input_tokens": 21428,
+      "output_tokens": 522
+    },
+    "proposed_action": "promote_candidate",
+    "accepted_derivations": 5,
+    "rejected_derivations": 0,
+    "raw_reply": "{\"proposed_action\":\"promote_candidate\",\"hypothesized_worlds\":[\"s_leader_dead\"],\"requested_probes\":[],\"derivations\":[{\"rule_id\":\"r_act_etcd\",\"evidence_handles\":[\"a_D_etcd_1795340806\"]},{\"rule_id\":\"r_act_oob\",\"evidence_handles\":[\"a_D_oob_rest_1795340806\"]},{\"rule_id\":\"r_act_sql\",\"evidence_handles\":[\"a_D_sql_mon_1795340806\"]},{\"rule_id\":\"r_ref_part_etcd\",\"evidence_handles\":[\"a_D_etcd_1795340806\"]},{\"rule_id\":\"r_ref_part_oob\",\"evidence_handles\":[\"a_D_oob_rest_1795340806\"]}]}"
+  },
+  "pieq_decision": {
+    "surviving_worlds": [
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 3,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "SNAPSHOT_TRIGGERED||persist=0",
+    "admitted": true,
+    "reason": "ADMIT_PROMOTE_TIER_E0_NATIVE_SAFEGUARDS"
+  },
+  "dispatch": {
+    "rc": 0,
+    "response": "Successfully failed over to \"pg1\"",
+    "err": ""
+  },
+  "new_leader": "pg1",
+  "observer_confirmed_promotion_seconds": 57.6,
+  "observer_file": "f1_p4_20261122T094601Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 5,
+  "client_writes_failed": 49,
+  "final_state": {
+    "t_utc": "2026-11-22T09:47:02.634311+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 4,
+        "witness_rows": 28
+      },
+      "pg2": {
+        "reachable": false,
+        "error": "Error response from daemon: container 250c3aa791de6ce708666536d926d359d034864e813659a03e5e9d5041e0c742 is not running"
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 2,
+        "witness_rows": 23
+      }
+    },
+    "writable_primaries": [
+      "pg1"
+    ],
+    "dual_primary": false
+  }
+}

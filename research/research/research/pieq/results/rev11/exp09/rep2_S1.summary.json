@@ -1,0 +1,22 @@
+{
+  "schema_version": "pieq-rev10-hardened-live-summary-v1",
+  "run_kind": "cli_wrapper_live_unpinned",
+  "condition": "S1",
+  "manifest_sha256": "c308a4d030537e7a326312c6539a2d12444bd5b6faabd2dd3f45e1c9e38b8bf1",
+  "schema_sha256": "ec59523053bb28e9b3c05ac5f75548c3da5ded78b18981c339c61e0996fcf84d",
+  "models": {
+    "agent_0": "claude_cli:sonnet@cli-unpinned"
+  },
+  "cases_evaluated": 36,
+  "admitted_count": 10,
+  "deferred_count": 26,
+  "raw_unsafe_count": 2,
+  "api_calls": 41,
+  "api_cost_usd_cli_reported": 1.058161,
+  "wall_clock_seconds": 259.918,
+  "provider_failures": {
+    "claude_cli": []
+  },
+  "trace_path": "results/rev11/exp09/rep2_S1.jsonl",
+  "finished_utc": "2026-11-22T13:03:52.003371+00:00"
+}

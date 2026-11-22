@@ -1,0 +1,70 @@
+{
+  "run_id": "pieq-rev8-pinned-multifamily-template-v1",
+  "run_kind": "primary_pinned_api",
+  "protocol_version": "pieq-rev8-live-eval-v1",
+  "require_server_attested_model_id": true,
+  "instances": [
+    {
+      "agent_id": "agent_0",
+      "provider": "anthropic",
+      "family": "anthropic-claude",
+      "model": "claude-sonnet-4-5-20250929",
+      "snapshot": "20250929",
+      "supports_seed": false,
+      "input_usd_per_million": 3.0,
+      "output_usd_per_million": 15.0
+    },
+    {
+      "agent_id": "agent_1",
+      "provider": "anthropic",
+      "family": "anthropic-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "snapshot": "20251001",
+      "supports_seed": false,
+      "input_usd_per_million": 1.0,
+      "output_usd_per_million": 5.0
+    },
+    {
+      "agent_id": "agent_2",
+      "provider": "openai",
+      "family": "openai-gpt",
+      "model": "gpt-4.1-2025-04-14",
+      "snapshot": "2025-04-14",
+      "supports_seed": true,
+      "input_usd_per_million": 2.0,
+      "output_usd_per_million": 8.0
+    },
+    {
+      "agent_id": "agent_3",
+      "provider": "openai",
+      "family": "openai-gpt",
+      "model": "gpt-4.1-mini-2025-04-14",
+      "snapshot": "2025-04-14",
+      "supports_seed": true,
+      "input_usd_per_million": 0.4,
+      "output_usd_per_million": 1.6
+    },
+    {
+      "agent_id": "agent_4",
+      "provider": "gemini",
+      "family": "google-gemini",
+      "model": "gemini-2.5-pro",
+      "snapshot": "gemini-2.5-pro",
+      "supports_seed": true,
+      "input_usd_per_million": 1.25,
+      "output_usd_per_million": 10.0
+    }
+  ],
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "seed": 17,
+    "max_output_tokens": 2048
+  },
+  "timeout_seconds": 90,
+  "max_retries_typed": 2,
+  "max_calls": 1200,
+  "spending_cap_usd": 50.0,
+  "max_cost_per_call_usd": 0.15,
+  "packing_expansions": 10000
+}

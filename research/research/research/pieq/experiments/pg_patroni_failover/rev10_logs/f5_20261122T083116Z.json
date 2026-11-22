@@ -1,0 +1,62 @@
+{
+  "scenario": "f5_revocation_race",
+  "initial_leader": "pg2",
+  "note": "E0 target: only PRE-dispatch refusal is enforceable by PIEQ; the post-dispatch window is Patroni-native (documented, not claimed).",
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_unreachable",
+    "D_etcd": "obs:etcd_lease_absent"
+  },
+  "decision_before_revocation": {
+    "surviving_worlds": [
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 1,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "SNAPSHOT_TRIGGERED||persist=0",
+    "admitted": false,
+    "reason": "DEFER_INSUFFICIENT_INDEPENDENT_EVIDENCE"
+  },
+  "decision_after_revocation": {
+    "surviving_worlds": [
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 1,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "SNAPSHOT_TRIGGERED||persist=0",
+    "admitted": false,
+    "reason": "REJECTED_AUTHORIZATION_REVOKED_PRE_DISPATCH"
+  },
+  "dispatched": false,
+  "observer_file": "f5_20261122T083116Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 10,
+  "client_writes_failed": 38,
+  "final_state": {
+    "t_utc": "2026-11-22T08:32:10.383103+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 172
+      },
+      "pg2": {
+        "reachable": false,
+        "error": "Error response from daemon: container dfc0d51269e205094c4286c44da5e02b7c2096cb09b6a28abcb766edbdb138b5 is not running"
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 3,
+        "witness_rows": 171
+      }
+    },
+    "writable_primaries": [
+      "pg1"
+    ],
+    "dual_primary": false
+  }
+}

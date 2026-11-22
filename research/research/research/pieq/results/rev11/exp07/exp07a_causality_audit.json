@@ -1,0 +1,56 @@
+[
+  {
+    "trial": "f1_p4_20261122T050136Z.json",
+    "old_leader": "pg3",
+    "new_leader": "pg2",
+    "clock_sources": "single host wall clock (harness + observer); sampling 1 Hz (+/-1 s)",
+    "fault_window_s_rel": [
+      8.3,
+      9.6
+    ],
+    "llm_inference_s": 12.1,
+    "earliest_possible_dispatch_s_rel": 56.7,
+    "first_new_primary_observed_s_rel": 66.9,
+    "writable_primary_before_earliest_dispatch": false,
+    "pieq_decision_admitted": true,
+    "dispatch_response": "Successfully failed over to \"pg2\"",
+    "dual_primary_intervals": 0,
+    "causal_attribution": "PIEQ-CAUSED (paused mode; no writable primary existed before earliest possible dispatch; new primary appears only after)"
+  },
+  {
+    "trial": "f1_p4_20261122T083548Z.json",
+    "old_leader": "pg1",
+    "new_leader": "pg2",
+    "clock_sources": "single host wall clock (harness + observer); sampling 1 Hz (+/-1 s)",
+    "fault_window_s_rel": [
+      8.2,
+      9.5
+    ],
+    "llm_inference_s": 8.5,
+    "earliest_possible_dispatch_s_rel": 52.9,
+    "first_new_primary_observed_s_rel": 62.1,
+    "writable_primary_before_earliest_dispatch": false,
+    "pieq_decision_admitted": true,
+    "dispatch_response": "Successfully failed over to \"pg2\"",
+    "dual_primary_intervals": 0,
+    "causal_attribution": "PIEQ-CAUSED (paused mode; no writable primary existed before earliest possible dispatch; new primary appears only after)"
+  },
+  {
+    "trial": "f1_p4_20261122T083656Z.json",
+    "old_leader": "pg2",
+    "new_leader": "pg1",
+    "clock_sources": "single host wall clock (harness + observer); sampling 1 Hz (+/-1 s)",
+    "fault_window_s_rel": [
+      0.0,
+      1.2
+    ],
+    "llm_inference_s": 6.1,
+    "earliest_possible_dispatch_s_rel": 42.2,
+    "first_new_primary_observed_s_rel": 57.6,
+    "writable_primary_before_earliest_dispatch": false,
+    "pieq_decision_admitted": true,
+    "dispatch_response": "Successfully failed over to \"pg1\"",
+    "dual_primary_intervals": 0,
+    "causal_attribution": "PIEQ-CAUSED (paused mode; no writable primary existed before earliest possible dispatch; new primary appears only after)"
+  }
+]

@@ -1,0 +1,71 @@
+{
+  "scenario": "f7_temporal_policy_on_physical_target",
+  "initial_leader": "pg3",
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_unreachable",
+    "D_etcd": "obs:etcd_lease_absent"
+  },
+  "commit_time_sensitive_decision": {
+    "surviving_worlds": [
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 3,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "COMMIT_TIME_SENSITIVE|obs:leader_confirmed_dead_at_effect|persist=0",
+    "admitted": false,
+    "reason": "REJECTED_COMMIT_TIME_POLICY_UNENFORCEABLE_ON_E0"
+  },
+  "snapshot_triggered_decision": {
+    "surviving_worlds": [
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 3,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "SNAPSHOT_TRIGGERED||persist=0",
+    "admitted": true,
+    "reason": "ADMIT_PROMOTE_TIER_E0_NATIVE_SAFEGUARDS"
+  },
+  "missing_policy_decision": {
+    "surviving_worlds": [
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 3,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": null,
+    "admitted": false,
+    "reason": "REJECTED_MISSING_TEMPORAL_PRECONDITION_POLICY"
+  },
+  "observer_file": "f7_20261122T083408Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 8,
+  "client_writes_failed": 38,
+  "final_state": {
+    "t_utc": "2026-11-22T08:35:01.176333+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 4,
+        "witness_rows": 189
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 189
+      },
+      "pg3": {
+        "reachable": false,
+        "error": "Error response from daemon: container 6ca5dd30ecab63ff1640e80fc858e6e0c7b623f1331e9e4d3495eafc3445f3fa is not running"
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  }
+}

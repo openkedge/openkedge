@@ -1,0 +1,96 @@
+{
+  "scenario": "f9_unmediated_writer_out_of_assumption",
+  "initial_leader": "pg2",
+  "before": {
+    "t_utc": "2026-11-22T08:35:19.929214+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 4,
+        "witness_rows": 189
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 6,
+        "witness_rows": 189
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 5,
+        "witness_rows": 189
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  },
+  "external_switchover": {
+    "rc": 0,
+    "out": "+-------------+---------+---------+----+-----------+\n| pg1    | 172.29.0.21 | Leader  | running |  7 |           |\n| pg2    | 172.28.0.22 | Replica | stopped |    |   unknown |\n| pg3    | 172.28.0.23 | Replica | running |  6 |         0 |\n+--------+-------------+---------+---------+----+-----------+",
+    "err": ""
+  },
+  "after": {
+    "t_utc": "2026-11-22T08:35:42.449423+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 7,
+        "witness_rows": 210
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 6,
+        "witness_rows": 210
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 5,
+        "witness_rows": 210
+      }
+    },
+    "writable_primaries": [
+      "pg1"
+    ],
+    "dual_primary": false
+  },
+  "reconciliation_detected_external_mutation": true,
+  "new_leader": "pg1",
+  "observer_file": "f9_20261122T083519Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 24,
+  "client_writes_failed": 1,
+  "final_state": {
+    "t_utc": "2026-11-22T08:35:45.677439+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 7,
+        "witness_rows": 213
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 6,
+        "witness_rows": 213
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 5,
+        "witness_rows": 213
+      }
+    },
+    "writable_primaries": [
+      "pg1"
+    ],
+    "dual_primary": false
+  }
+}

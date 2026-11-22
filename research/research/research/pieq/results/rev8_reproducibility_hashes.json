@@ -1,0 +1,19 @@
+{
+  "experiments/pg_patroni_failover/run_experiment.py": "dafed8b5d32c439d7eaf04592a9c2bf128b6f0afbddab1a1ef27b49e599d0374",
+  "experiments/pinned_live_manifest_template.json": "f3727794d5c926c6133d19c44a7b9f4f2c2c2b4c1801964c1f0be2fbd6858ab6",
+  "pieq/core.py": "db119ce0ba28284ef6f48c2e3eabf931b4789ca56bc6c6ceeb690659ae0bc617",
+  "pieq/hardened.py": "3982f024fc9048f1b3f34f88cb8d6fbf39230d490fe4ea3f08d0071bab973b8d",
+  "pieq/heldout_cases.py": "5cddb0d22e71e5ca39281064d26b2ddcbce69aa7e64e5b790058dd6484dfb198",
+  "pieq/live_cases.py": "c0c08852519a1a1c5680f7063bfaa444d828c3f16c0f0ad30022a48531164132",
+  "pieq/probe_loop.py": "bbefa66ad0d1f12090b25b5e6bd5995f0bd575aa716124a87718a0fe2661c927",
+  "pieq/typed_pipeline.py": "e7e5df62fd357fd12574d4dd28b9962bd5cb2c40982fc8d05434d21b1ccbab6b",
+  "results/rev7_frozen_hashes.json": "5bbff93ac37af4f320c44c174443afa0875f6a48e79768807287503b589feaae",
+  "results/rev8_heldout_frozen_rev7.json": "003b9de82f761e649c63d03ba77f2bd7ac1cca03505247c0c47d57fc72726e8f",
+  "results/rev8_heldout_post_p13.json": "93c4c4e4f7a2c73f93660c17e78f973aa5c3303de000111a180ffbb2b69bf255",
+  "results/rev8_r4_replay_ledger.json": "22f63dbf08071881ab124b1818f7bdd7b26e010db70d5bedcacdd0d55d638731",
+  "results/rev8_workflow_cost_accounting.json": "d929e957d29eb5306425570cfc2da6c0f9838cfa540a6360a65907d0730ab842",
+  "scripts/audit_rev8_counterfactual_provenance.py": "62c0932ac5db08ed96791b38cb69fe814d8b9c6e4c7f65aa393f2375429a6ae7",
+  "scripts/profile_rev8_workflow_costs.py": "eb31d8887e701321176a26a102f631599c8fef11e21e5d3f1ff50b714be11439",
+  "scripts/run_rev8_independent_eval.py": "64b2ff8c0cbe8d64c7d2de69d485140eb8ee0b0ce7a3f89fa55d691211abeaef",
+  "scripts/run_rev8_pinned_live_eval.py": "6bd8d585f7bc3a5ad19b6ed23461790f6000360b0874126a0d49af54e7965aeb"
+}

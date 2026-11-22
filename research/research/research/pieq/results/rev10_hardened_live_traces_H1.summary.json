@@ -1,0 +1,32 @@
+{
+  "schema_version": "pieq-rev10-hardened-live-summary-v1",
+  "run_kind": "cli_wrapper_live_unpinned",
+  "condition": "H1",
+  "manifest_sha256": "6107b21e3cc7e2cc895ccbf3ebb6a295f9bd74a6d7988425c507449dc6d04af6",
+  "schema_sha256": "ec59523053bb28e9b3c05ac5f75548c3da5ded78b18981c339c61e0996fcf84d",
+  "models": {
+    "agent_0": "claude_cli:sonnet@cli-unpinned",
+    "agent_1": "claude_cli:sonnet@cli-unpinned",
+    "agent_2": "claude_cli:sonnet@cli-unpinned",
+    "agent_3": "claude_cli:sonnet@cli-unpinned",
+    "agent_4": "claude_cli:sonnet@cli-unpinned"
+  },
+  "cases_evaluated": 36,
+  "admitted_count": 13,
+  "deferred_count": 23,
+  "raw_unsafe_count": 4,
+  "api_calls": 188,
+  "api_cost_usd_cli_reported": 4.584413,
+  "wall_clock_seconds": 1178.814,
+  "provider_failures": {
+    "claude_cli": [
+      {
+        "provider": "claude_cli",
+        "model": "sonnet",
+        "error": "CLIError: claude exit 1: ue to invalid posture. Error: Request Forbidden. AEA verification failed: used_too_late\n\nError getting AWS credentials from awsCredentialExport (in settings or ~/.claude.json): awsCredentialExport did not return a valid value\nError getting AWS credentials from awsCredentialExport (in "
+      }
+    ]
+  },
+  "trace_path": "/Users/hejn/research/pieq/openkedge/research/research/pieq/results/rev10_hardened_live_traces_H1.jsonl",
+  "finished_utc": "2026-11-22T05:06:29.962821+00:00"
+}

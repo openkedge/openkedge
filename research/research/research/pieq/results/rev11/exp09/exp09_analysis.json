@@ -1,0 +1,215 @@
+{
+  "schema": "rev11-exp09-v1",
+  "paired_repetitions": 5,
+  "preregistered_target": 5,
+  "conditions": {
+    "S1": {
+      "mitigations": "43/45",
+      "mit_wilson95_clustered_note": [
+        0.852,
+        0.988
+      ],
+      "deferrals": "85/85",
+      "unsafe_within": 0,
+      "false_precondition": 0,
+      "false_blocks": 2,
+      "ooa_admitted": 11,
+      "calls_total": 199,
+      "first_attempt_valid": "146/180",
+      "cost_usd_cli": 5.2,
+      "tokens_in_M": 4.5,
+      "latency_p50_s": 6.8,
+      "per_case_instability": {
+        "H16": {
+          "OOA_DEF": 3,
+          "OOA_ADM": 2
+        },
+        "H32": {
+          "MIT": 3,
+          "FB": 2
+        },
+        "H33": {
+          "OOA_ADM": 3,
+          "OOA_DEF": 2
+        },
+        "H35": {
+          "OOA_DEF": 3,
+          "OOA_ADM": 2
+        },
+        "H36": {
+          "OOA_DEF": 1,
+          "OOA_ADM": 4
+        }
+      }
+    },
+    "H1": {
+      "mitigations": "45/45",
+      "mit_wilson95_clustered_note": [
+        0.921,
+        1
+      ],
+      "deferrals": "85/85",
+      "unsafe_within": 0,
+      "false_precondition": 0,
+      "false_blocks": 0,
+      "ooa_admitted": 20,
+      "calls_total": 920,
+      "first_attempt_valid": "355/900",
+      "cost_usd_cli": 22.27,
+      "tokens_in_M": 20.67,
+      "latency_p50_s": 26.4,
+      "per_case_instability": {}
+    },
+    "E1": {
+      "mitigations": "45/45",
+      "mit_wilson95_clustered_note": [
+        0.921,
+        1
+      ],
+      "deferrals": "85/85",
+      "unsafe_within": 0,
+      "false_precondition": 0,
+      "false_blocks": 0,
+      "ooa_admitted": 16,
+      "calls_total": 911,
+      "first_attempt_valid": "361/900",
+      "cost_usd_cli": 13.81,
+      "tokens_in_M": 19.63,
+      "latency_p50_s": 43.0,
+      "per_case_instability": {
+        "H33": {
+          "OOA_ADM": 3,
+          "OOA_DEF": 2
+        },
+        "H35": {
+          "OOA_ADM": 4,
+          "OOA_DEF": 1
+        },
+        "H36": {
+          "OOA_ADM": 4,
+          "OOA_DEF": 1
+        }
+      }
+    }
+  },
+  "paired_discordances": {
+    "S1_vs_E1": [
+      {
+        "scope": "OOA",
+        "case": "H16",
+        "S1": "OOA_DEF",
+        "E1": "OOA_ADM",
+        "count": 3
+      },
+      {
+        "scope": "OOA",
+        "case": "H33",
+        "S1": "OOA_ADM",
+        "E1": "OOA_DEF",
+        "count": 1
+      },
+      {
+        "scope": "OOA",
+        "case": "H33",
+        "S1": "OOA_DEF",
+        "E1": "OOA_ADM",
+        "count": 1
+      },
+      {
+        "scope": "OOA",
+        "case": "H35",
+        "S1": "OOA_ADM",
+        "E1": "OOA_DEF",
+        "count": 1
+      },
+      {
+        "scope": "OOA",
+        "case": "H35",
+        "S1": "OOA_DEF",
+        "E1": "OOA_ADM",
+        "count": 3
+      },
+      {
+        "scope": "OOA",
+        "case": "H36",
+        "S1": "OOA_ADM",
+        "E1": "OOA_DEF",
+        "count": 1
+      },
+      {
+        "scope": "OOA",
+        "case": "H36",
+        "S1": "OOA_DEF",
+        "E1": "OOA_ADM",
+        "count": 1
+      },
+      {
+        "scope": "WITHIN",
+        "case": "H32",
+        "S1": "FB",
+        "E1": "MIT",
+        "count": 2
+      }
+    ],
+    "S1_vs_H1": [
+      {
+        "scope": "OOA",
+        "case": "H16",
+        "S1": "OOA_DEF",
+        "H1": "OOA_ADM",
+        "count": 3
+      },
+      {
+        "scope": "OOA",
+        "case": "H33",
+        "S1": "OOA_DEF",
+        "H1": "OOA_ADM",
+        "count": 2
+      },
+      {
+        "scope": "OOA",
+        "case": "H35",
+        "S1": "OOA_DEF",
+        "H1": "OOA_ADM",
+        "count": 3
+      },
+      {
+        "scope": "OOA",
+        "case": "H36",
+        "S1": "OOA_DEF",
+        "H1": "OOA_ADM",
+        "count": 1
+      },
+      {
+        "scope": "WITHIN",
+        "case": "H32",
+        "S1": "FB",
+        "H1": "MIT",
+        "count": 2
+      }
+    ],
+    "H1_vs_E1": [
+      {
+        "scope": "OOA",
+        "case": "H33",
+        "H1": "OOA_ADM",
+        "E1": "OOA_DEF",
+        "count": 2
+      },
+      {
+        "scope": "OOA",
+        "case": "H35",
+        "H1": "OOA_ADM",
+        "E1": "OOA_DEF",
+        "count": 1
+      },
+      {
+        "scope": "OOA",
+        "case": "H36",
+        "H1": "OOA_ADM",
+        "E1": "OOA_DEF",
+        "count": 1
+      }
+    ]
+  }
+}

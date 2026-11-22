@@ -1,0 +1,14 @@
+{
+  "experiment": "EXP-07 Patroni physical causality",
+  "frozen_before_execution": true,
+  "exp07a": {"method": "timeline reconstruction from Rev10 f1_p4 traces + observer JSONL; single-host wall clock; 1Hz sampling (+/-1s); causal attribution requires NO writable primary in [fault, earliest_dispatch] and new primary only after", "note": "analyzer hash in rev11 manifest"},
+  "exp07b_conditions": {
+    "P0": "native auto-failover baseline (fresh rerun)",
+    "P1": "deterministic direct supervisor: promote iff SQL+OOB+etcd all show leader down (prespecified), paused mode, same native safeguards",
+    "P2": "PIEQ supervised promotion (f1-p4) with absolute event timestamps; paused mode (declared supervised operating mode; latency NOT compared against P0 as same availability policy)",
+    "P3": "authorization refusal (f5)", "P4": "commit-time policy refusal on E0 (f7)", "P5": "asymmetric partition deferral (f2-p4)"},
+  "matched": "Patroni HA config constant; paused mode applied identically to P1/P2; observer + workload identical",
+  "primary_metrics": "three outcome levels per trial (proposal/authorization/physical effect); causal ordering; dual-primary intervals at 1Hz (disclosed resolution)",
+  "safety_failure": "any observed dual-primary; any unauthorized dispatch",
+  "stopping": "1 sanity trial per condition; P2 x2 additional reps if stable"
+}

@@ -1,0 +1,60 @@
+{
+  "scenario": "f2_p4_asymmetric_partition",
+  "initial_leader": "pg2",
+  "monitor": "pg3",
+  "candidate": "pg1",
+  "fault": "iptables cuts monitor<->leader DATA-net path only; leader alive, etcd lease held, OOB reachable",
+  "partition_injection": {
+    "rc": 0,
+    "err": ""
+  },
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_alive",
+    "D_etcd": "obs:etcd_lease_held"
+  },
+  "pieq_decision": {
+    "surviving_worlds": [
+      "s_asym_partition",
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 1,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "SNAPSHOT_TRIGGERED||persist=0",
+    "admitted": false,
+    "reason": "DEFER_PLAUSIBLE_WORLD_AMBIGUITY"
+  },
+  "f3_shared_domain_nu_pack_on_live_evidence": 1,
+  "observer_file": "f2_p4_20261122T083101Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 13,
+  "client_writes_failed": 0,
+  "final_state": {
+    "t_utc": "2026-11-22T08:31:16.201707+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 3,
+        "witness_rows": 162
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 162
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 3,
+        "witness_rows": 162
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  }
+}

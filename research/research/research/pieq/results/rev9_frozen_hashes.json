@@ -1,0 +1,41 @@
+{
+  "freeze_kind": "rev9_post_p1_1_p1_2_repair_freeze",
+  "frozen_utc": "2026-11-22T01:16:49.626534+00:00",
+  "purpose": "Implementation frozen BEFORE authoring/executing the P1.3 independent confirmation set (scripts/run_rev9_confirmation_eval.py). Any implementation change after this freeze reclassifies subsequent confirmation runs as regression tests.",
+  "hashes_sha256": {
+    "pieq/__init__.py": "e6d68f245cc9b1d698287a159e5736a1175a8ff027092fc4c4525b530c8e706e",
+    "pieq/benchmark.py": "551b6ef18f5181623997cd4f7fba8f7712ec1d8b66692a4f463d311e23cc0f8f",
+    "pieq/core.py": "56cb17da8ed67d2d2e239ce4b4fcf7ca693bf2eed919d4a1823f1dbe4039b7f8",
+    "pieq/etcd_boundary.py": "d6da9bfd8db23d4891b79f7be38330ceb3588c35ccae0d47a2bd1c49a976cb29",
+    "pieq/fault_worker.py": "83d74b817130a54af012274281fbb651d69f81db042b4f19378da48e3a74d681",
+    "pieq/hardened.py": "24a46a1652c9cc72761f8abfc8d7d2a1f9bc7fc63d3b9e3fa28e9e7dd022f793",
+    "pieq/heldout_cases.py": "5cddb0d22e71e5ca39281064d26b2ddcbce69aa7e64e5b790058dd6484dfb198",
+    "pieq/live_cases.py": "c0c08852519a1a1c5680f7063bfaa444d828c3f16c0f0ad30022a48531164132",
+    "pieq/live_protocol.py": "bf68e0fccf0a5cb7adad9492193756d3211342e855297315afb0c6702429ceef",
+    "pieq/live_providers.py": "53c33cc7e33c99878dc38313a0bb12c9297d8f7045fbb910f915f5e8d9669933",
+    "pieq/live_score.py": "ba05f3692f1f6e909eb5eece4472cabc8cfaf2fba032c4a0754e92e453e4d1a0",
+    "pieq/probe_loop.py": "618f3daa731b4ed611685f14145cbcdd49ca4691db556822d84bdb38b7e12e8c",
+    "pieq/typed_pipeline.py": "e7e5df62fd357fd12574d4dd28b9962bd5cb2c40982fc8d05434d21b1ccbab6b"
+  },
+  "post_freeze_fix_addendum": {
+    "fixed_utc": "2026-11-22T01:19:27.589908+00:00",
+    "change": "pieq/core.py compute_provenance_min_cut: removed proposer-context vertices from the Menger diagnostic graph so Theorem 3(2)'s min-cut upper bound remains valid over the physical footprint Phi_phys (P1.1 consistency fix). Diagnostic-only function; not used in admission.",
+    "discovered_by": "manuscript/theorem consistency audit, NOT by the confirmation set",
+    "classification": "First-run confirmation results preserved verbatim in results/rev9_confirmation_results_frozen_firstrun.json (12/12, pre-fix hash). Post-fix rerun in results/rev9_confirmation_results.json is a REGRESSION run on the same cases.",
+    "post_fix_hashes_sha256": {
+      "pieq/__init__.py": "e6d68f245cc9b1d698287a159e5736a1175a8ff027092fc4c4525b530c8e706e",
+      "pieq/benchmark.py": "551b6ef18f5181623997cd4f7fba8f7712ec1d8b66692a4f463d311e23cc0f8f",
+      "pieq/core.py": "cf37c670da4e0397b0e679ecdc7884140a16f52bf020d9d03f1d1d4ef77aab1a",
+      "pieq/etcd_boundary.py": "d6da9bfd8db23d4891b79f7be38330ceb3588c35ccae0d47a2bd1c49a976cb29",
+      "pieq/fault_worker.py": "83d74b817130a54af012274281fbb651d69f81db042b4f19378da48e3a74d681",
+      "pieq/hardened.py": "24a46a1652c9cc72761f8abfc8d7d2a1f9bc7fc63d3b9e3fa28e9e7dd022f793",
+      "pieq/heldout_cases.py": "5cddb0d22e71e5ca39281064d26b2ddcbce69aa7e64e5b790058dd6484dfb198",
+      "pieq/live_cases.py": "c0c08852519a1a1c5680f7063bfaa444d828c3f16c0f0ad30022a48531164132",
+      "pieq/live_protocol.py": "bf68e0fccf0a5cb7adad9492193756d3211342e855297315afb0c6702429ceef",
+      "pieq/live_providers.py": "53c33cc7e33c99878dc38313a0bb12c9297d8f7045fbb910f915f5e8d9669933",
+      "pieq/live_score.py": "ba05f3692f1f6e909eb5eece4472cabc8cfaf2fba032c4a0754e92e453e4d1a0",
+      "pieq/probe_loop.py": "618f3daa731b4ed611685f14145cbcdd49ca4691db556822d84bdb38b7e12e8c",
+      "pieq/typed_pipeline.py": "e7e5df62fd357fd12574d4dd28b9962bd5cb2c40982fc8d05434d21b1ccbab6b"
+    }
+  }
+}

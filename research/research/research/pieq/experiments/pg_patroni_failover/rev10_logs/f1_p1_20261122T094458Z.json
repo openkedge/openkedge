@@ -1,0 +1,74 @@
+{
+  "scenario": "f1_p1_deterministic_supervisor",
+  "initial_leader": "pg3",
+  "monitor": "pg1",
+  "candidate": "pg2",
+  "policy": "promote iff sql_unreachable AND oob_unreachable AND lease_absent",
+  "events": [
+    {
+      "t_utc": "2026-11-22T09:44:58.434761+00:00",
+      "event": "paused"
+    },
+    {
+      "t_utc": "2026-11-22T09:45:07.437717+00:00",
+      "event": "fault_injected_leader_stopped"
+    },
+    {
+      "t_utc": "2026-11-22T09:45:48.614268+00:00",
+      "event": "observations_collected"
+    },
+    {
+      "t_utc": "2026-11-22T09:45:48.614295+00:00",
+      "event": "dispatching_failover"
+    },
+    {
+      "t_utc": "2026-11-22T09:45:54.714150+00:00",
+      "event": "dispatch_returned"
+    },
+    {
+      "t_utc": "2026-11-22T09:45:54.755580+00:00",
+      "event": "observer_confirmed_new_primary"
+    }
+  ],
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_unreachable",
+    "D_etcd": "obs:etcd_lease_absent"
+  },
+  "supervisor_decision": "promote",
+  "dispatch": {
+    "rc": 0,
+    "response": "Successfully failed over to \"pg2\"",
+    "err": ""
+  },
+  "new_leader": "pg2",
+  "observer_file": "f1_p1_20261122T094458Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 12,
+  "client_writes_failed": 41,
+  "final_state": {
+    "t_utc": "2026-11-22T09:45:58.016956+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 23
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 23
+      },
+      "pg3": {
+        "reachable": false,
+        "error": "Error response from daemon: container ed7337cd743a3643c93e3d0ad1dcdf93f63c98090ba6b3bc625a5163cdffaffc is not running"
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  }
+}

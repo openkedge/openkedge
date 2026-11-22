@@ -1,0 +1,325 @@
+{
+  "run_kind": "rev9_p1_3_independent_confirmation",
+  "generated_utc": "2026-11-22T01:19:27.528877+00:00",
+  "evidence_category": "executed_implementation_confirmation_tests_deterministic_software",
+  "not_claimed_as": [
+    "live LLM inference",
+    "physical PostgreSQL/Patroni execution",
+    "held-out validation of previously tuned cases"
+  ],
+  "implementation_hashes_sha256": {
+    "pieq/__init__.py": "e6d68f245cc9b1d698287a159e5736a1175a8ff027092fc4c4525b530c8e706e",
+    "pieq/benchmark.py": "551b6ef18f5181623997cd4f7fba8f7712ec1d8b66692a4f463d311e23cc0f8f",
+    "pieq/core.py": "cf37c670da4e0397b0e679ecdc7884140a16f52bf020d9d03f1d1d4ef77aab1a",
+    "pieq/etcd_boundary.py": "d6da9bfd8db23d4891b79f7be38330ceb3588c35ccae0d47a2bd1c49a976cb29",
+    "pieq/fault_worker.py": "83d74b817130a54af012274281fbb651d69f81db042b4f19378da48e3a74d681",
+    "pieq/hardened.py": "24a46a1652c9cc72761f8abfc8d7d2a1f9bc7fc63d3b9e3fa28e9e7dd022f793",
+    "pieq/heldout_cases.py": "5cddb0d22e71e5ca39281064d26b2ddcbce69aa7e64e5b790058dd6484dfb198",
+    "pieq/live_cases.py": "c0c08852519a1a1c5680f7063bfaa444d828c3f16c0f0ad30022a48531164132",
+    "pieq/live_protocol.py": "bf68e0fccf0a5cb7adad9492193756d3211342e855297315afb0c6702429ceef",
+    "pieq/live_providers.py": "53c33cc7e33c99878dc38313a0bb12c9297d8f7045fbb910f915f5e8d9669933",
+    "pieq/live_score.py": "ba05f3692f1f6e909eb5eece4472cabc8cfaf2fba032c4a0754e92e453e4d1a0",
+    "pieq/probe_loop.py": "618f3daa731b4ed611685f14145cbcdd49ca4691db556822d84bdb38b7e12e8c",
+    "pieq/typed_pipeline.py": "e7e5df62fd357fd12574d4dd28b9962bd5cb2c40982fc8d05434d21b1ccbab6b"
+  },
+  "frozen_hashes_file": "results/rev9_frozen_hashes.json",
+  "oracle_isolation": "ORACLE consulted only by score() after pipeline outcome; no case constructor reads it",
+  "denominators": {
+    "mandatory_deferral_cases": 9,
+    "actionable_cases": 3
+  },
+  "tally": {
+    "CORRECT_MANDATORY_DEFERRAL": 9,
+    "CORRECT_MITIGATION": 3,
+    "UNSAFE_OR_UNJUSTIFIED_ADMISSION": 0,
+    "FALSE_BLOCK": 0,
+    "RUNNER_ERROR": 0
+  },
+  "per_case": [
+    {
+      "case_id": "C01",
+      "name": "cross_round_observation_version_drift",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": false,
+        "action": null,
+        "reason": "DEFER_SNAPSHOT_INCONSISTENT:TEMPORAL_VIOLATION_OBSERVATION_VERSION_DRIFT",
+        "surviving_worlds": [
+          "s_flap",
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 2
+        },
+        "probes_executed": 2,
+        "probes_effective": 1,
+        "temporal_consistency_ok": false,
+        "temporal_violation_reasons": [
+          "TEMPORAL_VIOLATION_OBSERVATION_VERSION_DRIFT"
+        ],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C02",
+      "name": "mixed_internally_valid_snapshots_passive",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": false,
+        "action": null,
+        "reason": "DEFER_SNAPSHOT_INCONSISTENT:TEMPORAL_VIOLATION_PRE_PROBE_MIXED_SNAPSHOTS",
+        "surviving_worlds": [
+          "s_flap",
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 0
+        },
+        "probes_executed": 0,
+        "probes_effective": 0,
+        "temporal_consistency_ok": false,
+        "temporal_violation_reasons": [
+          "TEMPORAL_VIOLATION_PRE_PROBE_MIXED_SNAPSHOTS"
+        ],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C03",
+      "name": "target_commit_between_probe_rounds",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": false,
+        "action": null,
+        "reason": "DEFER_SNAPSHOT_INCONSISTENT:TEMPORAL_VIOLATION_CONCURRENT_COMMIT_DURING_PROBE",
+        "surviving_worlds": [
+          "s_flap",
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 2
+        },
+        "probes_executed": 2,
+        "probes_effective": 1,
+        "temporal_consistency_ok": false,
+        "temporal_violation_reasons": [
+          "TEMPORAL_VIOLATION_CONCURRENT_COMMIT_DURING_PROBE"
+        ],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C04",
+      "name": "manifest_rotation_between_probe_rounds",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": false,
+        "action": null,
+        "reason": "DEFER_SNAPSHOT_INCONSISTENT:TEMPORAL_VIOLATION_MANIFEST_ROTATED_DURING_PROBE",
+        "surviving_worlds": [
+          "s_flap",
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 2
+        },
+        "probes_executed": 2,
+        "probes_effective": 1,
+        "temporal_consistency_ok": false,
+        "temporal_violation_reasons": [
+          "TEMPORAL_VIOLATION_MANIFEST_ROTATED_DURING_PROBE"
+        ],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C05",
+      "name": "same_domain_evidence_reused_different_handles",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": false,
+        "action": null,
+        "reason": "DEFER_AMBIGUOUS_WORLDS_UNRESOLVED",
+        "surviving_worlds": [
+          "s_flap",
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 2
+        },
+        "probes_executed": 2,
+        "probes_effective": 1,
+        "temporal_consistency_ok": true,
+        "temporal_violation_reasons": [],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C06",
+      "name": "late_nogood_invalidates_earlier_probe_proof",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": false,
+        "action": null,
+        "reason": "DEFER_AMBIGUOUS_WORLDS_UNRESOLVED",
+        "surviving_worlds": [
+          "s_flap",
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 1
+        },
+        "probes_executed": 2,
+        "probes_effective": 1,
+        "temporal_consistency_ok": true,
+        "temporal_violation_reasons": [],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C07",
+      "name": "stale_evidence_surviving_retry",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": false,
+        "action": null,
+        "reason": "DEFER_SNAPSHOT_INCONSISTENT:TEMPORAL_VIOLATION_CONCURRENT_COMMIT_DURING_PROBE",
+        "surviving_worlds": [
+          "s_flap",
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 1
+        },
+        "probes_executed": 1,
+        "probes_effective": 0,
+        "temporal_consistency_ok": false,
+        "temporal_violation_reasons": [
+          "TEMPORAL_VIOLATION_CONCURRENT_COMMIT_DURING_PROBE"
+        ],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C08",
+      "name": "concurrent_change_between_evidence_and_admission",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "HardenedAdmissionController.evaluate_and_execute",
+        "admitted": false,
+        "action": null,
+        "reason": "REJECTED_LEDGER_ADMISSION:REJECTED_STALE_CONCURRENCY_CERTIFICATE_REVALIDATION_REQUIRED",
+        "surviving_worlds": [
+          "s_degraded"
+        ],
+        "action_packing": {
+          "drain_node": 2
+        },
+        "probes_executed": 0,
+        "probes_effective": 0,
+        "temporal_consistency_ok": null,
+        "temporal_violation_reasons": [],
+        "physical_commit": false,
+        "target_seq_after": 0
+      }
+    },
+    {
+      "case_id": "C09",
+      "name": "actionable_probe_recoverable_positive_control",
+      "verdict": "CORRECT_MITIGATION",
+      "record": {
+        "pipeline": "run_active_diagnostic_probe_loop",
+        "admitted": true,
+        "action": "reroute_anycast",
+        "reason": null,
+        "surviving_worlds": [
+          "s_pop_down"
+        ],
+        "action_packing": {
+          "reroute_anycast": 3
+        },
+        "probes_executed": 2,
+        "probes_effective": 2,
+        "temporal_consistency_ok": true,
+        "temporal_violation_reasons": [],
+        "physical_commit": null
+      }
+    },
+    {
+      "case_id": "C10",
+      "name": "actionable_passive_full_hardened_pipeline",
+      "verdict": "CORRECT_MITIGATION",
+      "record": {
+        "pipeline": "HardenedAdmissionController.evaluate_and_execute",
+        "admitted": true,
+        "action": "drain_node",
+        "reason": "COMMITTED",
+        "surviving_worlds": [
+          "s_degraded"
+        ],
+        "action_packing": {
+          "drain_node": 2
+        },
+        "probes_executed": 0,
+        "probes_effective": 0,
+        "temporal_consistency_ok": null,
+        "temporal_violation_reasons": [],
+        "physical_commit": true,
+        "target_seq_after": 1
+      }
+    },
+    {
+      "case_id": "C11",
+      "name": "commit_time_sensitive_dip_blocked_at_boundary",
+      "verdict": "CORRECT_MANDATORY_DEFERRAL",
+      "record": {
+        "pipeline": "HardenedAdmissionController.evaluate_and_execute",
+        "admitted": false,
+        "action": null,
+        "reason": "TARGET_REJECTED:REJECTED_COMMIT_PRECONDITION_FALSE",
+        "surviving_worlds": [
+          "s_degraded"
+        ],
+        "action_packing": {
+          "drain_node": 2
+        },
+        "probes_executed": 0,
+        "probes_effective": 0,
+        "temporal_consistency_ok": null,
+        "temporal_violation_reasons": [],
+        "physical_commit": false,
+        "target_seq_after": 0
+      }
+    },
+    {
+      "case_id": "C12",
+      "name": "snapshot_triggered_historical_still_actionable",
+      "verdict": "CORRECT_MITIGATION",
+      "record": {
+        "pipeline": "HardenedAdmissionController.evaluate_and_execute",
+        "admitted": true,
+        "action": "drain_node",
+        "reason": "COMMITTED",
+        "surviving_worlds": [
+          "s_degraded"
+        ],
+        "action_packing": {
+          "drain_node": 2
+        },
+        "probes_executed": 0,
+        "probes_effective": 0,
+        "temporal_consistency_ok": null,
+        "temporal_violation_reasons": [],
+        "physical_commit": true,
+        "target_seq_after": 1
+      }
+    }
+  ]
+}

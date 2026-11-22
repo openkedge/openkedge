@@ -1,0 +1,47 @@
+name: PIEQ distributed evaluation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "research/pieq/**"
+      - ".github/workflows/pieq-evaluation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  etcd-faults:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: research/pieq
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install evaluation test dependencies
+        run: python -m pip install -r requirements-eval.txt
+      - name: Start isolated, digest-pinned three-member etcd cluster
+        run: docker compose -f containers/etcd-compose.yml up -d
+      - name: Run Python regressions and container-backed fault schedules
+        env:
+          PIEQ_ETCD_COMPOSE: ${{ github.workspace }}/research/pieq/containers/etcd-compose.yml
+          PIEQ_ETCD_ENDPOINTS: http://127.0.0.1:12379,http://127.0.0.1:22379,http://127.0.0.1:32379
+        run: python -m pytest tests/ -q
+      - name: Archive full distributed fault receipts
+        env:
+          PIEQ_ETCD_COMPOSE: ${{ github.workspace }}/research/pieq/containers/etcd-compose.yml
+          PIEQ_ETCD_ENDPOINTS: http://127.0.0.1:12379,http://127.0.0.1:22379,http://127.0.0.1:32379
+        run: python scripts/run_etcd_fault_eval.py --repetitions 20 --output results/ci_etcd_evidence.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pieq-etcd-evidence
+          path: research/pieq/results/ci_etcd_evidence.json
+          if-no-files-found: warn
+      - name: Stop isolated cluster
+        if: always()
+        run: docker compose -f containers/etcd-compose.yml down

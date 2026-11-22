@@ -1,0 +1,64 @@
+{
+  "scenario": "f1_p0_native_baseline",
+  "initial_leader": "pg1",
+  "fault": "docker stop pieq-pg1 (true leader process death)",
+  "policy": "P0 native Patroni auto-failover (unpaused)",
+  "before": {
+    "t_utc": "2026-11-22T09:44:41.672293+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 1,
+        "witness_rows": 1
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 1
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 1
+      }
+    },
+    "writable_primaries": [
+      "pg1"
+    ],
+    "dual_primary": false
+  },
+  "new_leader": "pg3",
+  "native_failover_seconds": 9.9,
+  "observer_file": "f1_p0_20261122T094441Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 11,
+  "client_writes_failed": 1,
+  "final_state": {
+    "t_utc": "2026-11-22T09:44:54.748862+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": false,
+        "error": "Error response from daemon: container 3356b128903bb75e77e4091144544bf8c6b5be4a596217496a3324a5c977c16e is not running"
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 11
+      },
+      "pg3": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 2,
+        "witness_rows": 11
+      }
+    },
+    "writable_primaries": [
+      "pg3"
+    ],
+    "dual_primary": false
+  }
+}

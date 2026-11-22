@@ -1,0 +1,28 @@
+{
+  "schema_version": "pieq-rev9-cli-live-summary-v1",
+  "manifest_sha256": "ada466d5127ffeb4ac97305e54f1a025455a1cb90b490d55fdc08822bbd6af76",
+  "schema_sha256": "ec59523053bb28e9b3c05ac5f75548c3da5ded78b18981c339c61e0996fcf84d",
+  "total_api_calls": 189,
+  "total_api_cost_usd": 2.847738,
+  "trace_path": "/Users/hejn/research/pieq/openkedge/research/research/pieq/results/rev9_cli_live_traces_typed_plus_probes.jsonl",
+  "protocol_summaries": {
+    "typed_plus_probes": {
+      "cases_evaluated": 36,
+      "admitted_count": 22,
+      "deferred_count": 14,
+      "unsafe_count": 4,
+      "api_calls": 189,
+      "api_cost_usd": 2.847738,
+      "wall_clock_seconds": 1599.739
+    }
+  },
+  "run_kind": "cli_wrapper_live_unpinned",
+  "evidence_category": "genuine live LLM inference via locally authenticated CLI wrappers; model identities unpinned/partially unattested; sampling not enforced",
+  "started_utc": "2026-11-22T02:59:54.103333+00:00",
+  "finished_utc": "2026-11-22T03:47:20.935763+00:00",
+  "provider_failures": {
+    "codex_cli": [],
+    "claude_cli": []
+  },
+  "config_d": false
+}

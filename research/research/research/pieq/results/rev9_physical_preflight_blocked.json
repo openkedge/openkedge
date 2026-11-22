@@ -1,0 +1,48 @@
+{
+  "execution_status": "UNEXECUTED_MISSING_RUNTIME",
+  "docker_available": false,
+  "docker_detail": "docker binary not found in PATH",
+  "psql_available": false,
+  "comparisons": [
+    "patroni_native_ha_baseline",
+    "llm_proposal_matched_controls",
+    "positive_packing_no_shield",
+    "conservative_shield_no_packing",
+    "full_pieq_with_probing"
+  ],
+  "fault_scenarios": [
+    "F1:clean_primary_sigkill",
+    "F2:asymmetric_partition_primary_alive",
+    "F3:single_faulty_collector_spoof",
+    "F4:ambiguous_resolved_by_oob_probe",
+    "F5:concurrent_reconfig_and_auth_revoke",
+    "F6:transient_load_spike_clears_before_commit",
+    "F7:exceed_fault_budget_correlated_collapse",
+    "F8:out_of_band_direct_bypass",
+    "F9:unmodeled_world_omission"
+  ],
+  "required_p2_controls": [
+    "constant_patroni_native_ha_config",
+    "independent_sql_observation_of_physical_effects",
+    "crash_and_asymmetric_network_partition_scenarios",
+    "actual_primary_role_and_client_write_witness_recording",
+    "snapshot_consistency_audit_during_probing_and_diagnosis",
+    "concurrent_admission_race_and_stale_certificate_injection",
+    "target_fencing_and_authorization_revocation_exercise",
+    "explicit_separation_sqlite_admission_commit_vs_pg_promotion_effect",
+    "physically_shared_collector_dependency_accounting",
+    "actionable_and_mandatory_defer_scenarios_both_included"
+  ],
+  "required_p2_metrics": [
+    "real_unsafe_physical_effects",
+    "false_precondition_authorizations",
+    "useful_autonomous_mitigations",
+    "mandatory_safe_deferrals",
+    "false_blocks",
+    "time_to_recovery_ms",
+    "end_to_end_operational_latency_ms",
+    "unknown_outcome_retention_and_recovery_count",
+    "cpu_memory_model_tokens_and_cost_usd"
+  ],
+  "sqlite_vs_pg_note": "SQLite WAL protected-resource commits validate local Tier E2 admission fencing only; they NEVER prove physical PostgreSQL split-brain exclusion without executing this cluster testbed."
+}

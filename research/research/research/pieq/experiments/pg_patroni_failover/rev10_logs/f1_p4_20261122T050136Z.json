@@ -1,0 +1,73 @@
+{
+  "scenario": "f1_p4_full_pieq_supervised",
+  "initial_leader": "pg3",
+  "monitor": "pg1",
+  "candidate": "pg2",
+  "mode": "patronictl pause (supervised failover; leader lock + native promotion safety INTACT, automatic failover disabled)",
+  "fault": "docker stop pieq-pg3",
+  "collector_observations": {
+    "D_sql_mon": "obs:sql_leader_unreachable",
+    "D_oob_rest": "obs:oob_leader_unreachable",
+    "D_etcd": "obs:etcd_lease_absent"
+  },
+  "llm": {
+    "model": "claude-sonnet-5-5",
+    "elapsed_ms": 12088.7,
+    "usage": {
+      "reported_cost_usd": 0.028315800000000002,
+      "input_tokens": 21424,
+      "output_tokens": 498
+    },
+    "proposed_action": "promote_candidate",
+    "accepted_derivations": 5,
+    "rejected_derivations": 0,
+    "raw_reply": "{\"proposed_action\":\"promote_candidate\",\"hypothesized_worlds\":[\"s_leader_dead\"],\"requested_probes\":[],\"derivations\":[{\"rule_id\":\"r_act_etcd\",\"evidence_handles\":[\"a_D_etcd_1795323741\"]},{\"rule_id\":\"r_act_oob\",\"evidence_handles\":[\"a_D_oob_rest_1795323741\"]},{\"rule_id\":\"r_act_sql\",\"evidence_handles\":[\"a_D_sql_mon_1795323741\"]},{\"rule_id\":\"r_ref_part_etcd\",\"evidence_handles\":[\"a_D_etcd_1795323741\"]},{\"rule_id\":\"r_ref_part_oob\",\"evidence_handles\":[\"a_D_oob_rest_1795323741\"]}]}"
+  },
+  "pieq_decision": {
+    "surviving_worlds": [
+      "s_leader_dead"
+    ],
+    "nu_pack_promote": 3,
+    "packing_truncated": false,
+    "snapshot_inconsistent": false,
+    "temporal_policy": "SNAPSHOT_TRIGGERED||persist=0",
+    "admitted": true,
+    "reason": "ADMIT_PROMOTE_TIER_E0_NATIVE_SAFEGUARDS"
+  },
+  "dispatch": {
+    "rc": 0,
+    "response": "Successfully failed over to \"pg2\"",
+    "err": ""
+  },
+  "new_leader": "pg2",
+  "observer_confirmed_promotion_seconds": 66.5,
+  "observer_file": "f1_p4_20261122T050136Z.observer.jsonl",
+  "dual_primary_intervals_observed": 0,
+  "client_writes_ok": 11,
+  "client_writes_failed": 50,
+  "final_state": {
+    "t_utc": "2026-11-22T05:02:46.776431+00:00",
+    "nodes": {
+      "pg1": {
+        "reachable": true,
+        "is_in_recovery": true,
+        "timeline": 1,
+        "witness_rows": 22
+      },
+      "pg2": {
+        "reachable": true,
+        "is_in_recovery": false,
+        "timeline": 3,
+        "witness_rows": 22
+      },
+      "pg3": {
+        "reachable": false,
+        "error": "Error response from daemon: container 6ca5dd30ecab63ff1640e80fc858e6e0c7b623f1331e9e4d3495eafc3445f3fa is not running"
+      }
+    },
+    "writable_primaries": [
+      "pg2"
+    ],
+    "dual_primary": false
+  }
+}

@@ -1,0 +1,44 @@
+# =============================================================================
+# Shared Patroni 3.x / PostgreSQL 16 Configuration — Held IDENTICAL across all
+# 5 matched experimental comparisons so native HA safety is cleanly separated
+# from PIEQ's incremental epistemic + admission protection.
+# STATUS: UNEXECUTED.
+# =============================================================================
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 5
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    synchronous_mode: true
+    synchronous_mode_strict: false
+    synchronous_node_count: 1
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        wal_level: replica
+        hot_standby: "on"
+        max_wal_senders: 10
+        max_replication_slots: 10
+        wal_log_hints: "on"
+        synchronous_commit: "on"
+
+restapi:
+  listen: 0.0.0.0:8008
+
+postgresql:
+  listen: 0.0.0.0:5432
+  data_dir: /home/postgres/pgdata/pgroot/data
+  authentication:
+    replication:
+      username: replicator
+      password: pieq_eval_repl_only_disposable
+    superuser:
+      username: postgres
+      password: pieq_eval_pg_only_disposable
+
+watchdog:
+  mode: automatic
+  device: /dev/watchdog
+  safety_margin: 5

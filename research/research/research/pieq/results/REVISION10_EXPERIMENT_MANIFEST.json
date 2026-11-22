@@ -1,0 +1,154 @@
+{
+  "manifest_kind": "pieq-rev10-experiment-manifest-v1",
+  "generated_utc": "2026-11-22T09:05:22.677548+00:00",
+  "code_freezes": {
+    "phase1": {
+      "pieq/__init__.py": "e6d68f245cc9b1d698287a159e5736a1175a8ff027092fc4c4525b530c8e706e",
+      "pieq/benchmark.py": "551b6ef18f5181623997cd4f7fba8f7712ec1d8b66692a4f463d311e23cc0f8f",
+      "pieq/core.py": "cf37c670da4e0397b0e679ecdc7884140a16f52bf020d9d03f1d1d4ef77aab1a",
+      "pieq/etcd_boundary.py": "d6da9bfd8db23d4891b79f7be38330ceb3588c35ccae0d47a2bd1c49a976cb29",
+      "pieq/fault_worker.py": "83d74b817130a54af012274281fbb651d69f81db042b4f19378da48e3a74d681",
+      "pieq/hardened.py": "24a46a1652c9cc72761f8abfc8d7d2a1f9bc7fc63d3b9e3fa28e9e7dd022f793",
+      "pieq/heldout_cases.py": "5cddb0d22e71e5ca39281064d26b2ddcbce69aa7e64e5b790058dd6484dfb198",
+      "pieq/live_cases.py": "c0c08852519a1a1c5680f7063bfaa444d828c3f16c0f0ad30022a48531164132",
+      "pieq/live_protocol.py": "bf68e0fccf0a5cb7adad9492193756d3211342e855297315afb0c6702429ceef",
+      "pieq/live_providers.py": "53c33cc7e33c99878dc38313a0bb12c9297d8f7045fbb910f915f5e8d9669933",
+      "pieq/live_score.py": "ba05f3692f1f6e909eb5eece4472cabc8cfaf2fba032c4a0754e92e453e4d1a0",
+      "pieq/probe_loop.py": "618f3daa731b4ed611685f14145cbcdd49ca4691db556822d84bdb38b7e12e8c",
+      "pieq/typed_pipeline.py": "e7e5df62fd357fd12574d4dd28b9962bd5cb2c40982fc8d05434d21b1ccbab6b",
+      "scripts/audit_rev8_counterfactual_provenance.py": "62c0932ac5db08ed96791b38cb69fe814d8b9c6e4c7f65aa393f2375429a6ae7",
+      "scripts/profile_rev8_workflow_costs.py": "eb31d8887e701321176a26a102f631599c8fef11e21e5d3f1ff50b714be11439",
+      "scripts/profile_revision5_costs.py": "bf7937d2a76cefe5adc6251bfa3b363dbe08a96fe66a13d08d61007b76f11c80",
+      "scripts/run_benchmark.py": "cbf532dd83234b8d222556822c39fe409917f881f35c8282c7a25ac260bd7d28",
+      "scripts/run_etcd_fault_eval.py": "6a01dd6d777e9d6110380d4a76991eb3d735d3a7674fcb3ebaf10b3bde8e188b",
+      "scripts/run_live_llm_eval.py": "4fdbda4a7d2e688b6e3c1db2561aaf7c06ae81c95a0ab1063c00d916572bfac8",
+      "scripts/run_multiprocess_fault_eval.py": "981e832515420efa11125719ab606e63d86c3fc70ac25365c6e22b27354feb6f",
+      "scripts/run_rev10_hardened_live_eval.py": "1b95ae9f95ca6f58bf9bb3768d162f8dbb375d18234d625b114b961bbf86bc1e",
+      "scripts/run_rev7_liveness_eval.py": "8b1eff9ab0b923faa227226c0822c3b219d7d9db97f00ff84c96422437bab0b1",
+      "scripts/run_rev8_independent_eval.py": "64b2ff8c0cbe8d64c7d2de69d485140eb8ee0b0ce7a3f89fa55d691211abeaef",
+      "scripts/run_rev8_pinned_live_eval.py": "6bd8d585f7bc3a5ad19b6ed23461790f6000360b0874126a0d49af54e7965aeb",
+      "scripts/run_rev9_cli_live_eval.py": "22b4cf67bbab050cfa160a5654d345aa0daff506abe5dc22099409880feac46a",
+      "scripts/run_rev9_confirmation_eval.py": "8a8e05d2a40eb604442db5d2ee542bdb47830f60653cd4bbb8be5b364fc26318",
+      "scripts/score_live_llm_eval.py": "230a044ee38f1d413c163cab0b4c4c77aa5dbc49822bc82f4335739448257251",
+      "scripts/score_rev9_cli_live.py": "e51230f50b6faa20bc19e57848adc9ad93da60ea82b79822e2b36476ce05c841"
+    },
+    "exp04_preregistered": {
+      "pieq/__init__.py": "e6d68f245cc9b1d698287a159e5736a1175a8ff027092fc4c4525b530c8e706e",
+      "pieq/benchmark.py": "551b6ef18f5181623997cd4f7fba8f7712ec1d8b66692a4f463d311e23cc0f8f",
+      "pieq/core.py": "cf37c670da4e0397b0e679ecdc7884140a16f52bf020d9d03f1d1d4ef77aab1a",
+      "pieq/etcd_boundary.py": "d6da9bfd8db23d4891b79f7be38330ceb3588c35ccae0d47a2bd1c49a976cb29",
+      "pieq/fault_worker.py": "83d74b817130a54af012274281fbb651d69f81db042b4f19378da48e3a74d681",
+      "pieq/hardened.py": "24a46a1652c9cc72761f8abfc8d7d2a1f9bc7fc63d3b9e3fa28e9e7dd022f793",
+      "pieq/heldout_cases.py": "5cddb0d22e71e5ca39281064d26b2ddcbce69aa7e64e5b790058dd6484dfb198",
+      "pieq/live_cases.py": "c0c08852519a1a1c5680f7063bfaa444d828c3f16c0f0ad30022a48531164132",
+      "pieq/live_protocol.py": "bf68e0fccf0a5cb7adad9492193756d3211342e855297315afb0c6702429ceef",
+      "pieq/live_providers.py": "53c33cc7e33c99878dc38313a0bb12c9297d8f7045fbb910f915f5e8d9669933",
+      "pieq/live_score.py": "ba05f3692f1f6e909eb5eece4472cabc8cfaf2fba032c4a0754e92e453e4d1a0",
+      "pieq/probe_loop.py": "618f3daa731b4ed611685f14145cbcdd49ca4691db556822d84bdb38b7e12e8c",
+      "pieq/typed_pipeline.py": "e7e5df62fd357fd12574d4dd28b9962bd5cb2c40982fc8d05434d21b1ccbab6b",
+      "scripts/audit_rev8_counterfactual_provenance.py": "62c0932ac5db08ed96791b38cb69fe814d8b9c6e4c7f65aa393f2375429a6ae7",
+      "scripts/profile_rev8_workflow_costs.py": "eb31d8887e701321176a26a102f631599c8fef11e21e5d3f1ff50b714be11439",
+      "scripts/profile_revision5_costs.py": "bf7937d2a76cefe5adc6251bfa3b363dbe08a96fe66a13d08d61007b76f11c80",
+      "scripts/rev10_confirmation_cases.py": "aefd2d3f8dbc57ea1f1c348fc839b8020625ba516e0e043a95ba1df9d7e917b3",
+      "scripts/run_benchmark.py": "cbf532dd83234b8d222556822c39fe409917f881f35c8282c7a25ac260bd7d28",
+      "scripts/run_etcd_fault_eval.py": "6a01dd6d777e9d6110380d4a76991eb3d735d3a7674fcb3ebaf10b3bde8e188b",
+      "scripts/run_live_llm_eval.py": "4fdbda4a7d2e688b6e3c1db2561aaf7c06ae81c95a0ab1063c00d916572bfac8",
+      "scripts/run_multiprocess_fault_eval.py": "981e832515420efa11125719ab606e63d86c3fc70ac25365c6e22b27354feb6f",
+      "scripts/run_rev10_hardened_live_eval.py": "f6cee9fa1ad8dc14abe1ab39e4c810a8f99aa3f49740b3bb2869d41abc9a6ac5",
+      "scripts/run_rev7_liveness_eval.py": "8b1eff9ab0b923faa227226c0822c3b219d7d9db97f00ff84c96422437bab0b1",
+      "scripts/run_rev8_independent_eval.py": "64b2ff8c0cbe8d64c7d2de69d485140eb8ee0b0ce7a3f89fa55d691211abeaef",
+      "scripts/run_rev8_pinned_live_eval.py": "6bd8d585f7bc3a5ad19b6ed23461790f6000360b0874126a0d49af54e7965aeb",
+      "scripts/run_rev9_cli_live_eval.py": "22b4cf67bbab050cfa160a5654d345aa0daff506abe5dc22099409880feac46a",
+      "scripts/run_rev9_confirmation_eval.py": "8a8e05d2a40eb604442db5d2ee542bdb47830f60653cd4bbb8be5b364fc26318",
+      "scripts/score_live_llm_eval.py": "230a044ee38f1d413c163cab0b4c4c77aa5dbc49822bc82f4335739448257251",
+      "scripts/score_rev9_cli_live.py": "e51230f50b6faa20bc19e57848adc9ad93da60ea82b79822e2b36476ce05c841"
+    }
+  },
+  "models_declared_vs_reported": {
+    "claude_cli": {
+      "aliases": [
+        "sonnet",
+        "haiku",
+        "opus"
+      ],
+      "cli_reported_ids": [
+        "claude-sonnet-5-5",
+        "claude-haiku-5-5",
+        "claude-opus-5-5"
+      ],
+      "snapshot_attestation": "NONE (CLI-reported, unpinned)"
+    },
+    "codex_cli": {
+      "config_declared": "openai.gpt-5.6-sol (amazon-bedrock, reasoning_effort=high)",
+      "event_reported_id": "NONE",
+      "snapshot_attestation": "NONE (unattested)"
+    }
+  },
+  "sampling": "not enforceable via CLIs; declared-only (temperature/seed None)",
+  "datasets": {
+    "heldout36": "pieq/heldout_cases.py (public hash per Rev8 record)",
+    "rev10_confirmation": {
+      "module": "scripts/rev10_confirmation_cases.py",
+      "sha256": "aefd2d3f8dbc57ea1f1c348fc839b8020625ba516e0e043a95ba1df9d7e917b3",
+      "cases": 12
+    }
+  },
+  "physical_testbed": {
+    "compose": {
+      "file": "experiments/pg_patroni_failover/docker-compose.rev10.yml",
+      "sha256": "8c687cf505b2d4598a117b8c8f8c47d96903ef81582805f1b0d791a048a323d1"
+    },
+    "harness": {
+      "file": "experiments/pg_patroni_failover/rev10_physical_harness.py",
+      "sha256": "2790878a8fb89bffe9273c0878aa65ae4a01174554734a1ff7ed33f7a4493e52"
+    },
+    "images": [
+      "ghcr.io/zalando/spilo-16:3.3-p1",
+      "quay.io/coreos/etcd:v3.7.3"
+    ],
+    "runtime": "colima VM (4 vCPU/8GB), Docker 29.5.2, single physical host (common-cause disclosed)",
+    "tier_contract": "docs/REVISION10_TARGET_CAPABILITY_CONTRACT.md"
+  },
+  "trace_hashes_sha256": {
+    "f1_p0_20261122T050048Z.json": "4c99f8274c7791e808ebfae8ed98d2ecaf504599c785fdaa04f928b85f814737",
+    "f1_p4_20261122T050136Z.json": "30c3a7122a6378ea6a5fce64583b12197fefdb6c78e6fb5e341a4d15241d6401",
+    "f1_p4_20261122T083548Z.json": "96e393717566597b7c95e720c03d5077662e75c2b5002d216003f0231c258a8c",
+    "f1_p4_20261122T083656Z.json": "f6d783907228fbe411618c89d1d290903a3477c22abb612f596a8d34abd1112a",
+    "f2_p1_20261122T050638Z.json": "69305307c4187561d43508f508beb9745a37ab74061d6b2fe8361d261a672f03",
+    "f2_p1_20261122T082910Z.json": "56a5f4d1249e1230be499b062b6be4252694c3ea6c9aa87a49159a24b1168eb4",
+    "f2_p1_20261122T082931Z.json": "80de3e64f8a11848f8674047f8bb88a66e1b42a558a48f2d35b0c1ac40972f05",
+    "f2_p1_20261122T082954Z.json": "742fb89d0289851fbe8dd39942d451984db8a0b17dfa3d71b0f09cc5c7f6c751",
+    "f2_p4_20261122T050313Z.json": "767ceadf4271117b5851408191a7f9bf4f66bf100cf75f5c9ffdca026ff6f588",
+    "f2_p4_20261122T050508Z.json": "15a66b5e996f30d0242c7b2dfc2a26145ec4659349be18b013c2f2b7776bac05",
+    "f2_p4_20261122T083101Z.json": "dcfc9a728adc2ebc6afd3d970477e4853240ab357f7be7b15879b83c8d791c06",
+    "f5_20261122T083116Z.json": "e6e247df836c59e93f29c43a76cd9b110e14acba3332b712f3583d685a1d986a",
+    "f5_20261122T083253Z.json": "d2bdf64dd898aebcfef3541bfa51a582a3c5f91cd2d3f858aab12332c64d2884",
+    "f7_20261122T083408Z.json": "2bc62195d0f48acdded727e104df7a16280d90e23691db1d4a8b9fa6367653f8",
+    "f9_20261122T083519Z.json": "5c68003ca183d0244f8b1184640a3b93bd15623e5631b84714fc779c95bed841",
+    "rev10_confirmation_live_exploratory_r2full.jsonl": "e88a49d912741e460120db5617106f691b1d2d1fa94f19ea3eae1f9bc34b1c1d",
+    "rev10_confirmation_live_exploratory_r2full.summary.json": "f3b3a5a61f8a3b352d5b627f573fc4303c3a41d728854b0a3b52fdaa504d6519",
+    "rev10_confirmation_live_r1.jsonl": "5a90208dc25f83d0d68364513f79ef2a573b5ee3a4a6029608cb2ba67c2f41fe",
+    "rev10_confirmation_live_r1.summary.json": "78e7ad811170ee177ab845cd03cc8eea843540e9b0bb54dc5927c0646979522e",
+    "rev10_confirmation_live_r2.jsonl": "7741a9b5950583f87fb61e9d8ca0d00831785005f56ee3daa1e9999762cf40c5",
+    "rev10_confirmation_live_r2.summary.json": "8c48e76c4b0011365f68f9a207c7dab428b42744312aa50972f5f3bc1b476b7b",
+    "rev10_confirmation_live_r3.jsonl": "7f6650ebb841fc0f362004b670d879dfb75130d1c3d9871c5b75f1a515fe1b20",
+    "rev10_confirmation_live_r3.summary.json": "05d59f22b0cd9c0beae64254541555a67ba377e74293e274debd2417123ee291",
+    "rev10_exp04_freeze.json": "1ca90e0bde8cc5ad1788be64380eaa4a9d520ae0a9cc98d508e216f16657582b",
+    "rev10_frozen_hashes.json": "04eb0b46a2fade3cbacd273123843268f4da0a9298dcfda839b403383b3e5f74",
+    "rev10_hardened_live_traces_E1.jsonl": "c821e2203c281d8fc56981a2a4d5dfdff205ce5086e571e0d92d3f9c750fb86c",
+    "rev10_hardened_live_traces_E1.summary.json": "932c532fc61109c7c9b7dde7f9d31ed59968b2d330e6410a4438735b1fc80896",
+    "rev10_hardened_live_traces_E1_partial35.jsonl": "e086974abaf8feb8848439a7306f46cde9cb1391388bfab39cccf6a8cb75d521",
+    "rev10_hardened_live_traces_H1.jsonl": "40bea059d16e4d00551087747e86bc4208dc80a72ed9977630bb6da81449fd4f",
+    "rev10_hardened_live_traces_H1.summary.json": "894bd41eb8722992624c5d679becded65027e94d8ec64913b489df8741673b52",
+    "rev10_hardened_live_traces_S1.jsonl": "e78db5aa415497ebfecf27c6d113610eac6b0d080ad60c43192080152d241e78",
+    "rev10_hardened_live_traces_S1.summary.json": "145e9c301b574917e750d96c4fd859a9395da52e6f659a77ce09c8eb47381fb2",
+    "rev10_live_scored.json": "1f5888a52156175f32e4ccd88e2de572d64d349591f30642239bb8d569658872",
+    "rev10_pinned_preflight.json": "201998c852d0b01aeb5948388b1e98ad95a46a5494b30b1c764a0c08225b4f58",
+    "rev10_smoke_S1.jsonl": "d48cd68570c40dfed6c2b51efa2a84571d47bf7acb779bf11e4a1d23bfe43a54",
+    "rev10_smoke_S1.summary.json": "b6c53c05b46be1d63a7044470f2346fafebc106b4d186566b1bfcd8c86d03556"
+  },
+  "spending_caps": {
+    "per_process_usd": 40.0,
+    "rev10_total_cli_reported_usd_approx": 12.4
+  }
+}
