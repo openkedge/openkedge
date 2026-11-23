@@ -65,6 +65,8 @@ from pieq.hardened import (
     TargetRefinementAttestation,
 )
 from pieq.heldout_cases import HELDOUT_COLLECTOR_KEY, HeldOutCase, build_heldout_cases
+from pieq.hardened import MutationTemporalPolicy
+from scripts.rev10_confirmation_cases import build_cases as build_confirmation12_cases
 from pieq.live_protocol import _extract_json_text
 from pieq.live_providers import Reply, make_provider
 from pieq.probe_loop import ProbeBudget, run_active_diagnostic_probe_loop
@@ -201,6 +203,7 @@ def run_pinned_live_evaluation(
     trace_path: Path,
     protocols: Sequence[str] = LIVE_PROTOCOLS,
     providers_override: Optional[Dict[str, Any]] = None,
+    use_mandatory_temporal_registry: bool = False,
 ) -> Dict[str, Any]:
     """
     Execute pinned multi-provider live evaluation across all requested protocols on
@@ -264,7 +267,11 @@ def run_pinned_live_evaluation(
                 atms, verifier, by_id = case.build_atms()
                 cand_actions = tuple(sorted({a for w in case.worlds for a in w.safe_mutations}))
                 world_ids = tuple(sorted(w.world_id for w in case.worlds))
-                alloc_map = {aid: frozenset(hs) for aid, hs in case.agent_allocation.items()}
+                all_handles = frozenset(by_id.keys())
+                alloc_map = {
+                    inst["agent_id"]: frozenset(case.agent_allocation.get(inst["agent_id"], all_handles))
+                    for inst in manifest["instances"]
+                }
                 vocab = TypedVocabulary(
                     permissible_actions=cand_actions,
                     world_ids=world_ids,
@@ -392,12 +399,35 @@ def run_pinned_live_evaluation(
                             "ik_pre", "op_pre", "pre_op", case.exposure_domain, case.preexisting_unknown_exposure
                         )
                         ledger.mark_timeout_or_cancel_race(case.exposure_domain, "op_pre", state="UNKNOWN")
-                    cfg = HardenedPIEQConfig(  # legacy temporal mode: pinned runner (frozen Rev8 protocol; E0-legacy comparability)
-                    legacy_temporal_mode_opt_in=True,
-                        resource_id=case.resource_id, epoch=case.epoch, manifest_hash=case.manifest_hash,
-                        auth_epoch=case.auth_epoch_cert, signing_key=HELDOUT_COLLECTOR_KEY,
-                        f_fault_budget=case.f_budget, k_a=case.k_a, require_positive_packing=True,
-                    )
+                    if use_mandatory_temporal_registry:
+                        mut_actions = [a for a in cand_actions if a not in {"defer", "probe"}]
+                        preds = tuple(sorted(
+                            set(case.required_commit_predicates)
+                            | set(case.live_predicates_at_commit.keys())
+                        ))
+                        t_policies = tuple(
+                            MutationTemporalPolicy(
+                                action=a,
+                                mode="COMMIT_TIME_SENSITIVE",
+                                trusted_commit_predicates=preds,
+                            )
+                            if case.is_commit_time_truth_action
+                            else MutationTemporalPolicy(action=a, mode="SNAPSHOT_TRIGGERED")
+                            for a in mut_actions
+                        )
+                        cfg = HardenedPIEQConfig(
+                            resource_id=case.resource_id, epoch=case.epoch, manifest_hash=case.manifest_hash,
+                            auth_epoch=case.auth_epoch_cert, signing_key=HELDOUT_COLLECTOR_KEY,
+                            f_fault_budget=case.f_budget, k_a=case.k_a, require_positive_packing=True,
+                            temporal_policies=t_policies,
+                        )
+                    else:
+                        cfg = HardenedPIEQConfig(  # legacy temporal mode: pinned runner (frozen Rev8 protocol; E0-legacy comparability)
+                            legacy_temporal_mode_opt_in=True,
+                            resource_id=case.resource_id, epoch=case.epoch, manifest_hash=case.manifest_hash,
+                            auth_epoch=case.auth_epoch_cert, signing_key=HELDOUT_COLLECTOR_KEY,
+                            f_fault_budget=case.f_budget, k_a=case.k_a, require_positive_packing=True,
+                        )
                     att = TargetRefinementAttestation(
                         case.resource_id, "E2_SHARED_ATOMIC", case.refinement_regime,
                         case.manifest_hash, case.complete_writer_mediation,
@@ -515,19 +545,41 @@ def run_pinned_live_evaluation(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--dataset", choices=("heldout36", "confirmation12"), default="heldout36")
+    parser.add_argument(
+        "--protocols",
+        type=str,
+        default=",".join(LIVE_PROTOCOLS),
+        help="Comma-separated subset of protocols: orig_freeform,typed_interface,typed_plus_probes,full_pieq",
+    )
+    parser.add_argument(
+        "--mandatory-temporal-registry",
+        action="store_true",
+        help="Enable mandatory per-incident temporal-policy registry for full_pieq (default on for confirmation12)",
+    )
     parser.add_argument("--preflight", action="store_true")
     parser.add_argument("--trace", type=Path, default=REPO_ROOT / "results" / "rev8_pinned_live_traces.jsonl")
     parser.add_argument("--limit", type=int, default=0, help="Optional case count limit for smoke runs")
     args = parser.parse_args()
 
+    selected_protocols = tuple(p.strip() for p in args.protocols.split(",") if p.strip())
+    for p in selected_protocols:
+        if p not in LIVE_PROTOCOLS:
+            raise ValueError(f"Unknown protocol in --protocols: {p!r}")
+
     manifest = json.loads(args.manifest.read_text())
     if args.preflight:
         status = check_live_preflight(manifest)
+        status["dataset"] = args.dataset
+        status["case_count"] = 12 if args.dataset == "confirmation12" else 36
+        status["protocols_selected"] = list(selected_protocols)
         print(json.dumps(status, indent=2))
         return
 
     preflight = check_live_preflight(manifest)
     if preflight["execution_status"] != "READY":
+        preflight["dataset"] = args.dataset
+        preflight["protocols_selected"] = list(selected_protocols)
         print(json.dumps(preflight, indent=2), file=sys.stderr)
         print(
             "ERROR: Pinned multi-provider API credentials unavailable. "
@@ -536,10 +588,17 @@ def main() -> None:
         )
         sys.exit(2)
 
-    cases = build_heldout_cases()
+    cases = build_confirmation12_cases() if args.dataset == "confirmation12" else build_heldout_cases()
     if args.limit > 0:
         cases = cases[: args.limit]
-    summary = run_pinned_live_evaluation(cases=cases, manifest=manifest, trace_path=args.trace)
+    summary = run_pinned_live_evaluation(
+        cases=cases,
+        manifest=manifest,
+        trace_path=args.trace,
+        protocols=selected_protocols,
+        use_mandatory_temporal_registry=(args.mandatory_temporal_registry or args.dataset == "confirmation12"),
+    )
+    summary["dataset"] = args.dataset
     print(json.dumps(summary, indent=2))
 
 

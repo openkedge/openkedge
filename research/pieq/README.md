@@ -1,26 +1,29 @@
 # Provenance-Isolated Epistemic Quorums (PIEQ) — Executable Artifact
 
-**Paper:** *Provenance-Isolated Epistemic Quorums: Execution-Bound Evidence Certification and Plausible-World Safety Gating in Agentic Control Planes* (Ninth Revision, November 2026)  
+**Paper:** *Provenance-Isolated Epistemic Quorums: Execution-Bound Evidence Certification and Plausible-World Safety Gating in Agentic Control Planes* (arXiv Preprint, November 2026)  
 **Authors:** Jun He and Deying Yu (OpenKedge LLC)
 
-This directory (`research/pieq/` in `openkedge/openkedge`) contains the shareable Python implementation, regression test suite, deterministic benchmark simulator, and audit documentation for PIEQ.
+This directory (`research/pieq/` in `openkedge/openkedge`, verified commit `525ff84eb0b786fa3479673a71915db3d5de84c1`) contains the shareable Python implementation, regression test suite, deterministic benchmark simulator, live/physical evaluation harnesses, and audit documentation for PIEQ.
+
+## Verified GitHub Actions CI
+
+Workflow `.github/workflows/pieq-evaluation.yml` ([run 45072074097](https://github.com/openkedge/openkedge/actions/runs/45072074097), Python 3.13.18, `pytest 9.0.3`, NumPy 2.5.1, containerized 3-member `etcd`):
+- `python -m pytest tests/ -q`: **242 passed, 0 failed, 0 skipped in 170.35 s** (includes the 13 container-backed `etcd` integration tests; local runs without an `etcd` cluster pass 229 with those 13 skipped).
+- `python scripts/run_etcd_fault_eval.py --repetitions 20 --output results/ci_etcd_evidence.json`: **140 distributed `etcd` fault trials passed** (artifact `pieq-etcd-evidence`; not double-counted with pytest's `etcd` integration cases).
 
 ## Contents
 
-- `pieq/core.py` — Bounded 64-bit ATMS (`BoundedATMSEngine`), deterministic Horn/nogood verifier (`DeterministicRuleVerifier`), bounded complete-justification set packing (`compute_disjoint_justification_packing_bounded`), $f$-fault-tolerant belief shield (`PlausibleWorldGate`), versioned snapshot advancement (`SnapshotContext`), multi-resource constraint closure (`ConstraintDependencyGraph`), cross-root exposure ledger (`CrossRootExposureLedger`), concrete Mode C compatibility verifier (`ModeCCompatibilityVerifier`), E0–E2 fencing model (`TargetResourceBoundary`), and on-disk SQLite WAL protected-resource boundary (`SQLiteProtectedResourceBoundary`).
+- `pieq/core.py`, `pieq/hardened.py`, `pieq/typed_pipeline.py`, `pieq/probe_loop.py`, `pieq/completion.py`, `pieq/etcd_boundary.py` — Bounded 64-bit ATMS (`BoundedATMSEngine`), deterministic Horn/nogood verifier (`DeterministicRuleVerifier`), bounded complete-justification set packing (`compute_disjoint_justification_packing_bounded`), $f$-fault-tolerant belief shield (`PlausibleWorldGate`), versioned snapshot advancement (`SnapshotContext`), multi-resource constraint closure (`ConstraintDependencyGraph`), cross-root exposure ledger (`CrossRootExposureLedger`), concrete Mode C compatibility verifier (`ModeCCompatibilityVerifier`), E0–E2 fencing model (`TargetResourceBoundary`), on-disk SQLite WAL protected-resource boundary (`SQLiteProtectedResourceBoundary`), mandatory temporal-precondition policy registry (`MutationTemporalPolicy`), typed proof-submission pipeline, seven-boundary probe loop, and default-off bounded deterministic completion.
 - `pieq/benchmark.py` — 100-scenario synthetic protocol & fault-injection simulator (SVD-whitened Gaussian agent latents, 13 ablations, 2 negative controls) plus pure wall-clock 1,000-trace profiler on an on-disk SQLite WAL database.
-- `tests/` — the original 36 theorem, counterexample, Revision 4, and SQLite WAL tests, expanded with live-case, protocol, scoring, and fault-evaluation tests:
-  - `tests/test_theorems_and_counterexamples.py`
-  - `tests/test_benchmark_and_ablations.py`
-  - `tests/test_revision4_formal_repairs.py`
+- `tests/` — 242 automated test cases across 21 test modules covering formal theorems, counterexamples, temporal-policy enforcement, seven-boundary probing, deterministic completion, SQLite WAL boundaries, live protocols, and container-backed `etcd` faults.
 - `scripts/run_benchmark.py` — Regenerates `results/benchmark_summary.json` and prints policy & latency tables.
 - `docs/` — Audit deliverables:
-  - [`docs/REVISION9_CLOSING_REPORT.md`](./docs/REVISION9_CLOSING_REPORT.md) — current revision status, P1.1/P1.2 closure, frozen P1.3 confirmation, and the two P0 blocker reports
-  - [`docs/REVISION8_AUDIT_AND_CONSOLIDATION_REPORT.md`](./docs/REVISION8_AUDIT_AND_CONSOLIDATION_REPORT.md)
-  - [`docs/TRACEABILITY_MATRIX.md`](./docs/TRACEABILITY_MATRIX.md)
-  - [`docs/COUNTEREXAMPLE_REPORT.md`](./docs/COUNTEREXAMPLE_REPORT.md)
-  - [`docs/REPRODUCIBILITY_REPORT.md`](./docs/REPRODUCIBILITY_REPORT.md)
-  - [`docs/REVIEWER_ASSESSMENT.md`](./docs/REVIEWER_ASSESSMENT.md)
+  - [`docs/REVISION11_CLOSING_REPORT.md`](./docs/REVISION11_CLOSING_REPORT.md) — final closing report (EXP-05..09, negative results, remaining blockers)
+  - [`docs/REVISION11_REPRODUCIBILITY.md`](./docs/REVISION11_REPRODUCIBILITY.md) — exact commands, CI verification, and frozen manifests
+  - [`docs/REVISION11_FORMAL_IMPLEMENTATION_AUDIT.md`](./docs/REVISION11_FORMAL_IMPLEMENTATION_AUDIT.md) — theorem-to-implementation consistency audit
+  - [`docs/REVISION11_REFUTATION_COMPLETION.md`](./docs/REVISION11_REFUTATION_COMPLETION.md) & [`docs/REVISION11_AGENT_COUNT_STUDY.md`](./docs/REVISION11_AGENT_COUNT_STUDY.md)
+  - [`docs/REVISION10_TARGET_CAPABILITY_CONTRACT.md`](./docs/REVISION10_TARGET_CAPABILITY_CONTRACT.md), [`docs/REVISION11_PATRONI_CAUSALITY.md`](./docs/REVISION11_PATRONI_CAUSALITY.md), & [`docs/REVISION11_POSTGRES_E2_CONTRACT.md`](./docs/REVISION11_POSTGRES_E2_CONTRACT.md)
+  - [`docs/REVISION9_CLOSING_REPORT.md`](./docs/REVISION9_CLOSING_REPORT.md), [`docs/REVISION8_AUDIT_AND_CONSOLIDATION_REPORT.md`](./docs/REVISION8_AUDIT_AND_CONSOLIDATION_REPORT.md), [`docs/TRACEABILITY_MATRIX.md`](./docs/TRACEABILITY_MATRIX.md), [`docs/COUNTEREXAMPLE_REPORT.md`](./docs/COUNTEREXAMPLE_REPORT.md), [`docs/REPRODUCIBILITY_REPORT.md`](./docs/REPRODUCIBILITY_REPORT.md)
 
 ## Reproducing All Tests and Benchmark Numbers
 
@@ -28,7 +31,7 @@ This directory (`research/pieq/` in `openkedge/openkedge`) contains the shareabl
 cd research/pieq
 python3 -m pip install -r requirements-eval.txt
 
-# 1. Run the expanded artifact suite (216 passed, 13 optional etcd/live tests skipped)
+# 1. Run the regression suite (242 passed with containerized etcd; 229 passed, 13 skipped locally without etcd)
 python3 -m pytest -v tests/
 
 # 1b. Revision 9 frozen confirmation set (12/12; see docs/REVISION9_CLOSING_REPORT.md)

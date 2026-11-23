@@ -1,0 +1,74 @@
+{
+  "all_passed": true,
+  "generated_at_utc": "2026-11-23T23:12:07.700571+00:00",
+  "schedules": {
+    "concurrent_coordinator_radm_cas": {
+      "failed": 0,
+      "p50_ms": 6.321,
+      "p95_ms": 19.203,
+      "passed": 20,
+      "repetitions": 20,
+      "sample_trial": {
+        "elapsed_ms": 31.906,
+        "final_rev": 3,
+        "final_sum": 8,
+        "passed": true,
+        "race_statuses": [
+          "COMMITTED",
+          "REJECTED_STALE_ADMISSION_REVISION"
+        ],
+        "rep": 0,
+        "rev_after_race": 2
+      }
+    },
+    "midflight_auth_revocation_e2": {
+      "failed": 0,
+      "p50_ms": 8.712,
+      "p95_ms": 11.167,
+      "passed": 20,
+      "repetitions": 20,
+      "sample_trial": {
+        "committed": false,
+        "elapsed_ms": 5.936,
+        "exec_status": "REJECTED_AUTHORIZATION_REVOKED",
+        "mode": "post_revocation_strict",
+        "passed": true,
+        "rep": 0,
+        "revoked_commit_leak": false
+      }
+    },
+    "mode_c_r2_phase_decomposed_write_skew": {
+      "failed": 0,
+      "p50_ms": 6.526,
+      "p95_ms": 8.921,
+      "passed": 20,
+      "repetitions": 20,
+      "sample_trial": {
+        "checked_schedules": 18,
+        "elapsed_ms": 7.071,
+        "passed": true,
+        "r2_safe_admitted_and_overlapped": true,
+        "rep": 0,
+        "write_skew_blocked_pre_dispatch": true
+      }
+    },
+    "tier_e1_plus_quiescence_6step": {
+      "failed": 0,
+      "p50_ms": 15.183,
+      "p95_ms": 18.026,
+      "passed": 20,
+      "repetitions": 20,
+      "sample_trial": {
+        "crash_while_prepared_blocks_conflict": true,
+        "elapsed_ms": 15.761,
+        "passed": true,
+        "post_fence_ack_revoked_rejected": true,
+        "pre_fence_ack_prepared_committed": true,
+        "rep": 0
+      }
+    }
+  },
+  "schema_version": "pieq-rev12-section5-multiprocess-faults-v1",
+  "total_passed": 80,
+  "total_trials": 80
+}

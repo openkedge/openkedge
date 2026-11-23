@@ -1,0 +1,40 @@
+{
+  "execution_status": "UNEXECUTED_MISSING_CREDENTIALS",
+  "manifest_sha256": "2629c9ffb1b1a7413de68baf7e0619451c8da34efc240b82d48528bfcf46cfc7",
+  "schema_sha256": "ec59523053bb28e9b3c05ac5f75548c3da5ded78b18981c339c61e0996fcf84d",
+  "provider_families": [
+    "anthropic-claude",
+    "google-gemini",
+    "openai-gpt"
+  ],
+  "pinned_models": {
+    "agent_0": "anthropic:claude-sonnet-4-5-20250929@20250929",
+    "agent_1": "anthropic:claude-haiku-4-5-20251001@20251001",
+    "agent_2": "openai:gpt-4.1-2025-04-14@2025-04-14",
+    "agent_3": "openai:gpt-4.1-mini-2025-04-14@2025-04-14",
+    "agent_4": "gemini:gemini-2.5-pro@gemini-2.5-pro"
+  },
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "seed": 17,
+    "max_output_tokens": 2048
+  },
+  "endpoints_ready": {},
+  "missing_credentials": {
+    "anthropic": "Missing ANTHROPIC_API_KEY",
+    "gemini": "Missing GEMINI_API_KEY",
+    "openai": "Missing OPENAI_API_KEY"
+  },
+  "protocols_configured": [
+    "orig_freeform",
+    "typed_interface",
+    "typed_plus_probes",
+    "full_pieq"
+  ],
+  "dataset": "confirmation12",
+  "case_count": 12,
+  "protocols_selected": [
+    "full_pieq"
+  ]
+}

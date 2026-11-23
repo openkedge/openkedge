@@ -108,7 +108,16 @@ def mk_cert(op_id, amount=3, auth_epoch=5, admission_rev=1, valid_s=600,
     return cert, sign(cert)
 
 
-def execute_e2(conn, cert, sig, *, crash_before_commit=False, crash_after_commit=False):
+def execute_e2(
+    conn,
+    cert,
+    sig,
+    *,
+    crash_before_commit=False,
+    crash_after_commit=False,
+    increment_rev_on_commit=False,
+    before_commit_hook=None,
+):
     """The single Tier E2 transaction. Returns (status, detail)."""
     cur = conn.cursor()
     try:
@@ -119,6 +128,8 @@ def execute_e2(conn, cert, sig, *, crash_before_commit=False, crash_after_commit
             (canonical(cert), sig))
         if not cur.fetchone()[0]:
             conn.rollback(); return "REJECTED_INVALID_SIGNATURE", None
+        if before_commit_hook is not None:
+            before_commit_hook()
         # (2) control row lock = authoritative state + invariant serialization:
         cur.execute("SELECT min_auth_epoch, admission_rev, capacity_limit, expected_policy "
                     "FROM pieq_e2.control WHERE resource_id=%s FOR UPDATE;",
@@ -165,11 +176,14 @@ def execute_e2(conn, cert, sig, *, crash_before_commit=False, crash_after_commit
         total = cur.fetchone()[0]
         if total + cert["amount"] > cap:
             conn.rollback(); return "REJECTED_EXPOSURE_CAP", {"total": int(total), "cap": cap}
-        # (10) the mutation:
+        # (10) the mutation (+ optional universal r_adm increment for Rev 12 CAS races):
         cur.execute("INSERT INTO pieq_e2.ops VALUES (%s,%s,%s,'COMMITTED',%s,now());",
                     (cert["op_id"], cert["action"], canonical(cert), cert["amount"]))
         cur.execute("INSERT INTO pieq_e2.reservations VALUES (%s,%s);",
                     (cert["op_id"], cert["amount"]))
+        if increment_rev_on_commit:
+            cur.execute("UPDATE pieq_e2.control SET admission_rev = admission_rev + 1 WHERE resource_id=%s;",
+                        (cert["resource_id"],))
         if crash_before_commit:
             conn.close(); return "CRASHED_BEFORE_COMMIT", None
         conn.commit()
@@ -274,6 +288,61 @@ def main():
         R["12b_admin_bypass_outside_mediation"] = "SUCCEEDS (superuser is outside the mediation assumption, as declared)"
     except psycopg2.Error as e:
         R["12b_admin_bypass_outside_mediation"] = f"DENIED:{e.pgcode}"
+    # Optional Revision 12 Section 5 physical race suite (--include-rev12-races):
+    #   13. Concurrent-coordinator universal r_adm CAS race across threading.Barrier(2)
+    #   14. Mid-flight authorization revocation race across 10 barrier-synchronized trials
+    if "--include-rev12-races" in sys.argv:
+        su.cursor().execute("TRUNCATE pieq_e2.reservations, pieq_e2.ops;")
+        su.cursor().execute("UPDATE pieq_e2.control SET min_auth_epoch=5, admission_rev=1, capacity_limit=10;")
+
+        # 13. Concurrent-coordinator r_adm CAS race
+        b13 = threading.Barrier(2)
+        out13 = {}
+        def race_coord(tag, op_id):
+            c, s = mk_cert(op_id, amount=2, admission_rev=1)
+            out13[tag] = execute_e2(
+                fresh(), c, s, increment_rev_on_commit=True, before_commit_hook=b13.wait
+            )[0]
+        ta = threading.Thread(target=race_coord, args=("coord_a", "op_radm_a"))
+        tb = threading.Thread(target=race_coord, args=("coord_b", "op_radm_b"))
+        ta.start(); tb.start(); ta.join(); tb.join()
+        rev_post = int(observer("SELECT admission_rev FROM pieq_e2.control WHERE resource_id='capacity_pool_01';")[0][0])
+        loser_c, loser_s = mk_cert("op_radm_retry", amount=2, admission_rev=rev_post)
+        retry_st = execute_e2(fresh(), loser_c, loser_s, increment_rev_on_commit=True)[0]
+        R["13_concurrent_coordinator_radm_cas_race"] = {
+            "race": out13,
+            "admission_rev_after_race": rev_post,
+            "revalidated_retry": retry_st,
+        }
+
+        # 14. Mid-flight authorization revocation race (10 trials)
+        rev_trials = []
+        for idx in range(10):
+            su.cursor().execute("UPDATE pieq_e2.control SET min_auth_epoch=%s, admission_rev=10;", (10 + idx,))
+            b14 = threading.Barrier(2)
+            res14 = {}
+            def exec_t():
+                c, s = mk_cert(f"op_revrace_{idx}", amount=1, auth_epoch=10 + idx, admission_rev=10)
+                res14["exec"] = execute_e2(fresh(), c, s, before_commit_hook=b14.wait)[0]
+            def rev_t():
+                rc = psycopg2.connect(SUPER_DSN)
+                rc.autocommit = True
+                b14.wait()
+                rc.cursor().execute("UPDATE pieq_e2.control SET min_auth_epoch=%s;", (11 + idx,))
+                rc.close()
+                res14["revoked_to"] = 11 + idx
+            te = threading.Thread(target=exec_t); tr = threading.Thread(target=rev_t)
+            te.start(); tr.start(); te.join(); tr.join()
+            rev_trials.append(res14)
+        R["14_midflight_auth_revocation_races"] = {
+            "trials": len(rev_trials),
+            "statuses": [t["exec"] for t in rev_trials],
+            "all_valid_serializations": all(
+                t["exec"] in {"COMMITTED", "REJECTED_AUTHORIZATION_REVOKED", "SERIALIZATION_ABORT_RETRYABLE"}
+                for t in rev_trials
+            ),
+        }
+
     # independent final state
     results["final_state"] = {
         "reservation_total": int(observer("SELECT COALESCE(SUM(amount),0) FROM pieq_e2.reservations;")[0][0]),

@@ -128,3 +128,39 @@ def test_member_failure_receipts_record_fault_timing_and_topology(cluster, sched
         route["member_id"] for route in result["member_routes"]
     }
     assert result["checks"]["all_passed"]
+
+
+def test_etcd_quiescence_6step_revocation_and_crash_blocking(cluster):
+    """Rev 12: Verify Tier E1+-quiescence 6-step pre- vs. post-FenceAck exclusion on real etcd."""
+    from pieq.etcd_boundary import EtcdQuiescenceBoundary
+
+    q = EtcdQuiescenceBoundary(cluster.endpoints[0])
+    q.initialize_quiescence(initial_auth_epoch=5)
+
+    # Step 1-2: Op1 acquires lock_r and registers prepared_slot at auth_epoch=5
+    prep1 = q.prepare("op_prep_1", auth_epoch=5)
+    assert prep1["prepared"] and prep1["status"] == "PREPARED_LOCKED"
+
+    # Step 3: Concurrent revocation to auth_epoch=6 blocks on lock_r
+    rev = q.initiate_revocation(6)
+    assert rev["status"] == "BLOCKED_ON_PREPARED_LOCK"
+
+    # Step 4-5: Op1 commits in pre-FenceAck window and flushes FenceAck=6
+    c1 = q.commit_prepared("op_prep_1")
+    assert c1["committed"] and c1["status"] == "COMMITTED_PRE_FENCE_ACK"
+    assert c1["fence_ack_epoch"] == 6
+
+    # Step 6: Post-FenceAck attempt with revoked auth_epoch=5 deterministically rejects
+    prep2 = q.prepare("op_post_2", auth_epoch=5)
+    assert (not prep2["prepared"]) and prep2["status"] == "REJECTED_AUTHORIZATION_REVOKED"
+
+    # Crash while prepared: blocks conflicting op until explicit reconciliation
+    prep3 = q.prepare("op_crash_3", auth_epoch=6)
+    assert prep3["prepared"]
+    conflict = q.prepare("op_conflict_4", auth_epoch=6)
+    assert (not conflict["prepared"]) and conflict["status"] == "BLOCKED_UNKNOWN_PREPARED"
+
+    rec = q.reconcile_prepared("op_crash_3", outcome="FENCED_NO_EFFECT")
+    assert rec["status"] == "RECONCILED_FENCED_NO_EFFECT"
+    prep5 = q.prepare("op_after_rec_5", auth_epoch=6)
+    assert prep5["prepared"]

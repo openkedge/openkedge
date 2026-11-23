@@ -157,3 +157,124 @@ class EtcdBoundary:
             # reconcile the same op_id. UNKNOWN never grants a fresh mutation.
             return {"status": "UNKNOWN", "committed": False, "error": str(exc)}
         return {"status": "UNKNOWN", "committed": False, "reason": "CAS retry bound"}
+
+
+class EtcdQuiescenceBoundary(EtcdBoundary):
+    """
+    Revision 12 — Tier E1+-quiescence two-phase barrier backed by etcd Raft quorum.
+
+    Operationalizes Corollary 1(c-E1+):
+      - `prepare(op_id, auth_epoch)` checks durable `min_auth_epoch` and acquires
+        exclusive `lock_r` + `prepared_op` via atomic Raft CAS.
+      - `initiate_revocation(new_auth_epoch)` records `pending_auth_epoch`; if `lock_r`
+        is free, flushes `min_auth_epoch` and `fence_ack_epoch` immediately; otherwise
+        reports `BLOCKED_ON_PREPARED_LOCK` until `commit_prepared` drains `lock_r`.
+      - `commit_prepared(op_id)` executes the already-prepared mutation (pre-FenceAck
+        window) and atomically flushes `min_auth_epoch = max(min_auth_epoch, pending)`
+        and `fence_ack_epoch`, returning `FenceAck`. Subsequent calls with revoked
+        `auth_epoch` deterministically reject (`REJECTED_AUTHORIZATION_REVOKED`).
+      - If the worker crashes while holding `lock_r`, `prepared_op` stays durable and
+        blocks conflicting admissions (`BLOCKED_UNKNOWN_PREPARED`) until explicit
+        `reconcile_prepared(op_id, outcome)` clears the barrier.
+    """
+
+    def initialize_quiescence(self, initial_auth_epoch: int = 5):
+        response = self._txn({"revision": 0, "revisions": {}}, {
+            "q/min_auth_epoch": initial_auth_epoch,
+            "q/pending_auth_epoch": initial_auth_epoch,
+            "q/fence_ack_epoch": initial_auth_epoch,
+            "q/lock_holder": None,
+            "q/prepared_op": None,
+        }, absent=("q/min_auth_epoch",))
+        if not response.get("succeeded", False):
+            raise ValueError("quiescence namespace already initialized")
+        return response
+
+    def prepare(self, op_id: str, auth_epoch: int):
+        try:
+            for _ in range(self.attempts):
+                snap = self.snapshot()
+                vals = snap["values"]
+                if vals["q/lock_holder"] is not None:
+                    return {"status": "BLOCKED_UNKNOWN_PREPARED", "prepared": False, "holder": vals["q/lock_holder"]}
+                if auth_epoch < vals["q/min_auth_epoch"]:
+                    return {"status": "REJECTED_AUTHORIZATION_REVOKED", "prepared": False, "min_auth_epoch": vals["q/min_auth_epoch"]}
+                resp = self._txn(snap, {"q/lock_holder": op_id, "q/prepared_op": {"op_id": op_id, "auth_epoch": auth_epoch}})
+                if resp.get("succeeded", False):
+                    return {"status": "PREPARED_LOCKED", "prepared": True, "revision": int(resp["header"]["revision"])}
+        except EtcdUnavailable as exc:
+            return {"status": "UNKNOWN", "prepared": False, "error": str(exc)}
+        return {"status": "UNKNOWN", "prepared": False}
+
+    def initiate_revocation(self, new_auth_epoch: int):
+        try:
+            for _ in range(self.attempts):
+                snap = self.snapshot()
+                vals = snap["values"]
+                pending = max(vals["q/pending_auth_epoch"], new_auth_epoch)
+                if vals["q/lock_holder"] is None:
+                    new_min = max(vals["q/min_auth_epoch"], pending)
+                    resp = self._txn(snap, {
+                        "q/pending_auth_epoch": pending,
+                        "q/min_auth_epoch": new_min,
+                        "q/fence_ack_epoch": new_min,
+                    })
+                    if resp.get("succeeded", False):
+                        return {"status": "FENCE_ACK_IMMEDIATE", "fence_ack_epoch": new_min}
+                else:
+                    resp = self._txn(snap, {"q/pending_auth_epoch": pending})
+                    if resp.get("succeeded", False):
+                        return {"status": "BLOCKED_ON_PREPARED_LOCK", "holder": vals["q/lock_holder"], "pending_auth_epoch": pending}
+        except EtcdUnavailable as exc:
+            return {"status": "UNKNOWN", "error": str(exc)}
+        return {"status": "UNKNOWN"}
+
+    def commit_prepared(self, op_id: str):
+        try:
+            for _ in range(self.attempts):
+                snap = self.snapshot()
+                vals = snap["values"]
+                if vals["q/lock_holder"] != op_id:
+                    return {"status": "REJECTED_LOCK_NOT_HELD", "committed": False}
+                new_min = max(vals["q/min_auth_epoch"], vals["q/pending_auth_epoch"])
+                pre_fence_race = vals["q/pending_auth_epoch"] > vals["q/prepared_op"]["auth_epoch"]
+                resp = self._txn(snap, {
+                    f"q/commits/{op_id}": {"op_id": op_id, "pre_fence_ack_rev_pending": pre_fence_race},
+                    "q/min_auth_epoch": new_min,
+                    "q/fence_ack_epoch": new_min,
+                    "q/lock_holder": None,
+                    "q/prepared_op": None,
+                })
+                if resp.get("succeeded", False):
+                    return {
+                        "status": "COMMITTED_PRE_FENCE_ACK" if pre_fence_race else "COMMITTED",
+                        "committed": True,
+                        "fence_ack_epoch": new_min,
+                        "revision": int(resp["header"]["revision"]),
+                    }
+        except EtcdUnavailable as exc:
+            return {"status": "UNKNOWN", "committed": False, "error": str(exc)}
+        return {"status": "UNKNOWN", "committed": False}
+
+    def reconcile_prepared(self, op_id: str, outcome: str = "FENCED_NO_EFFECT"):
+        if outcome not in ("COMMITTED", "FENCED_NO_EFFECT"):
+            raise ValueError("outcome must be COMMITTED or FENCED_NO_EFFECT")
+        try:
+            for _ in range(self.attempts):
+                snap = self.snapshot()
+                vals = snap["values"]
+                if vals["q/lock_holder"] != op_id:
+                    return {"status": "NO_MATCHING_PREPARED_OP"}
+                new_min = max(vals["q/min_auth_epoch"], vals["q/pending_auth_epoch"])
+                resp = self._txn(snap, {
+                    f"q/reconciled/{op_id}": outcome,
+                    "q/min_auth_epoch": new_min,
+                    "q/fence_ack_epoch": new_min,
+                    "q/lock_holder": None,
+                    "q/prepared_op": None,
+                })
+                if resp.get("succeeded", False):
+                    return {"status": f"RECONCILED_{outcome}", "fence_ack_epoch": new_min}
+        except EtcdUnavailable as exc:
+            return {"status": "UNKNOWN", "error": str(exc)}
+        return {"status": "UNKNOWN"}
