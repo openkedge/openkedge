@@ -2,6 +2,12 @@ name: PIEQ distributed evaluation
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "research/pieq/**"
+      - ".github/workflows/pieq-evaluation.yml"
   pull_request:
     paths:
       - "research/pieq/**"
@@ -82,6 +88,19 @@ jobs:
         run: |
           python experiments/pg_patroni_failover/rev11_exp08_e2_adapter.py 127.0.0.1 --include-rev12-races > results/rev12/ci_pg16_e2_races.json
           cat results/rev12/ci_pg16_e2_races.json
+          python - <<'PY'
+          import json
+          d = json.load(open("results/rev12/ci_pg16_e2_races.json"))
+          assert d["invariant_total_le_cap"] is True
+          s13 = d["scenarios"]["13_concurrent_coordinator_radm_cas_race"]
+          vals = sorted(s13["race"].values())
+          assert vals[0] == "COMMITTED" and vals[1] in {"REJECTED_STALE_ADMISSION_REVISION", "SERIALIZATION_ABORT_RETRYABLE"}, s13
+          assert s13["admission_rev_after_race"] == 2 and s13["revalidated_retry"] == "COMMITTED", s13
+          s14 = d["scenarios"]["14_midflight_auth_revocation_races"]
+          assert s14["trials"] == 10 and s14["all_valid_serializations"] is True, s14
+          assert d["scenarios"]["15_post_race_clean_commit"] == "COMMITTED"
+          print("PG16_REV12_RACES_ASSERTIONS_PASSED")
+          PY
       - uses: actions/upload-artifact@v7
         if: always()
         with:

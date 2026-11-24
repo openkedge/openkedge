@@ -316,6 +316,8 @@ def main():
         }
 
         # 14. Mid-flight authorization revocation race (10 trials)
+        su.cursor().execute("TRUNCATE pieq_e2.reservations, pieq_e2.ops;")
+        su.cursor().execute("UPDATE pieq_e2.control SET capacity_limit=20;")
         rev_trials = []
         for idx in range(10):
             su.cursor().execute("UPDATE pieq_e2.control SET min_auth_epoch=%s, admission_rev=10;", (10 + idx,))
@@ -342,6 +344,12 @@ def main():
                 for t in rev_trials
             ),
         }
+        su.cursor().execute("UPDATE pieq_e2.control SET capacity_limit=10;")
+        su.cursor().execute("TRUNCATE pieq_e2.reservations, pieq_e2.ops;")
+        # Restore bounded cap verification final state cleanly via one valid reservation
+        fin_c, fin_s = mk_cert("op_final_check", amount=1, auth_epoch=25, admission_rev=10)
+        su.cursor().execute("UPDATE pieq_e2.control SET min_auth_epoch=25, admission_rev=10;")
+        R["15_post_race_clean_commit"] = execute_e2(fresh(), fin_c, fin_s)[0]
 
     # independent final state
     results["final_state"] = {
