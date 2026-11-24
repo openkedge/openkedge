@@ -1,0 +1,20 @@
+{
+  "schema_version": "pieq-rev8-pinned-live-summary-v1",
+  "manifest_sha256": "c2fc3b1a0247d951040a529fd62f6544de407f5c28dd19e1a5cce42e52398e37",
+  "schema_sha256": "ec59523053bb28e9b3c05ac5f75548c3da5ded78b18981c339c61e0996fcf84d",
+  "total_api_calls": 60,
+  "total_api_cost_usd": 0.13899,
+  "trace_path": "results/rev12/pinned_conf12_full_pieq.jsonl",
+  "protocol_summaries": {
+    "full_pieq": {
+      "cases_evaluated": 12,
+      "admitted_count": 5,
+      "deferred_count": 7,
+      "unsafe_count": 1,
+      "api_calls": 60,
+      "api_cost_usd": 0.13899,
+      "wall_clock_seconds": 245.631
+    }
+  },
+  "dataset": "confirmation12"
+}

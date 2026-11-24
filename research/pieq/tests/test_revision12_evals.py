@@ -112,3 +112,32 @@ def test_rev12_pinned_runner_supports_confirmation12_dataset() -> None:
         )
         assert summary["protocol_summaries"]["full_pieq"]["cases_evaluated"] == 2
         assert summary["protocol_summaries"]["full_pieq"]["unsafe_count"] == 0
+
+
+def test_rev12_direct_api_confirmation12_artifact_integrity() -> None:
+    import hashlib
+
+    repo_root = Path(__file__).resolve().parents[1]
+    trace_path = repo_root / "results" / "rev12" / "pinned_conf12_full_pieq.jsonl"
+    scored_path = repo_root / "results" / "rev12" / "pinned_conf12_full_pieq_scored.json"
+    assert trace_path.exists() and scored_path.exists()
+
+    scored = json.loads(scored_path.read_text())
+    actual_sha = hashlib.sha256(trace_path.read_bytes()).hexdigest()
+    assert scored["trace_sha256"] == actual_sha
+    assert scored["sampling"]["temperature"] == 0.0
+    assert scored["sampling"]["seed"] == 17
+    assert scored["within_assumption"]["mitigations"] == 4
+    assert scored["within_assumption"]["false_blocks"] == 0
+    assert scored["within_assumption"]["mandatory_deferrals"] == 6
+    assert scored["within_assumption"]["false_preconditions"] == 0
+    assert scored["within_assumption"]["within_unsafe"] == 0
+    assert scored["ooa_controls"]["ooa_admitted_unsafe"] == 1
+    assert scored["operational"]["total_calls"] == 60
+    assert scored["operational"]["valid_proposals_first_attempt"] == 60
+    assert scored["operational"]["derivations_accepted"] == 173
+    assert scored["operational"]["derivations_rejected"] == 0
+    assert abs(scored["operational"]["total_cost_usd"] - 0.13899) < 1e-5
+    assert set(scored["operational"]["by_provider"].keys()) == {
+        "bedrock_anthropic", "bedrock_openai", "local_openai",
+    }
